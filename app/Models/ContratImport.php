@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class ContratImport extends Model
 {
     use HasFactory;
@@ -69,7 +70,10 @@ class ContratImport extends Model
         ];
     }
 
-    // Relations
+    // =========================================================================
+    // Relations — parents (belongsTo)
+    // =========================================================================
+
     public function devis()
     {
         return $this->belongsTo(Devis::class);
@@ -110,6 +114,10 @@ class ContratImport extends Model
         return $this->belongsTo(User::class, 'verifie_caution_par_user_id');
     }
 
+    // =========================================================================
+    // Relations — children (hasMany / hasOne)
+    // =========================================================================
+
     public function lignes()
     {
         return $this->hasMany(LigneContrat::class, 'contrat_id');
@@ -130,22 +138,112 @@ class ContratImport extends Model
         return $this->hasMany(CalculPenalite::class, 'contrat_id');
     }
 
-    // Vérifie si le contrat est actif
+    // --- NEW ---
+
+    public function avenants()
+    {
+        return $this->hasMany(Avenant::class, 'contrat_id')
+                    ->orderBy('numero_avenant');
+    }
+
+    public function restitutionsCaution()
+    {
+        return $this->hasMany(RestitutionCaution::class, 'contrat_id')
+                    ->orderBy('date_action');
+    }
+
+    /**
+     * Quick access to the most recent cheque action —
+     * useful for showing the current caution status on any dashboard card.
+     */
+    public function dernierEtatCaution()
+    {
+        return $this->hasOne(RestitutionCaution::class, 'contrat_id')
+                    ->latestOfMany('date_action');
+    }
+
+    /**
+     * Alerts linked to this contract via the polymorphic entite_type pattern.
+     * Usage: $contrat->alertes
+     */
+    public function alertes()
+    {
+        return $this->hasMany(Alerte::class, 'entite_id')
+                    ->where('entite_type', 'contrat');
+    }
+
+    // =========================================================================
+    // Scopes
+    // =========================================================================
+
+    public function scopeActifs($query)
+    {
+        return $query->where('statut', 'ACTIF');
+    }
+
+    public function scopeEnAttenteSignature($query)
+    {
+        return $query->where('statut', 'EN_ATTENTE_SIGNATURE');
+    }
+
+    public function scopeEnAttenteCaution($query)
+    {
+        return $query->where('statut_caution', 'EN_ATTENTE');
+    }
+
+    public function scopeExpirantDans($query, int $jours)
+    {
+        return $query->where('statut', 'ACTIF')
+                     ->whereBetween('date_fin', [now(), now()->addDays($jours)]);
+    }
+
+    // =========================================================================
+    // Helpers
+    // =========================================================================
+
     public function estActif(): bool
     {
         return $this->statut === 'ACTIF';
     }
 
-    // Vérifie si la caution est en attente
     public function cautionEnAttente(): bool
     {
         return $this->statut_caution === 'EN_ATTENTE';
     }
 
-    // Calcule les jours restants
+    /**
+     * Returns the number of days remaining before the contract ends.
+     * Negative value means the contract is already expired.
+     */
     public function joursRestants(): int
     {
-        if (!$this->date_fin) return 0;
-        return now()->diffInDays($this->date_fin, false);
+        if (! $this->date_fin) return 0;
+        return (int) now()->diffInDays($this->date_fin, false);
+    }
+
+    public function estExpire(): bool
+    {
+        return $this->date_fin && now()->isAfter($this->date_fin);
+    }
+
+    public function estSigneParClient(): bool
+    {
+        return ! is_null($this->date_signature) && ! is_null($this->token_signature);
+    }
+
+    /**
+     * Total invoiced amount across all factures linked to this contract.
+     */
+    public function montantTotalFacture(): float
+    {
+        return (float) $this->factures()->sum('montant_ttc');
+    }
+
+    /**
+     * Total remaining balance across all unpaid factures.
+     */
+    public function soldeRestant(): float
+    {
+        return (float) $this->factures()->sum('montant_restant');
     }
 }
