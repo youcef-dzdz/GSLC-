@@ -1,11 +1,30 @@
 @import 'tailwindcss';
 
+/* Tell Tailwind where to look for your files */
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.jsx';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Your preferred clean geometric font stack */
+    --font-sans: 'Inter', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Core Branding Colors */
+    --color-brand-navy: #0f172a;
+    --color-brand-blue: #3b82f6;
+    --color-brand-orange: #f59e0b;
+    --color-brand-green: #10b981;
+    --color-brand-red: #f43f5e;
+
+    /* Soft Pastel Colors for UI Cards */
+    --color-pastel-blue-bg: #eff6ff;
+    --color-pastel-blue-text: #3b82f6;
+    --color-pastel-green-bg: #f0fdf4;
+    --color-pastel-green-text: #10b981;
+    --color-pastel-purple-bg: #faf5ff;
+    --color-pastel-purple-text: #a855f7;
+    --color-pastel-orange-bg: #fffbeb;
+    --color-pastel-orange-text: #f59e0b;
 }
