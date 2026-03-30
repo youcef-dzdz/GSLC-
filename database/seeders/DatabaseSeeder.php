@@ -2,24 +2,49 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->command->info('');
+        $this->command->info('🚀 Démarrage du seeding GSLC...');
+        $this->command->info('');
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // ── LAYER 1 — Foundation (production-safe) ────────────────────────────
+        $this->command->info('── Layer 1 : Données de référence ──');
+
+        $this->call(RoleSeeder::class);       // 1. roles (no dependencies)
+        $this->call(PaysSeeder::class);       // 2. pays (no dependencies)
+        $this->call(BanqueSeeder::class);     // 3. banques (no dependencies)
+        $this->call(DeviseSeeder::class);     // 4. devises (no dependencies)
+        $this->call(ConfigSeeder::class);     // 5. configuration_systeme (no dependencies)
+        $this->call(TypeConteneurSeeder::class); // 6. types_conteneur (no dependencies)
+        $this->call(PortSeeder::class);       // 7. ports (needs pays)
+        $this->call(FranchiseSeeder::class);  // 8. franchises (no dependencies)
+
+        $this->command->info('');
+
+        // ── LAYER 2 — Dev/Test data ───────────────────────────────────────────
+        $this->command->info('── Layer 2 : Données de test ──');
+
+        $this->call(UserSeeder::class);       // 9. users + clients (needs roles, pays)
+
+        $this->command->info('');
+        $this->command->info('✅ Seeding terminé avec succès !');
+        $this->command->info('');
+        $this->command->info('Comptes de test disponibles (mot de passe: password):');
+        $this->command->table(
+            ['Email', 'Rôle', 'Accès'],
+            [
+                ['admin@nashco.dz',      'Administrateur',  '/admin/dashboard'],
+                ['directeur@nashco.dz',  'Directeur',       '/director/dashboard'],
+                ['commercial@nashco.dz', 'Commercial',      '/commercial/dashboard'],
+                ['logistique@nashco.dz', 'Logistique',      '/logistics/dashboard'],
+                ['financier@nashco.dz',  'Financier',       '/finance/dashboard'],
+                ['client@nashco.dz',     'Client',          '/client/dashboard'],
+            ]
+        );
     }
 }
