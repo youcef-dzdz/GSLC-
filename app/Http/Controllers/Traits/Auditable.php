@@ -44,8 +44,8 @@ trait Auditable
             'action'            => $action,
             'table_cible'       => $tableCible,
             'enregistrement_id' => $enregistrementId,
-            'anciennes_valeurs' => $anciennesValeurs ? json_encode($anciennesValeurs) : null,
-            'nouvelles_valeurs' => $nouvellesValeurs ? json_encode($nouvellesValeurs) : null,
+            'anciennes_valeurs' => $anciennesValeurs, // cast to array by model
+            'nouvelles_valeurs' => $nouvellesValeurs, // cast to array by model
             'adresse_ip'        => request()->ip(),
             'user_agent'        => request()->userAgent(),
             'resultat'          => $resultat,

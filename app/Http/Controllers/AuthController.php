@@ -57,7 +57,6 @@ class AuthController extends Controller
         $request->session()->regenerate();
         Auth::login($user);
 
-        // Use Auditable trait — correct column names
         $this->audit('LOGIN', 'users', $user->id, null, [
             'email' => $user->email,
             'role'  => $user->role->label,
