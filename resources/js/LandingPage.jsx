@@ -1,849 +1,647 @@
 import { useState, useEffect, useRef } from "react";
 
-// ─── i18n ─────────────────────────────────────────────────────────────────────
+/* ── TRANSLATIONS ─────────────────────────────────────────── */
 const T = {
   FR: {
     dir: "ltr",
-    nav: ["Accueil", "Services", "Conteneurs", "Contact"],
-    login: "Connexion",
-    register: "S'inscrire",
-    heroTitle: "NASHCO : Votre Partenaire Maritime & Logistique en Algérie",
-    heroSub:
-      "Filiale du Groupe de Transport Maritime G.A.T.MA, NASHCO Spa accompagne les armateurs et opérateurs économiques depuis 1991 à travers l'ensemble des ports commerciaux algériens.",
-    heroCta: "Découvrir nos services",
-    heroDemo: "Nous contacter",
-    dashPort: "Au port",
-    dashWarehouse: "En attente",
-    dashClient: "Opérations",
-    dashLate: "Urgents",
-    servicesTitle: "Nos Services",
-    servicesSub: "Des solutions maritimes et logistiques intégrées sur mesure",
-    services: [
-      {
-        title: "Consignation Maritime",
-        desc: "Prise en charge complète des navires (Lignes régulières, Tramping et Car-ferries).",
-      },
-      {
-        title: "Logistique & Conteneurs",
-        desc: "Gestion, stockage de conteneurs vides, réparation, nettoyage et manutention.",
-      },
-      {
-        title: "Transit & Douane",
-        desc: "Expertise maritime, courtage et accomplissement de toutes les formalités douanières.",
-      },
-      {
-        title: "Approvisionnement",
-        desc: "Fourniture de vivres, soutes (Bunkering) et assistance technique complète aux navires.",
-      },
+    nav: ["Accueil", "À Propos", "Services", "Conteneurs", "Contact"],
+    login: "Connexion", register: "S'inscrire",
+    hero_tag: "EPE NASHCO SPA — Filiale du Groupe G.A.T.MA",
+    hero_h1: "Votre partenaire logistique d'excellence en Algérie",
+    hero_p: "Solutions intelligentes de consignation, de manutention et de suivi de conteneurs pour optimiser vos opérations d'import-export.",
+    hero_cta1: "Nous Contacter", hero_cta2: "Créer un compte",
+    about_tag: "Notre Mission",
+    about_h2: "Qui est NASHCO DZ ?",
+    about_def_t: "Définition", about_def_p: "Automatisation intelligente et optimisation du suivi des conteneurs d'importation grâce à l'analyse prédictive et à l'intégration multi-sources. NASHCO offre des avantages concrets aux importateurs et aux lignes maritimes.",
+    about_hist_t: "Historique", about_hist_p: "Fondée en 1991, NASHCO DZ est un acteur certifié dans le domaine de la logistique portuaire en Algérie, accompagnant armateurs et opérateurs économiques à travers l'ensemble des ports commerciaux algériens.",
+    svc_tag: "Notre Expertise", svc_h2: "Nos Services de Logistique",
+    svcs: ["Consignation Maritime", "Services Conteneurs", "Douane & Transit", "Approvisionnement Naval"],
+    svc_items: [
+      ["Gestion des escales", "Suivi opérationnel", "Services aux armateurs"],
+      ["Entretien et réparation", "Nettoyage et stockage", "Logistique de terminaux"],
+      ["Formalités douanières", "Accompagnement administratif", "Transit import/export"],
+      ["Vivres & soutes", "Assistance technique", "Fournitures navires"],
     ],
-    statsTitle: "NASHCO en chiffres",
-    stats: [
-      { value: 35, suffix: "+", label: "Années d'expérience", icon: "⚓" },
-      { value: 236, suffix: "M", label: "Capital social (DZD)", icon: "💰" },
-      { value: 10, suffix: "+", label: "Ports couverts", icon: "🏢" },
-      { value: 3, suffix: "", label: "Succursales régionales", icon: "🗺️" },
-    ],
-    containersTitle: "Gestion des Conteneurs",
-    containersSub:
-      "Solutions d'entreposage et logistique adaptées à tous types de conteneurs",
-    testTitle: "Pourquoi nous choisir ?",
-    testimonials: [
-      {
-        initials: "NA",
-        company: "Siège Social",
-        city: "Alger",
-        rating: 5,
-        quote:
-          "Une présence historique sur le marché algérien garantissant une fluidité maximale pour vos escales et vos opérations de transit.",
-      },
-      {
-        initials: "SU",
-        company: "Succursales",
-        city: "Est & Ouest",
-        rating: 5,
-        quote:
-          "Couverture totale de tous les ports commerciaux d'Algérie : Oran, Annaba, Béjaïa, Skikda, Mostaganem, Ghazaouet, Arzew, Tenes et Djen Djen.",
-      },
-      {
-        initials: "EX",
-        company: "Expertise",
-        city: "Algérie",
-        rating: 4,
-        quote:
-          "Un personnel hautement qualifié disponible 24h/24 pour répondre aux exigences techniques et logistiques les plus complexes.",
-      },
-    ],
-    contactTitle: "Contactez-nous",
-    contactSub: "Nos équipes locales sont à votre disposition",
-    formName: "Votre nom complet",
-    formCompany: "Nom de votre entreprise",
-    formSubject: "Objet de votre message",
-    formMessage: "Votre message...",
-    formSend: "Envoyer le message",
-    footerDesc:
-      "Entreprise Publique Économique (EPE) NASHCO Spa - Filiale du Groupe G.A.T.MA.",
-    footerNav: "Navigation",
-    footerPorts: "Ports couverts",
-    footerLegal: "Légal",
-    ports: ["Alger", "Oran", "Annaba", "Béjaïa", "Mostaganem"],
-    legal: ["Mentions Légales", "Politique de confidentialité", "CGU"],
-    copyright: "© 2026 EPE NASHCO Spa — Tous droits réservés",
-  },
-  EN: {
-    dir: "ltr",
-    nav: ["Home", "Services", "Containers", "Contact"],
-    login: "Login",
-    register: "Contact Us",
-    heroTitle: "NASHCO: Your Maritime & Logistics Partner in Algeria",
-    heroSub:
-      "As a subsidiary of the G.A.T.MA Maritime Transport Group, NASHCO Spa has been supporting shipowners and economic operators since 1991 across all Algerian commercial ports.",
-    heroCta: "Our Services",
-    heroDemo: "Contact Us",
-    dashPort: "At Port",
-    dashWarehouse: "Pending",
-    dashClient: "Operations",
-    dashLate: "Urgent",
-    servicesTitle: "Our Services",
-    servicesSub: "Tailor-made integrated maritime and logistics solutions",
-    services: [
-      {
-        title: "Maritime Agency",
-        desc: "Full management of vessel calls (Liners, Tramping, and Car-ferries).",
-      },
-      {
-        title: "Logistics & Containers",
-        desc: "Management, empty container storage, repair, cleaning, and handling.",
-      },
-      {
-        title: "Transit & Customs",
-        desc: "Maritime expertise, brokerage, and completion of all customs formalities.",
-      },
-      {
-        title: "Ship Supply",
-        desc: "Provision of food, bunkering, and complete technical assistance to vessels.",
-      },
-    ],
-    statsTitle: "NASHCO by the numbers",
-    stats: [
-      { value: 35, suffix: "+", label: "Years of experience", icon: "⚓" },
-      { value: 236, suffix: "M", label: "Share Capital (DZD)", icon: "💰" },
-      { value: 10, suffix: "+", label: "Covered ports", icon: "🏢" },
-      { value: 3, suffix: "", label: "Regional branches", icon: "🗺️" },
-    ],
-    containersTitle: "Container Management",
-    containersSub: "Warehousing and logistics solutions for all container types",
-    testTitle: "Why Choose Us?",
-    testimonials: [
-      {
-        initials: "HQ",
-        company: "Headquarters",
-        city: "Algiers",
-        rating: 5,
-        quote:
-          "A historical presence in the Algerian market guaranteeing maximum fluidity for your port calls and transit operations.",
-      },
-      {
-        initials: "BR",
-        company: "Branches",
-        city: "East & West",
-        rating: 5,
-        quote:
-          "Total coverage of all commercial ports in Algeria: Oran, Annaba, Béjaïa, Skikda, Mostaganem, Ghazaouet, Arzew, Tenes, and Djen Djen.",
-      },
-      {
-        initials: "EX",
-        company: "Expertise",
-        city: "Algeria",
-        rating: 4,
-        quote:
-          "Highly qualified staff available 24/7 to meet the most complex technical and logistical requirements.",
-      },
-    ],
-    contactTitle: "Contact Us",
-    contactSub: "Our local teams are at your disposal",
-    formName: "Your full name",
-    formCompany: "Company name",
-    formSubject: "Message subject",
-    formMessage: "Your message...",
-    formSend: "Send Message",
-    footerDesc: "EPE NASHCO Spa - Subsidiary of the G.A.T.MA Group.",
-    footerNav: "Navigation",
-    footerPorts: "Covered Ports",
-    footerLegal: "Legal",
-    ports: ["Algiers", "Oran", "Annaba", "Béjaïa", "Mostaganem"],
-    legal: ["Legal Notice", "Privacy Policy", "Terms of Use"],
-    copyright: "© 2026 EPE NASHCO Spa — All rights reserved",
+    gallery_tag: "Nos Installations", gallery_h2: "Aperçu de nos Opérations",
+    cat_tag: "Notre Flotte", cat_h2: "Catalogue de Conteneurs",
+    stats: ["Années d'expérience", "Conteneurs traités/an", "Clients importateurs", "Ports couverts"],
+    contact_h2: "Nous Contacter",
+    contact_addr: "Siège Social", contact_ports: "Agences Portuaires",
+    form_name: "Nom complet", form_company: "Entreprise", form_email: "E-mail",
+    form_subject: "Objet de votre demande", form_msg: "Votre message",
+    form_send: "Envoyer le message →", form_sending: "Envoi...",
+    form_ok: "✅ Message envoyé — nous vous répondrons rapidement.",
+    form_opts: ["Location Conteneurs", "Consignation Maritime", "Transit & Douane", "Approvisionnement Naval", "Support Technique"],
+    footer_desc: "Leader de la consignation et de la manutention portuaire en Algérie. Une expertise de plus de 30 ans au service du commerce international.",
+    footer_nav: "Liens Rapides", footer_svc: "Services", footer_contact: "Contact",
+    footer_newsletter: "Newsletter", footer_newsletter_p: "Abonnez-vous pour recevoir les dernières actualités du secteur maritime algérien.",
+    footer_newsletter_ph: "Votre adresse e-mail", footer_newsletter_btn: "S'abonner",
+    footer_addr_label: "Adresse", footer_addr: "02 Rue de Béjaïa, Port d'Alger",
+    footer_phone_label: "Téléphone", footer_phone: "+213 (0)21 43 XX XX",
+    footer_email_label: "E-mail", footer_email_val: "contact@nashco-dz.com",
+    footer_hours_label: "Horaires", footer_hours: "Lun–Jeu : 08h–17h\nDim : 08h–13h",
+    footer_copy: "© 2026 EPE NASHCO Spa. Tous droits réservés.",
+    footer_legal: ["Confidentialité", "Mentions Légales", "Cookies"],
+    port_marker: "Réseau portuaire national",
   },
   AR: {
     dir: "rtl",
-    nav: ["الرئيسية", "الخدمات", "الحاويات", "اتصل بنا"],
-    login: "دخول",
-    register: "اتصل بنا",
-    heroTitle: "ناشكو: شريككم البحري واللوجستي في الجزائر",
-    heroSub:
-      "بصفتها فرعاً لمجمع النقل البحري G.A.T.MA، ترافق شركة ناشكو (NASHCO Spa) مجهزي السفن والمتعاملين الاقتصاديين منذ سنة 1991 عبر كافة الموانئ التجارية الجزائرية.",
-    heroCta: "خدماتنا",
-    heroDemo: "اتصل بنا",
-    dashPort: "بالميناء",
-    dashWarehouse: "في الانتظار",
-    dashClient: "عمليات",
-    dashLate: "مستعجل",
-    servicesTitle: "خدماتنا",
-    servicesSub: "حلول بحرية ولوجستية متكاملة ومصممة خصيصاً لتلبية احتياجاتكم",
-    services: [
-      { title: "الضبط البحري", desc: "تكليف وتسيير كامل للسفن (الخطوط المنتظمة، والترامبينغ، والعبارات)." },
-      { title: "اللوجستيات والحاويات", desc: "تسيير، تخزين الحاويات الفارغة، إصلاح وتنظيف ومناولة." },
-      { title: "الترانزيت والجمارك", desc: "الخبرة البحرية، والوساطة، وإتمام جميع الإجراءات الجمركية بسلاسة." },
-      { title: "الإمداد والتزود", desc: "توفير المؤن الغذائية، وقود السفن (Bunkering)، والمساعدة التقنية." },
+    nav: ["الرئيسية", "من نحن", "خدماتنا", "الحاويات", "اتصل بنا"],
+    login: "تسجيل الدخول", register: "إنشاء حساب",
+    hero_tag: "ناشكو — فرع مجموعة غاتما للنقل البحري",
+    hero_h1: "شريككم الموثوق في اللوجستيات والشحن البحري بالجزائر",
+    hero_p: "نقدّم حلولاً متكاملة لوكالة الشحن البحري، مناولة الحاويات وتتبّعها في الوقت الفعلي، بما يُعزّز كفاءة عمليات الاستيراد والتصدير لعملائنا.",
+    hero_cta1: "تواصل معنا", hero_cta2: "افتح حساباً",
+    about_tag: "رسالتنا",
+    about_h2: "من هي شركة ناشكو؟",
+    about_def_t: "نبذة عن الشركة", about_def_p: "ناشكو شركة عمومية جزائرية متخصصة في أتمتة وتحسين تتبّع حاويات الاستيراد، مستعينةً بأدوات التحليل الاستباقي والربط الشامل بين المنصات. نتيح للمستوردين وشركات الملاحة البحرية مزايا تشغيلية حقيقية وقيمة مضافة ملموسة.",
+    about_hist_t: "مسيرتنا", about_hist_p: "تأسست عام 1991، وتعمل ناشكو كجهة معتمدة في قطاع اللوجستيات الميناءية بالجزائر. على مدى أكثر من ثلاثة عقود، رافقت أصحاب السفن والمتعاملين الاقتصاديين في جميع الموانئ التجارية الجزائرية، مقدّمةً خدمات متميزة تواكب متطلبات التجارة الدولية.",
+    svc_tag: "مجالات خبرتنا", svc_h2: "خدماتنا اللوجستية المتكاملة",
+    svcs: ["الوكالة البحرية", "خدمات الحاويات", "الجمارك والعبور", "التزوّد البحري"],
+    svc_items: [
+      ["إدارة توقفات السفن", "المتابعة التشغيلية الميدانية", "خدمات أصحاب السفن"],
+      ["الصيانة والإصلاح", "التنظيف والتخزين", "إدارة محطات الحاويات"],
+      ["إنجاز الإجراءات الجمركية", "المرافقة الإدارية للملفات", "عمليات العبور استيراداً وتصديراً"],
+      ["توفير الأغذية والوقود", "الدعم الفني للسفن", "توريد لوازم الرحلات البحرية"],
     ],
-    statsTitle: "ناشكو بالأرقام",
-    stats: [
-      { value: 35, suffix: "+", label: "سنة من الخبرة", icon: "⚓" },
-      { value: 236, suffix: "مليون", label: "رأس المال الاجتماعي (دج)", icon: "💰" },
-      { value: 10, suffix: "+", label: "موانئ مغطاة", icon: "🏢" },
-      { value: 3, suffix: "", label: "فروع جهوية", icon: "🗺️" },
+    gallery_tag: "منشآتنا وعملياتنا", gallery_h2: "لمحة من واقع أعمالنا الميناءية",
+    cat_tag: "أسطولنا من الحاويات", cat_h2: "دليل أنواع الحاويات البحرية",
+    stats: ["سنة من الخبرة", "حاوية تُعالج سنوياً", "مستورد يثق بنا", "ميناء تجاري مُغطّى"],
+    contact_h2: "نحن في خدمتكم",
+    contact_addr: "المقر الرئيسي", contact_ports: "وكالاتنا الميناءية",
+    form_name: "الاسم الكامل", form_company: "اسم الشركة", form_email: "البريد الإلكتروني",
+    form_subject: "موضوع الطلب", form_msg: "تفاصيل رسالتك",
+    form_send: "إرسال الرسالة ←", form_sending: "جارٍ الإرسال...",
+    form_ok: "✅ وصلتنا رسالتك بنجاح — سنتواصل معك في أقرب وقت.",
+    form_opts: ["استئجار حاويات", "الوكالة البحرية", "الجمارك والعبور", "التزوّد البحري", "الدعم الفني"],
+    footer_desc: "ناشكو — رائدة في وكالة الشحن البحري والمناولة الميناءية بالجزائر. خبرة تمتد لأكثر من ثلاثة عقود في خدمة التجارة الدولية.",
+    footer_nav: "روابط سريعة", footer_svc: "خدماتنا", footer_contact: "معلومات التواصل",
+    footer_newsletter: "النشرة الإخبارية", footer_newsletter_p: "اشترك لتصلك آخر أخبار قطاع الشحن والملاحة البحرية في الجزائر.",
+    footer_newsletter_ph: "بريدك الإلكتروني", footer_newsletter_btn: "اشتراك",
+    footer_addr_label: "العنوان", footer_addr: "02 شارع بجاية، ميناء الجزائر",
+    footer_phone_label: "الهاتف", footer_phone: "21 43 XX XX (0)213+",
+    footer_email_label: "البريد", footer_email_val: "contact@nashco-dz.com",
+    footer_hours_label: "أوقات العمل", footer_hours: "الإثنين – الخميس: 08:00 – 17:00\nالأحد: 08:00 – 13:00",
+    footer_copy: "© 2026 مؤسسة ناشكو — جميع الحقوق محفوظة.",
+    footer_legal: ["سياسة الخصوصية", "الشروط القانونية", "ملفات تعريف الارتباط"],
+    port_marker: "الشبكة الميناءية الوطنية",
+  },
+  EN: {
+    dir: "ltr",
+    nav: ["Home", "About", "Services", "Containers", "Contact"],
+    login: "Login", register: "Sign Up",
+    hero_tag: "EPE NASHCO SPA — Subsidiary of G.A.T.MA Group",
+    hero_h1: "Algeria's Premier Logistics & Maritime Partner",
+    hero_p: "Smart consignment, container handling and tracking solutions to optimize your import-export operations across Algerian ports.",
+    hero_cta1: "Contact Us", hero_cta2: "Create Account",
+    about_tag: "Our Mission",
+    about_h2: "Who is NASHCO DZ?",
+    about_def_t: "Overview", about_def_p: "Intelligent automation and optimization of import container tracking through predictive analytics and multi-source integration. NASHCO delivers measurable advantages to importers and maritime shipping lines.",
+    about_hist_t: "History", about_hist_p: "Founded in 1991, NASHCO DZ is a certified player in Algerian port logistics, supporting shipowners and economic operators across all Algerian commercial ports.",
+    svc_tag: "Our Expertise", svc_h2: "Our Logistics Services",
+    svcs: ["Maritime Consignment", "Container Services", "Customs & Transit", "Naval Supply"],
+    svc_items: [
+      ["Port call management", "Operational tracking", "Shipowner services"],
+      ["Maintenance & repair", "Cleaning & storage", "Terminal logistics"],
+      ["Customs procedures", "Administrative support", "Import/export transit"],
+      ["Provisions & bunkers", "Technical assistance", "Ship supplies"],
     ],
-    containersTitle: "تسيير الحاويات",
-    containersSub: "حلول تخزين ولوجستيات مناسبة لجميع أنواع وأحجام الحاويات",
-    testTitle: "لماذا تختارنا ؟",
-    testimonials: [
-      { initials: "HQ", company: "المقر الرئيسي", city: "الجزائر", rating: 5, quote: "حضور تاريخي في السوق الجزائرية يضمن أقصى درجات السلاسة لرسو سفنكم وعمليات العبور الخاصة بكم." },
-      { initials: "BR", company: "الفروع", city: "الشرق والغرب", rating: 5, quote: "تغطية شاملة لجميع الموانئ التجارية في الجزائر: وهران، عنابة، بجاية، سكيكدة، مستغانم، الغزوات، أرزيو، تنس، وجن جن." },
-      { initials: "EX", company: "الخبرة", city: "الجزائر", rating: 4, quote: "طاقم عمل مؤهل تأهيلاً عالياً ومتوفر على مدار الساعة لتلبية المتطلبات التقنية واللوجستية الأكثر تعقيداً." },
-    ],
-    contactTitle: "اتصل بنا",
-    contactSub: "فرقنا المحلية رهن إشارتكم",
-    formName: "اسمكم الكامل",
-    formCompany: "اسم شركتكم",
-    formSubject: "موضوع الرسالة",
-    formMessage: "رسالتكم...",
-    formSend: "إرسال الرسالة",
-    footerDesc: "الشركة الوطنية المصلحة للخدمات اللوجستية والتسويق البحري (EPE NASHCO Spa) - فرع مجمع G.A.T.MA.",
-    footerNav: "التنقل",
-    footerPorts: "الموانئ المغطاة",
-    footerLegal: "قانوني",
-    ports: ["الجزائر", "وهران", "عنابة", "بجاية", "مستغانم"],
-    legal: ["إشعار قانوني", "سياسة الخصوصية", "شروط الاستخدام"],
-    copyright: "© 2026 EPE NASHCO Spa — جميع الحقوق محفوظة",
+    gallery_tag: "Our Facilities", gallery_h2: "Operations Overview",
+    cat_tag: "Our Fleet", cat_h2: "Container Catalogue",
+    stats: ["Years of experience", "Containers/year", "Importer clients", "Ports covered"],
+    contact_h2: "Get In Touch",
+    contact_addr: "Head Office", contact_ports: "Port Agencies",
+    form_name: "Full name", form_company: "Company", form_email: "Email address",
+    form_subject: "Subject", form_msg: "Your message",
+    form_send: "Send Message →", form_sending: "Sending...",
+    form_ok: "✅ Message sent — we'll get back to you shortly.",
+    form_opts: ["Container Rental", "Maritime Consignment", "Customs & Transit", "Naval Supply", "Technical Support"],
+    footer_desc: "Algeria's leading port consignment and container handling company. Over 30 years of expertise serving international trade.",
+    footer_nav: "Quick Links", footer_svc: "Services", footer_contact: "Contact",
+    footer_newsletter: "Newsletter", footer_newsletter_p: "Subscribe to receive the latest news from Algeria's maritime and logistics sector.",
+    footer_newsletter_ph: "Your email address", footer_newsletter_btn: "Subscribe",
+    footer_addr_label: "Address", footer_addr: "02 Rue de Béjaïa, Port of Algiers",
+    footer_phone_label: "Phone", footer_phone: "+213 (0)21 43 XX XX",
+    footer_email_label: "Email", footer_email_val: "contact@nashco-dz.com",
+    footer_hours_label: "Office Hours", footer_hours: "Mon–Thu: 08:00–17:00\nSun: 08:00–13:00",
+    footer_copy: "© 2026 EPE NASHCO Spa. All rights reserved.",
+    footer_legal: ["Privacy Policy", "Terms of Use", "Cookies"],
+    port_marker: "National port network",
   },
 };
 
-// ─── Container data ────────────────────────────────────────────────────────────
+/* ── IMAGE MAP ─────────────────────────────────────────────── */
+const IMG = {
+  logo: "/images/nashco_logo%20Company.jpg",
+  hero1: "/images/hero2.jpg",
+  hero2: "/images/hero3.jpg",
+  hero3: "/images/hero4.jpg",
+  hero4: "/images/Consignation%20Maritime.jpeg",
+  about: "/images/Consignation%20Maritime.jpeg",
+  about2: "/images/Logistique%20%26%20Conteneurs.jpg",
+  svc1: "/images/OIP%2010.webp",
+  svc2: "/images/Logistique%20%26%20Conteneurs.jpg",
+  svc3: "/images/Transit%20%26%20Douane.webp",
+  svc4: "/images/Approvisionnement.jpg",
+  cnt_dry: "/images/cont-dry-20_40.png",
+  cnt_opentop: "/images/cont-opentop-20_40.png",
+  cnt_reefer: "/images/cont-reefer-20_40.png",
+  cnt_flat: "/images/flatracks-20_40-300x217.png",
+  cnt_tank: "/images/citernes-300x297.png",
+  g: [
+    "/images/OIP%202.webp", "/images/OIP%203.webp", "/images/OIP%204.webp",
+    "/images/OIP%205.webp", "/images/OIP%206.webp", "/images/OIP%207.webp",
+    "/images/OIP%208.webp", "/images/OIP%209.webp", "/images/OIP%2010.webp",
+    "/images/OIP%201.webp",
+  ],
+};
+
+/* ── DATA ──────────────────────────────────────────────────── */
 const CONTAINERS = [
-  { id: "20dc", type: "20' Dry (DC)", dims: "5,9m × 2,35m × 2,39m", tare: "2 200 kg", volume: "33,2 m³", payload: "28 000 kg", desc: "Conteneur standard idéal pour marchandises sèches générales.", image: "https://images.unsplash.com/photo-1586528116311-ad8be3619883?auto=format&fit=crop&w=600&q=80" },
-  { id: "40dc", type: "40' Dry (DC)", dims: "12,03m × 2,35m × 2,39m", tare: "3 750 kg", volume: "67,7 m³", payload: "28 800 kg", desc: "Double volume du 20', parfait pour les grands lots.", image: "https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=600&q=80" },
-  { id: "40hc", type: "40' High Cube (HC)", dims: "12,03m × 2,35m × 2,69m", tare: "3 900 kg", volume: "76,4 m³", payload: "28 600 kg", desc: "Haute capacité — 30 cm supplémentaires en hauteur.", image: "https://images.unsplash.com/photo-1611245558489-02690f307fc8?auto=format&fit=crop&w=600&q=80", badge: "Haute capacité", badgeColor: "#0B6B5C" },
-  { id: "rf", type: "Reefer (RF)", dims: "11,59m × 2,29m × 2,25m", tare: "3 080 kg", volume: "59,8 m³", payload: "27 700 kg", desc: "Conteneur réfrigéré pour produits alimentaires et pharmaceutiques.", image: "https://images.unsplash.com/photo-1590496793907-4bfbc6300053?auto=format&fit=crop&w=600&q=80", badge: "Réfrigéré −25°C / +25°C", badgeColor: "#185FA5" },
-  { id: "ot", type: "Open Top (OT)", dims: "5,9m × 2,35m × 2,35m", tare: "2 350 kg", volume: "32,6 m³", payload: "28 130 kg", desc: "Toit ouvert pour chargement en hauteur — grandes marchandises.", image: "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=600&q=80", badge: "Toit ouvert", badgeColor: "#BA7517" },
-  { id: "fr", type: "Flat Rack (FR)", dims: "12,13m × 2,40m × 2,00m", tare: "5 000 kg", volume: "Variable", payload: "40 000 kg", desc: "Hors gabarit — machines industrielles, véhicules, équipements lourds.", image: "https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?auto=format&fit=crop&w=600&q=80", badge: "Hors gabarit", badgeColor: "#E24B4A" },
+  { id: "dry20", label: "20' DC", sub: "Dry Cargo Standard", img: IMG.cnt_dry, highlight: false, dims: "5,89×2,35×2,39m", vol: "33,2 m³", payload: "23 000 kg", tare: "2 200 kg", desc: "Conteneur standard entièrement fermé, idéal pour la majorité des marchandises sèches." },
+  { id: "dry40", label: "40' DC", sub: "Dry Cargo Standard", img: IMG.cnt_dry, highlight: false, dims: "12,03×2,35×2,39m", vol: "67,7 m³", payload: "25 000 kg", tare: "3 750 kg", desc: "Double volume du 20', parfait pour les grands lots de marchandises générales." },
+  { id: "hc40", label: "40' HC", sub: "High Cube", img: IMG.cnt_dry, highlight: false, dims: "12,03×2,35×2,70m", vol: "76,4 m³", payload: "28 600 kg", tare: "3 900 kg", desc: "30 cm suppl. en hauteur pour les marchandises volumineuses." },
+  { id: "reefer", label: "Reefer (RF)", sub: "Température contrôlée", img: IMG.cnt_reefer, highlight: true, badge: "Réfrigéré", dims: "11,59×2,29×2,25m", vol: "59,8 m³", payload: "27 700 kg", tare: "3 080 kg", temp: "−35°C à +20°C", desc: "Conteneur frigorifique pour produits frais, surgelés et pharmaceutiques." },
+  { id: "opentop", label: "Open Top (OT)", sub: "Chargement vertical", img: IMG.cnt_opentop, highlight: false, dims: "5,89×2,35×2,35m", vol: "32,6 m³", payload: "28 130 kg", tare: "2 350 kg", desc: "Toit ouvert pour marchandises hautes chargées par grue." },
+  { id: "flat", label: "Flat Rack (FR)", sub: "Hors gabarit", img: IMG.cnt_flat, highlight: false, dims: "12,13×2,40×2,00m", vol: "Variable", payload: "39 000 kg", tare: "5 000 kg", desc: "Sans parois latérales pour machines industrielles et équipements lourds." },
+  { id: "tank", label: "ISO Tank", sub: "Transport de liquides", img: IMG.cnt_tank, highlight: false, dims: "Cadre ISO 20'", vol: "20 000–26 000 L", payload: "~25 000 kg", tare: "~3 000 kg", desc: "Citerne ISO pour liquides alimentaires ou dangereux." },
 ];
 
-// ─── Ticker data ───────────────────────────────────────────────────────────────
-const TICKER_ITEMS = [
-  "⚓ NASHCO - Entreprise Publique Économique filiale du groupe G.A.T.MA",
-  "🏢 Couverture complète de l'ensemble des ports commerciaux algériens",
-  "📞 Service Assistance aux Armateurs disponible 24h/24 et 7j/7",
-  "📍 Siège Social : 02 Rue de Bejaia, Port d'Alger, Algérie",
-  "🛳️ Consignation des lignes régulières, Tramping et Car-ferries",
+const STATS = [
+  { value: 35, suffix: "+", bg: "#eef2ff" },
+  { value: 4500, suffix: "+", bg: "#fff7ed" },
+  { value: 320, suffix: "+", bg: "#f0fdf4" },
+  { value: 10, suffix: "+", bg: "#fffbeb" },
 ];
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
+const PORTS = ["Alger", "Oran", "Annaba", "Skikda", "Béjaïa", "Mostaganem", "Jijel / Djen-Djen", "Ghazaouet", "Arzew", "Tenes"];
+
+/* ── HOOKS ─────────────────────────────────────────────────── */
 function useCountUp(target, active, duration = 2000) {
-  const [count, setCount] = useState(0);
+  const [n, setN] = useState(0);
   useEffect(() => {
     if (!active) return;
-    let start = 0;
-    const step = target / (duration / 16);
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= target) { setCount(target); clearInterval(timer); }
-      else setCount(Math.floor(start));
-    }, 16);
-    return () => clearInterval(timer);
-  }, [active, target, duration]);
-  return count;
+    let cur = 0; const step = target / (duration / 16);
+    const t = setInterval(() => { cur += step; if (cur >= target) { setN(target); clearInterval(t); } else setN(Math.floor(cur)); }, 16);
+    return () => clearInterval(t);
+  }, [active, target]);
+  return n;
 }
-
-function useIntersection(ref, threshold = 0.2) {
-  const [visible, setVisible] = useState(false);
+function useInView(ref) {
+  const [v, setV] = useState(false);
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [ref, threshold]);
-  return visible;
+    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) setV(true); }, { threshold: 0.2 });
+    if (ref.current) o.observe(ref.current);
+    return () => o.disconnect();
+  }, [ref]);
+  return v;
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-function StarRating({ n }) {
+/* ── STAT CARD ─────────────────────────────────────────────── */
+function StatCard({ s, label, active }) {
+  const n = useCountUp(s.value, active);
   return (
-    <div className="flex gap-0.5">
-      {[1,2,3,4,5].map(i => (
-        <span key={i} style={{ color: i <= n ? "#CFA030" : "#334155", fontSize: 14 }}>★</span>
-      ))}
+    <div style={{ background: s.bg, borderRadius: 16, padding: "2rem", textAlign: "center", border: "1px solid rgba(0,0,0,.04)" }}>
+      <p style={{ fontSize: 36, fontWeight: 800, color: "#0D1F3C", lineHeight: 1 }}>{n.toLocaleString()}{s.suffix}</p>
+      <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 2, color: "#64748b", marginTop: 8 }}>{label}</p>
     </div>
   );
 }
 
-function ContainerModal({ c, onClose, lang }) {
+/* ── CONTAINER MODAL ───────────────────────────────────────── */
+function Modal({ c, onClose }) {
   useEffect(() => {
-    const h = (e) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", h);
-    return () => document.removeEventListener("keydown", h);
+    const h = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, [onClose]);
-  const t = T[lang];
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
-      <div className="rounded-2xl p-8 w-full max-w-md relative animate-fadeIn" style={{ background: "#0D1F3C", border: "1px solid rgba(207,160,48,0.3)" }}>
-        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors" style={{ fontSize: 18 }}>✕</button>
-        <div style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden", marginBottom: "1.5rem" }}>
-          <img src={c.image} alt={c.type} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,.6)", backdropFilter: "blur(8px)", padding: "1rem" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 24, width: "100%", maxWidth: 500, overflow: "hidden", boxShadow: "0 40px 100px rgba(0,0,0,.3)", animation: "modalIn .3s ease" }}>
+        <div style={{ background: c.highlight ? "#0D1F3C" : "#f1f5f9", height: 200, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+          <img src={c.img} alt={c.label} style={{ maxHeight: 160, maxWidth: "80%", objectFit: "contain" }} onError={e => e.target.style.display = "none"} />
+          {c.badge && <span style={{ position: "absolute", top: 12, right: 12, background: "#CFA030", color: "#0D1F3C", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20 }}>{c.badge}</span>}
+          <button onClick={onClose} style={{ position: "absolute", top: 12, left: 12, width: 32, height: 32, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.12)", color: c.highlight ? "#fff" : "#0D1F3C", cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         </div>
-        <h3 className="text-2xl font-bold text-white mb-1">{c.type}</h3>
-        {c.badge && (
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white mb-4" style={{ background: c.badgeColor }}>
-            {c.badge}
-          </span>
-        )}
-        <p className="text-sm mb-6" style={{ color: "#94a3b8" }}>{c.desc}</p>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            ["Dimensions", c.dims],
-            ["Tare", c.tare],
-            ["Volume", c.volume],
-            ["Charge utile", c.payload],
-          ].map(([k, v]) => (
-            <div key={k} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.05)" }}>
-              <div className="text-xs mb-1" style={{ color: "#CFA030" }}>{k}</div>
-              <div className="text-sm font-semibold text-white">{v}</div>
-            </div>
-          ))}
+        <div style={{ padding: "1.5rem 2rem 2rem" }}>
+          <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: 2, color: "#CFA030", marginBottom: 4 }}>NASHCO — Conteneur Maritime</p>
+          <h3 style={{ fontSize: 22, fontWeight: 800, color: "#0D1F3C", marginBottom: 8 }}>{c.label}</h3>
+          <p style={{ fontSize: 13, color: "#64748b", marginBottom: "1.25rem", lineHeight: 1.7 }}>{c.desc}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {[["Dimensions", c.dims], ["Volume", c.vol], ["Charge utile", c.payload], ["Tare", c.tare], ...(c.temp ? [["Température", c.temp]] : [])].map(([k, v]) => (
+              <div key={k} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 12px", border: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#CFA030", textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>{k}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0D1F3C" }}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <button onClick={onClose} style={{ marginTop: "1.25rem", width: "100%", padding: "13px", background: "#0D1F3C", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>Nous contacter →</button>
         </div>
-        <button onClick={onClose} className="mt-6 w-full py-3 rounded-xl font-semibold transition-all hover:opacity-90" style={{ background: "#CFA030", color: "#0D1F3C" }}>
-          {t.register}
-        </button>
       </div>
     </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+/* ── MAIN ──────────────────────────────────────────────────── */
 export default function LandingPage() {
   const [lang, setLang] = useState("FR");
   const [scrolled, setScrolled] = useState(false);
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [selectedContainer, setSelectedContainer] = useState(null);
-  const [dashValues, setDashValues] = useState({ port: 12, warehouse: 5, client: 45, late: 2 });
-  const [formState, setFormState] = useState({ name: "", company: "", subject: "", message: "", sending: false, sent: false, error: "" });
-  const [formErrors, setFormErrors] = useState({});
-
+  const [modal, setModal] = useState(null);
+  const [formSent, setFormSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [heroSlide, setHeroSlide] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", company: "", email: "", subject: "", message: "" });
   const statsRef = useRef(null);
-  const statsVisible = useIntersection(statsRef);
-
+  const statsVis = useInView(statsRef);
   const t = T[lang];
+  const heroSlides = [IMG.hero1, IMG.hero2, IMG.hero3, IMG.hero4];
 
-  // Scroll detection
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 80);
+    const h = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", h);
     return () => window.removeEventListener("scroll", h);
   }, []);
 
-  // Testimonial auto-rotate
   useEffect(() => {
-    const timer = setInterval(() => setActiveTestimonial(p => (p + 1) % t.testimonials.length), 5000);
-    return () => clearInterval(timer);
-  }, [t.testimonials.length]);
-
-  // Dashboard live simulation
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setDashValues(v => ({
-        port: Math.max(5, v.port + Math.floor(Math.random() * 3 - 1)),
-        warehouse: Math.max(1, v.warehouse + Math.floor(Math.random() * 3 - 1)),
-        client: Math.max(10, v.client + Math.floor(Math.random() * 3 - 1)),
-        late: Math.max(0, v.late + Math.floor(Math.random() * 2 - 1)),
-      }));
-    }, 4000);
-    return () => clearInterval(timer);
+    const ti = setInterval(() => setHeroSlide(s => (s + 1) % heroSlides.length), 6000);
+    return () => clearInterval(ti);
   }, []);
 
-  const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  const scrollTo = id => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setMenuOpen(false); };
+  const handleSend = async e => {
+    e.preventDefault(); setSending(true);
+    await new Promise(r => setTimeout(r, 1400));
+    setSending(false); setFormSent(true);
+    setForm({ name: "", company: "", email: "", subject: "", message: "" });
+    setTimeout(() => setFormSent(false), 5000);
   };
 
-  const validateForm = () => {
-    const errs = {};
-    if (!formState.name.trim()) errs.name = "Champ obligatoire";
-    if (!formState.subject.trim()) errs.subject = "Champ obligatoire";
-    if (!formState.message.trim() || formState.message.length < 20) errs.message = "Minimum 20 caractères";
-    setFormErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
+  const inputStyle = { padding: "12px 16px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: 14, color: "#1e293b", fontFamily: "inherit", width: "100%", transition: "border-color .2s" };
 
-  const handleSend = async () => {
-    if (!validateForm()) return;
-    setFormState(s => ({ ...s, sending: true, error: "" }));
-    await new Promise(r => setTimeout(r, 1500));
-    setFormState(s => ({ ...s, sending: false, sent: true }));
-    setTimeout(() => setFormState(s => ({ ...s, sent: false, name: "", subject: "", message: "", company: "" })), 4000);
-  };
-
-  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div dir={t.dir} style={{ fontFamily: "'Segoe UI', 'Helvetica Neue', sans-serif", background: "#F4F6F9", color: "#1e293b", overflowX: "hidden" }}>
-
-      {/* ── GLOBAL STYLES ── */}
+    <div style={{ fontFamily: "'Inter',sans-serif", color: "#1e293b", background: "#f7f9fc", overflowX: "hidden", direction: t.dir }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body { font-family: 'DM Sans', sans-serif; }
-        .display-font { font-family: 'Playfair Display', serif; }
-        @keyframes ticker {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .ticker-track { animation: ticker 28s linear infinite; }
-        .ticker-track:hover { animation-play-state: paused; }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
-        .live-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
-        .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease; }
-        .card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(13,31,60,0.18) !important; }
-        .btn-primary { transition: all 0.2s; }
-        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-        .btn-secondary { transition: all 0.2s; }
-        .btn-secondary:hover { background: rgba(255,255,255,0.08) !important; }
-        input, textarea { outline: none; }
-        input:focus, textarea:focus { box-shadow: 0 0 0 2px #1A4A8C !important; }
-        @keyframes countUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .stat-animate { animation: countUp 0.6s ease-out forwards; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap');
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        html{scroll-behavior:smooth;}
+        @keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(24px);}to{opacity:1;transform:scale(1) translateY(0);}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(32px);}to{opacity:1;transform:translateY(0);}}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        @keyframes heroFade{from{opacity:0;transform:scale(1.05);}to{opacity:1;transform:scale(1);}}
+        .fade-up{animation:fadeUp .8s ease both;}
+        .hero-active{animation:heroFade 1.4s ease both;}
+        .spinner{animation:spin .8s linear infinite;}
+        .inp:focus{border-color:#0D1F3C!important;outline:none;}
+        .nav-btn:hover{color:#CFA030!important;}
+        .svc-card:hover{transform:translateY(-8px)!important;box-shadow:0 24px 56px rgba(13,31,60,.14)!important;}
+        .cnt-btn:hover{transform:translateY(-5px)!important;box-shadow:0 16px 36px rgba(13,31,60,.18)!important;}
+        .gi:hover{transform:scale(1.06)!important;filter:brightness(1)!important;}
+        .social-btn:hover{background:#CFA030!important;color:#0D1F3C!important;border-color:#CFA030!important;}
+        ::-webkit-scrollbar{width:5px;}
+        ::-webkit-scrollbar-thumb{background:#CFA030;border-radius:3px;}
+        input:focus,textarea:focus,select:focus{outline:2px solid #0D1F3C;outline-offset:1px;}
       `}</style>
 
-      {/* ════════════════════════════════════════════════════
-          SECTION 1 — NAVBAR
-      ════════════════════════════════════════════════════ */}
-      <nav
-        style={{
-          position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-          background: scrolled ? "rgba(13,31,60,0.92)" : "#0D1F3C",
-          backdropFilter: scrolled ? "blur(12px)" : "none",
-          borderBottom: scrolled ? "1px solid rgba(207,160,48,0.2)" : "none",
-          transition: "all 0.3s ease",
-          padding: "0 2rem",
-          height: 68,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}
-      >
+      {/* ── NAVBAR ─────────────────────────────────── */}
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 200, height: 70, background: scrolled ? "rgba(255,255,255,.98)" : "rgba(255,255,255,.95)", backdropFilter: "blur(16px)", borderBottom: `1px solid ${scrolled ? "rgba(203,213,225,.7)" : "rgba(203,213,225,.4)"}`, boxShadow: scrolled ? "0 2px 20px rgba(0,0,0,.08)" : "none", transition: "all .3s", display: "flex", alignItems: "center", padding: "0 2.5rem", justifyContent: "space-between" }}>
         {/* Logo */}
-        <button onClick={() => scrollTo("hero")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 8, background: "#CFA030", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 16, color: "#0D1F3C" }}>N</div>
-          <span className="display-font" style={{ color: "#fff", fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>NASHCO <span style={{ color: "#CFA030" }}>SPA</span></span>
+        <button onClick={() => scrollTo("home")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
+          <img src={IMG.logo} alt="NASHCO" style={{ height: 44, width: "auto", objectFit: "contain", borderRadius: 6 }} onError={e => { e.target.style.display = "none"; }} />
+          <div>
+            <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 900, fontSize: 18, color: "#0D1F3C", letterSpacing: "-0.5px", lineHeight: 1 }}>NASHCO</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase" }}>Entreprise Publique</div>
+          </div>
         </button>
 
-        {/* Nav links */}
-        <div style={{ display: "flex", gap: "2rem" }}>
-          {t.nav.map((item, i) => {
-            const ids = ["hero", "services", "containers", "contact"];
-            return (
-              <button key={i} onClick={() => scrollTo(ids[i])} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.8)", fontSize: 14, fontWeight: 500, cursor: "pointer", transition: "color 0.2s" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#CFA030")}
-                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
-              >{item}</button>
-            );
-          })}
-        </div>
+        {/* Desktop Nav */}
+        <nav style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+          {t.nav.map((n, i) => (
+            <button key={i} className="nav-btn" onClick={() => scrollTo(["home", "about", "services", "catalogue", "contact"][i])} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#475569", transition: "color .2s", letterSpacing: ".02em" }}>{n}</button>
+          ))}
+        </nav>
 
-        {/* Right side */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {/* Lang switcher */}
-          <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.08)", borderRadius: 8, padding: "3px 4px" }}>
+        {/* Right */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", border: "1.5px solid #e2e8f0", borderRadius: 24, overflow: "hidden", fontSize: 11, fontWeight: 700 }}>
             {["FR", "AR", "EN"].map(l => (
-              <button key={l} onClick={() => setLang(l)} style={{
-                padding: "3px 10px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-                background: lang === l ? "#CFA030" : "transparent",
-                color: lang === l ? "#0D1F3C" : "rgba(255,255,255,0.7)",
-                transition: "all 0.2s",
-              }}>{l}</button>
+              <button key={l} onClick={() => setLang(l)} style={{ padding: "5px 12px", border: "none", cursor: "pointer", background: lang === l ? "#0D1F3C" : "#fff", color: lang === l ? "#fff" : "#0D1F3C", borderLeft: l !== "FR" ? "1.5px solid #e2e8f0" : "none", transition: "all .2s" }}>{l}</button>
             ))}
           </div>
-          <button className="btn-secondary" onClick={() => scrollTo("contact")} style={{ padding: "7px 16px", borderRadius: 8, border: "1.5px solid rgba(255,255,255,0.35)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
-            {t.login}
-          </button>
-          <button className="btn-primary" onClick={() => scrollTo("contact")} style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: "#CFA030", color: "#0D1F3C", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-            {t.register}
-          </button>
+          <button onClick={() => scrollTo("contact")} style={{ padding: "8px 18px", border: "1.5px solid #0D1F3C", borderRadius: 8, background: "transparent", color: "#0D1F3C", fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all .2s" }} onMouseEnter={e => { e.currentTarget.style.background = "#0D1F3C"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#0D1F3C"; }}>{t.login}</button>
+          <button onClick={() => scrollTo("contact")} style={{ padding: "8px 18px", border: "none", borderRadius: 8, background: "#0D1F3C", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(13,31,60,.25)", transition: "background .2s" }} onMouseEnter={e => e.currentTarget.style.background = "#1a4a8c"} onMouseLeave={e => e.currentTarget.style.background = "#0D1F3C"}>{t.register}</button>
         </div>
-      </nav>
+      </header>
 
-      {/* ════════════════════════════════════════════════════
-          SECTION 2 — TICKER
-      ════════════════════════════════════════════════════ */}
-      <div style={{ background: "#E24B4A", overflow: "hidden", whiteSpace: "nowrap", height: 36, display: "flex", alignItems: "center", marginTop: 68 }}>
-        <div className="ticker-track" style={{ display: "inline-flex", gap: "4rem" }}>
-          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-            <span key={i} style={{ color: "#fff", fontSize: 12, fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6 }}>
-              {item}
-              <span style={{ color: "rgba(255,255,255,0.4)", marginLeft: 24 }}>|</span>
+      {/* ── HERO ───────────────────────────────────── */}
+      <section id="home" style={{ position: "relative", height: "92vh", minHeight: 640, display: "flex", alignItems: "center", overflow: "hidden", marginTop: 70 }}>
+        {/* Slideshow */}
+        {heroSlides.map((src, i) => (
+          <img key={src} src={src} alt="Port" className={i === heroSlide ? "hero-active" : ""} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: i === heroSlide ? 1 : 0, transition: "opacity 1.4s ease", zIndex: 0 }} onError={e => e.target.style.display = "none"} />
+        ))}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(120deg,rgba(9,21,44,.88) 0%,rgba(9,21,44,.45) 60%,transparent 100%)", zIndex: 1 }} />
+
+        {/* Content */}
+        <div style={{ position: "relative", zIndex: 2, maxWidth: 1200, margin: "0 auto", padding: "0 2.5rem", width: "100%" }}>
+          <div className="fade-up" style={{ maxWidth: 720 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(207,160,48,.18)", border: "1px solid rgba(207,160,48,.45)", color: "#f4c842", padding: "6px 18px", borderRadius: 32, fontSize: 11, fontWeight: 700, letterSpacing: ".08em", marginBottom: 28, backdropFilter: "blur(6px)" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#CFA030", display: "inline-block" }} />{t.hero_tag}
             </span>
+            <h1 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 900, fontSize: "clamp(2.4rem,5vw,4rem)", color: "#fff", lineHeight: 1.1, marginBottom: 28, letterSpacing: "-1.5px" }}>{t.hero_h1}</h1>
+            <p style={{ fontSize: 17, color: "rgba(255,255,255,.8)", lineHeight: 1.85, marginBottom: 44, maxWidth: 560 }}>{t.hero_p}</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+              <button onClick={() => scrollTo("contact")} style={{ padding: "15px 36px", borderRadius: 10, border: "none", background: "#CFA030", color: "#0D1F3C", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 28px rgba(207,160,48,.4)", transition: "all .25s" }} onMouseEnter={e => e.currentTarget.style.background = "#e6b832"} onMouseLeave={e => e.currentTarget.style.background = "#CFA030"}>{t.hero_cta1}</button>
+              <button onClick={() => scrollTo("contact")} style={{ padding: "15px 36px", borderRadius: 10, border: "2px solid rgba(255,255,255,.6)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all .25s" }} onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#0D1F3C"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#fff"; }}>{t.hero_cta2}</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Slide dots */}
+        <div style={{ position: "absolute", bottom: 32, left: "50%", transform: "translateX(-50%)", zIndex: 2, display: "flex", gap: 8 }}>
+          {heroSlides.map((_, i) => (
+            <button key={i} onClick={() => setHeroSlide(i)} style={{ width: i === heroSlide ? 32 : 10, height: 10, borderRadius: 5, border: "none", cursor: "pointer", background: i === heroSlide ? "#CFA030" : "rgba(255,255,255,.4)", transition: "all .4s", padding: 0 }} />
           ))}
+        </div>
+      </section>
+
+      {/* ── STATS BAND ─────────────────────────────── */}
+      <div ref={statsRef} style={{ background: "#0D1F3C", padding: "3rem 2.5rem" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 24 }}>
+          {STATS.map((s, i) => <StatCard key={i} s={s} label={t.stats[i]} active={statsVis} />)}
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════
-          SECTION 3 — HERO
-      ════════════════════════════════════════════════════ */}
-      <section id="hero" style={{ background: "linear-gradient(135deg, #0D1F3C 0%, #1A4A8C 60%, #0D1F3C 100%)", minHeight: "88vh", display: "flex", alignItems: "center", padding: "4rem 2rem", position: "relative", overflow: "hidden" }}>
-        {/* Background decoration */}
-        <div style={{ position: "absolute", top: -100, right: -100, width: 500, height: 500, borderRadius: "50%", background: "rgba(207,160,48,0.06)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -150, left: -80, width: 400, height: 400, borderRadius: "50%", background: "rgba(26,74,140,0.3)", pointerEvents: "none" }} />
-
-        <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "center" }}>
-          {/* Left */}
-          <div style={{ animation: "fadeIn 0.8s ease-out" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(207,160,48,0.15)", borderRadius: 20, padding: "6px 14px", marginBottom: "1.5rem" }}>
-              <span className="live-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: "#CFA030", display: "inline-block" }} />
-              <span style={{ color: "#CFA030", fontSize: 12, fontWeight: 600 }}>EPE NASHCO SPA</span>
+      {/* ── ABOUT ──────────────────────────────────── */}
+      <section id="about" style={{ padding: "7rem 2.5rem", background: "#fff" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6rem", alignItems: "center" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 14, height: 500 }}>
+            <div style={{ borderRadius: 20, overflow: "hidden", gridRow: "1/3", boxShadow: "0 24px 60px rgba(0,0,0,.14)" }}>
+              <img src={IMG.about} alt="NASHCO" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s" }} className="gi" onError={e => e.target.style.display = "none"} />
             </div>
-            <h1 className="display-font" style={{ fontSize: "clamp(2rem, 4vw, 3.2rem)", color: "#fff", lineHeight: 1.2, marginBottom: "1.5rem" }}>
-              {t.heroTitle}
-            </h1>
-            <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 16, lineHeight: 1.75, marginBottom: "2.5rem", maxWidth: 480 }}>
-              {t.heroSub}
-            </p>
-            <div style={{ display: "flex", gap: 14 }}>
-              <button className="btn-primary" onClick={() => scrollTo("services")} style={{ padding: "14px 28px", borderRadius: 10, border: "none", background: "#CFA030", color: "#0D1F3C", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-                {t.heroCta}
-              </button>
-              <button className="btn-secondary" onClick={() => scrollTo("contact")} style={{ padding: "14px 28px", borderRadius: 10, border: "1.5px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 15, fontWeight: 500, cursor: "pointer" }}>
-                {t.heroDemo}
-              </button>
+            <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 12px 32px rgba(0,0,0,.1)" }}>
+              <img src={IMG.about2} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s", filter: "brightness(.92)" }} className="gi" onError={e => e.target.style.display = "none"} />
+            </div>
+            <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 12px 32px rgba(0,0,0,.1)" }}>
+              <img src={IMG.g[1]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s", filter: "brightness(.92)" }} className="gi" onError={e => e.target.style.display = "none"} />
             </div>
           </div>
+          <div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#CFA030", textTransform: "uppercase", letterSpacing: "0.3em", marginBottom: 14, display: "block" }}>{t.about_tag}</span>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: "clamp(2rem,3vw,2.8rem)", fontWeight: 900, color: "#0D1F3C", lineHeight: 1.15, marginBottom: 36, letterSpacing: "-0.5px" }}>{t.about_h2}</h2>
+            {[[t.about_def_t, t.about_def_p], [t.about_hist_t, t.about_hist_p]].map(([title, text]) => (
+              <div key={title} style={{ marginBottom: 28, paddingLeft: 16, borderLeft: "3px solid #CFA030" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, color: "#0D1F3C", marginBottom: 10 }}>{title}</h4>
+                <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.8 }}>{text}</p>
+              </div>
+            ))}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginTop: 32 }}>
+              {IMG.g.slice(0, 6).map((src, i) => (
+                <div key={i} style={{ height: 90, borderRadius: 12, overflow: "hidden" }}>
+                  <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s", filter: "brightness(.9)" }} className="gi" onError={e => e.target.style.display = "none"} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-          {/* Right — Live Operations Visual */}
-          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 20, padding: "2rem", border: "1px solid rgba(255,255,255,0.1)", backdropFilter: "blur(10px)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <span style={{ color: "#fff", fontWeight: 600, fontSize: 15 }}>Surveillance Flotte</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span className="live-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: "#0B6B5C", display: "inline-block" }} />
-                <span style={{ color: "#0B6B5C", fontSize: 11, fontWeight: 600 }}>EN DIRECT</span>
+      {/* ── SERVICES ───────────────────────────────── */}
+      <section id="services" style={{ padding: "7rem 2.5rem", background: "#f4f6fa" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#CFA030", textTransform: "uppercase", letterSpacing: "0.3em", marginBottom: 12, display: "block" }}>{t.svc_tag}</span>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: "clamp(2rem,3vw,2.8rem)", fontWeight: 900, color: "#0D1F3C", letterSpacing: "-0.5px" }}>{t.svc_h2}</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 22 }}>
+            {[IMG.svc1, IMG.svc2, IMG.svc3, IMG.svc4].map((img, i) => (
+              <div key={i} className="svc-card" style={{ background: "#fff", borderRadius: 20, overflow: "hidden", border: "1px solid #e8edf3", boxShadow: "0 2px 8px rgba(0,0,0,.05)", transition: "all .3s" }}>
+                <div style={{ height: 180, overflow: "hidden" }}>
+                  <img src={img} alt={t.svcs[i]} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s" }} onMouseEnter={e => e.target.style.transform = "scale(1.08)"} onMouseLeave={e => e.target.style.transform = "scale(1)"} onError={e => e.target.style.display = "none"} />
+                </div>
+                <div style={{ padding: "1.5rem 1.5rem 2rem" }}>
+                  <div style={{ width: 36, height: 3, background: "#CFA030", borderRadius: 2, marginBottom: 14 }} />
+                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0D1F3C", marginBottom: 14 }}>{t.svcs[i]}</h3>
+                  <ul style={{ listStyle: "none", padding: 0 }}>
+                    {t.svc_items[i].map(it => (
+                      <li key={it} style={{ fontSize: 13, color: "#64748b", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ color: "#CFA030", fontSize: 10 }}>▶</span>{it}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── GALLERY ────────────────────────────────── */}
+      <section style={{ padding: "6rem 2.5rem", background: "#09152C" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#CFA030", textTransform: "uppercase", letterSpacing: "0.3em", marginBottom: 12, display: "block" }}>{t.gallery_tag}</span>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: "clamp(2rem,3vw,2.6rem)", fontWeight: 900, color: "#fff", letterSpacing: "-0.5px" }}>{t.gallery_h2}</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gridTemplateRows: "220px 220px", gap: 12 }}>
+            {[{ style: { gridColumn: "1/3", gridRow: "1/2" }, src: IMG.hero1 }, { style: {}, src: IMG.g[0] }, { style: {}, src: IMG.g[2] }, { style: {}, src: IMG.g[3] }, { style: {}, src: IMG.g[4] }, { style: { gridColumn: "3/5", gridRow: "2/3" }, src: IMG.svc3 }].map((item, i) => (
+              <div key={i} style={{ ...item.style, borderRadius: 16, overflow: "hidden" }}>
+                <img src={item.src} alt="" className="gi" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s", filter: "brightness(.88)" }} onError={e => e.target.style.display = "none"} />
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginTop: 12 }}>
+            {IMG.g.slice(5, 10).map((src, i) => (
+              <div key={i} style={{ height: 150, borderRadius: 16, overflow: "hidden" }}>
+                <img src={src} alt="" className="gi" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s", filter: "brightness(.88)" }} onError={e => e.target.style.display = "none"} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CATALOGUE ──────────────────────────────── */}
+      <section id="catalogue" style={{ padding: "7rem 2.5rem", background: "#fff" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ marginBottom: "3rem" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#CFA030", textTransform: "uppercase", letterSpacing: "0.3em", marginBottom: 12, display: "block" }}>{t.cat_tag}</span>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: "clamp(2rem,3vw,2.8rem)", fontWeight: 900, color: "#0D1F3C", letterSpacing: "-0.5px" }}>{t.cat_h2}</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 14 }}>
+            {CONTAINERS.map(c => (
+              <button key={c.id} className="cnt-btn" onClick={() => setModal(c)} style={{ background: c.highlight ? "#0D1F3C" : "#f4f6fa", border: c.highlight ? "none" : "1.5px solid #e2e8f0", borderRadius: 16, padding: "1.25rem .75rem", textAlign: "center", cursor: "pointer", position: "relative", overflow: "hidden", transition: "all .3s" }}>
+                {c.badge && <span style={{ position: "absolute", top: 8, right: 8, background: "#CFA030", color: "#0D1F3C", fontSize: 7, fontWeight: 800, padding: "2px 7px", borderRadius: 20 }}>{c.badge}</span>}
+                <h4 style={{ fontSize: 12, fontWeight: 800, color: c.highlight ? "#fff" : "#0D1F3C", marginBottom: 10 }}>{c.label}</h4>
+                <div style={{ height: 72, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                  <img src={c.img} alt={c.label} style={{ maxHeight: 64, maxWidth: "100%", objectFit: "contain" }} onError={e => e.target.style.display = "none"} />
+                </div>
+                <div style={{ fontSize: 9, color: c.highlight ? "#94a3b8" : "#64748b", lineHeight: 1.5 }}>{c.sub}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PHOTO STRIP ────────────────────────────── */}
+      <div style={{ display: "flex", height: 260, overflow: "hidden" }}>
+        {[IMG.svc1, IMG.about2, IMG.svc4, IMG.g[6], IMG.hero2, IMG.g[8]].map((src, i) => (
+          <div key={i} style={{ flex: 1, overflow: "hidden" }}>
+            <img src={src} alt="" className="gi" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s", filter: "brightness(.9)" }} onError={e => e.target.style.display = "none"} />
+          </div>
+        ))}
+      </div>
+
+      {/* ── CONTACT ────────────────────────────────── */}
+      <section id="contact" style={{ padding: "7rem 2.5rem", background: "#f4f6fa" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#CFA030", textTransform: "uppercase", letterSpacing: "0.3em", marginBottom: 12, display: "block" }}>{t.footer_contact}</span>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: "clamp(2rem,3vw,2.8rem)", fontWeight: 900, color: "#0D1F3C", letterSpacing: "-0.5px" }}>{t.contact_h2}</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5rem", alignItems: "start" }}>
+            {/* Info */}
+            <div>
+              <div style={{ background: "#fff", borderRadius: 20, padding: "2rem", border: "1px solid #e2e8f0", marginBottom: 24 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 800, color: "#0D1F3C", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#CFA030" }}>📍</span> {t.contact_addr}</h4>
+                <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.7 }}>02 Rue de Béjaïa, Port d'Alger — Algérie</p>
+              </div>
+              <div style={{ background: "#fff", borderRadius: 20, padding: "2rem", border: "1px solid #e2e8f0", marginBottom: 24 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 800, color: "#0D1F3C", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#CFA030" }}>📞</span> Téléphone & Email</h4>
+                <p style={{ fontSize: 14, color: "#64748b", marginBottom: 8 }}>+213 (0)21 43 XX XX</p>
+                <p style={{ fontSize: 14, color: "#64748b", marginBottom: 8 }}>+213 (0)21 43 XX XX</p>
+                <p style={{ fontSize: 14, color: "#CFA030", fontWeight: 600 }}>contact@nashco-dz.com</p>
+              </div>
+              <div style={{ background: "#fff", borderRadius: 20, padding: "2rem", border: "1px solid #e2e8f0" }}>
+                <h4 style={{ fontSize: 13, fontWeight: 800, color: "#0D1F3C", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}><span style={{ color: "#CFA030" }}>⚓</span> {t.contact_ports}</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 1rem" }}>
+                  {PORTS.map(p => (
+                    <div key={p} style={{ fontSize: 13, color: "#64748b", display: "flex", alignItems: "center", gap: 6, padding: "4px 0", borderBottom: "1px solid #f1f5f9" }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#CFA030", flexShrink: 0 }} />
+                      {p}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+            {/* Form */}
+            <div style={{ background: "#fff", borderRadius: 24, border: "1px solid #e2e8f0", boxShadow: "0 20px 60px rgba(0,0,0,.08)", padding: "2.5rem" }}>
+              <h3 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 900, color: "#0D1F3C", marginBottom: "2rem" }}>
+                {t.form_subject}
+              </h3>
+              {formSent && <div style={{ background: "#ecfdf5", border: "1px solid #86efac", borderRadius: 10, padding: "12px 16px", marginBottom: 20, color: "#166534", fontSize: 13, fontWeight: 600 }}>{t.form_ok}</div>}
+              <form onSubmit={handleSend} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                  <input required className="inp" type="text" placeholder={t.form_name} value={form.name} onChange={e => setForm(s => ({ ...s, name: e.target.value }))} style={inputStyle} />
+                  <input className="inp" type="text" placeholder={t.form_company} value={form.company} onChange={e => setForm(s => ({ ...s, company: e.target.value }))} style={inputStyle} />
+                </div>
+                <input required className="inp" type="email" placeholder={t.form_email} value={form.email} onChange={e => setForm(s => ({ ...s, email: e.target.value }))} style={inputStyle} />
+                <select className="inp" value={form.subject} onChange={e => setForm(s => ({ ...s, subject: e.target.value }))} style={{ ...inputStyle, color: form.subject ? "#1e293b" : "#94a3b8" }}>
+                  <option value="">{t.form_subject}</option>
+                  {t.form_opts.map(o => <option key={o}>{o}</option>)}
+                </select>
+                <textarea required className="inp" rows={5} placeholder={t.form_msg} value={form.message} onChange={e => setForm(s => ({ ...s, message: e.target.value }))} style={{ ...inputStyle, resize: "vertical" }} />
+                <button type="submit" disabled={sending} style={{ background: sending ? "#94a3b8" : "#0D1F3C", color: "#fff", border: "none", borderRadius: 12, padding: "15px", fontSize: 13, fontWeight: 700, cursor: sending ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background .2s" }} onMouseEnter={e => { if (!sending) e.currentTarget.style.background = "#1a4a8c"; }} onMouseLeave={e => { if (!sending) e.currentTarget.style.background = "#0D1F3C"; }}>
+                  {sending ? <><span className="spinner" style={{ display: "inline-block", width: 16, height: 16, border: "2px solid rgba(255,255,255,.3)", borderTopColor: "#fff", borderRadius: "50%" }} />{t.form_sending}</> : t.form_send}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ─────────────────────────────────── */}
+      <footer style={{ background: "#09152C", color: "#fff", padding: "5rem 2.5rem 0" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+
+          {/* ROW 1: Logo+Desc | Quick Links | Services | Contact | Newsletter */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1.4fr", gap: "2.5rem", paddingBottom: "3rem", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
+
+            {/* Brand + Description */}
+            <div>
+              <div style={{ marginBottom: 20 }}>
+                <img src={IMG.logo} alt="NASHCO" style={{ height: 50, width: "auto", objectFit: "contain", borderRadius: 8, background: "#fff", padding: "4px 10px" }} onError={e => e.target.style.display = "none"} />
+              </div>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,.5)", lineHeight: 1.9, maxWidth: 280, marginBottom: 0 }}>{t.footer_desc}</p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h4 style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#CFA030", marginBottom: 20, borderBottom: "1px solid rgba(207,160,48,.2)", paddingBottom: 10 }}>{t.footer_nav}</h4>
+              {t.nav.map((n, i) => (
+                <button key={i} onClick={() => scrollTo(["home", "about", "services", "catalogue", "contact"][i])} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,255,255,.5)", fontSize: 13, cursor: "pointer", padding: "6px 0", transition: "color .2s", fontFamily: "inherit", width: "100%", textAlign: t.dir === "rtl" ? "right" : "left" }} onMouseEnter={e => e.currentTarget.style.color = "#CFA030"} onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,.5)"}>
+                  <span style={{ color: "#CFA030", fontSize: 8 }}>▶</span>{n}
+                </button>
+              ))}
+            </div>
+
+            {/* Services */}
+            <div>
+              <h4 style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#CFA030", marginBottom: 20, borderBottom: "1px solid rgba(207,160,48,.2)", paddingBottom: 10 }}>{t.footer_svc}</h4>
+              {t.svcs.map(s => (
+                <div key={s} style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,.5)", fontSize: 13, padding: "6px 0" }}>
+                  <span style={{ color: "#CFA030", fontSize: 8 }}>▶</span>{s}
+                </div>
+              ))}
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h4 style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#CFA030", marginBottom: 20, borderBottom: "1px solid rgba(207,160,48,.2)", paddingBottom: 10 }}>{t.footer_contact}</h4>
               {[
-                { label: t.dashPort, value: dashValues.port, color: "#1A4A8C", icon: "🚢" },
-                { label: t.dashWarehouse, value: dashValues.warehouse, color: "#BA7517", icon: "⏱️" },
-                { label: t.dashClient, value: dashValues.client, color: "#0B6B5C", icon: "⚙️" },
-                { label: t.dashLate, value: dashValues.late, color: "#E24B4A", icon: "⚠️" },
-              ].map((item) => (
-                <div key={item.label} style={{ background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "1.25rem", border: `1px solid ${item.color}40` }}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", fontVariantNumeric: "tabular-nums" }}>{item.value}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{item.label}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 16, padding: "10px 14px", background: "rgba(207,160,48,0.1)", borderRadius: 10, border: "1px solid rgba(207,160,48,0.2)" }}>
-              <span style={{ color: "#CFA030", fontSize: 12 }}>🔄 Mises à jour du réseau portuaire national.</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════
-          SECTION 4 — SERVICES
-      ════════════════════════════════════════════════════ */}
-      <section id="services" style={{ padding: "6rem 2rem", background: "#fff" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
-            <div style={{ display: "inline-block", padding: "4px 16px", borderRadius: 20, background: "rgba(13,31,60,0.08)", color: "#0D1F3C", fontSize: 12, fontWeight: 600, marginBottom: 12 }}>
-              LOGISTIQUE ET MARITIME
-            </div>
-            <h2 className="display-font" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", color: "#0D1F3C", marginBottom: 12 }}>{t.servicesTitle}</h2>
-            <p style={{ color: "#64748b", fontSize: 16 }}>{t.servicesSub}</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
-            {[
-              "https://images.unsplash.com/photo-1570126688035-1e6adbd61053?auto=format&fit=crop&w=600&q=80", // Consignation
-              "https://images.unsplash.com/photo-1586528116311-ad8be3619883?auto=format&fit=crop&w=600&q=80", // Logistique
-              "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=600&q=80", // Douane
-              "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80"  // Approvisionnement
-            ].map((imgUrl, i) => (
-              <div key={i} className="card-hover" style={{ background: "#F4F6F9", borderRadius: 16, overflow: "hidden", border: "1px solid #e2e8f0", cursor: "default" }}>
-                <div style={{ width: "100%", height: 160, overflow: "hidden" }}>
-                  <img src={imgUrl} alt={t.services[i].title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s" }} 
-                       onMouseEnter={e => e.target.style.transform = "scale(1.05)"}
-                       onMouseLeave={e => e.target.style.transform = "scale(1)"}/>
-                </div>
-                <div style={{ padding: "1.5rem" }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0D1F3C", marginBottom: 8 }}>{t.services[i].title}</h3>
-                  <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6 }}>{t.services[i].desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════
-          SECTION 5 — STATS
-      ════════════════════════════════════════════════════ */}
-      <section ref={statsRef} style={{ padding: "5rem 2rem", background: "#0D1F3C" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <h2 className="display-font" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", color: "#fff" }}>{t.statsTitle}</h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32 }}>
-            {t.stats.map((s, i) => {
-              const count = useCountUp(s.value, statsVisible);
-              return (
-                <div key={i} className={statsVisible ? "stat-animate" : ""} style={{ textAlign: "center", animationDelay: `${i * 0.15}s`, opacity: statsVisible ? 1 : 0 }}>
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>{s.icon}</div>
-                  <div style={{ fontSize: 42, fontWeight: 900, color: "#CFA030", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                    {count.toLocaleString()}{s.suffix}
+                { label: t.footer_addr_label, val: t.footer_addr, icon: "📍" },
+                { label: t.footer_phone_label, val: t.footer_phone, icon: "📞" },
+                { label: t.footer_email_label, val: t.footer_email_val, icon: "✉️" },
+                { label: t.footer_hours_label, val: t.footer_hours, icon: "🕐" },
+              ].map(({ label, val, icon }) => (
+                <div key={label} style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3, display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ fontSize: 11 }}>{icon}</span>{label}
                   </div>
-                  <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, marginTop: 8 }}>{s.label}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════
-          SECTION 6 — CONTAINERS
-      ════════════════════════════════════════════════════ */}
-      <section id="containers" style={{ padding: "6rem 2rem", background: "#F4F6F9" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
-            <h2 className="display-font" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", color: "#0D1F3C", marginBottom: 10 }}>{t.containersTitle}</h2>
-            <p style={{ color: "#64748b", fontSize: 16 }}>{t.containersSub}</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
-            {CONTAINERS.map((c) => (
-              <button key={c.id} className="card-hover" onClick={() => setSelectedContainer(c)} style={{
-                background: "#fff", borderRadius: 16, overflow: "hidden", border: "1px solid #e2e8f0",
-                textAlign: "left", cursor: "pointer", width: "100%",
-                boxShadow: "0 2px 8px rgba(13,31,60,0.06)",
-              }}>
-                <div style={{ width: "100%", height: 180, position: "relative" }}>
-                  <img src={c.image} alt={c.type} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  {c.badge && (
-                    <span style={{ position: "absolute", top: 12, right: 12, fontSize: 11, fontWeight: 600, color: "#fff", background: c.badgeColor, padding: "4px 12px", borderRadius: 20 }}>
-                      {c.badge}
-                    </span>
-                  )}
-                </div>
-                <div style={{ padding: "1.5rem" }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0D1F3C", marginBottom: 6 }}>{c.type}</h3>
-                  <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12, lineHeight: 1.5 }}>{c.desc}</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    <span style={{ fontSize: 11, color: "#1A4A8C", background: "#EFF6FF", padding: "2px 8px", borderRadius: 6, fontWeight: 500 }}>📐 {c.dims}</span>
-                    <span style={{ fontSize: 11, color: "#0B6B5C", background: "#ECFDF5", padding: "2px 8px", borderRadius: 6, fontWeight: 500 }}>📦 {c.volume}</span>
-                  </div>
-                  <div style={{ marginTop: 14, color: "#1A4A8C", fontSize: 13, fontWeight: 600 }}>Voir les détails →</div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════
-          SECTION 7 — TESTIMONIALS (Why Choose Us)
-      ════════════════════════════════════════════════════ */}
-      <section style={{ padding: "6rem 2rem", background: "#0D1F3C" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <h2 className="display-font" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", color: "#fff" }}>{t.testTitle}</h2>
-          </div>
-          <div style={{ position: "relative" }}>
-            {t.testimonials.map((t2, i) => (
-              <div key={i} style={{
-                display: i === activeTestimonial ? "block" : "none",
-                background: "rgba(255,255,255,0.05)", borderRadius: 20, padding: "2.5rem",
-                border: "1px solid rgba(207,160,48,0.2)",
-                animation: "fadeIn 0.5s ease-out",
-              }}>
-                <div style={{ fontSize: 40, color: "#CFA030", marginBottom: 16, lineHeight: 1 }}>"</div>
-                <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 17, lineHeight: 1.8, marginBottom: "1.5rem" }}>
-                  {t2.quote}
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#CFA030", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#0D1F3C", fontSize: 16 }}>
-                    {t2.initials}
-                  </div>
-                  <div>
-                    <div style={{ color: "#fff", fontWeight: 600, fontSize: 15 }}>{t2.company}</div>
-                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>{t2.city}</div>
-                  </div>
-                  <div style={{ marginLeft: "auto" }}>
-                    <StarRating n={t2.rating} />
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Controls */}
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: "2rem" }}>
-              <button onClick={() => setActiveTestimonial(p => (p - 1 + t.testimonials.length) % t.testimonials.length)} style={{ width: 36, height: 36, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", cursor: "pointer", fontSize: 16 }}>←</button>
-              {t.testimonials.map((_, i) => (
-                <button key={i} onClick={() => setActiveTestimonial(i)} style={{
-                  width: i === activeTestimonial ? 24 : 8, height: 8, borderRadius: 4, border: "none",
-                  background: i === activeTestimonial ? "#CFA030" : "rgba(255,255,255,0.3)",
-                  cursor: "pointer", transition: "all 0.3s",
-                }} />
-              ))}
-              <button onClick={() => setActiveTestimonial(p => (p + 1) % t.testimonials.length)} style={{ width: 36, height: 36, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", cursor: "pointer", fontSize: 16 }}>→</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════
-          SECTION 8 — CONTACT
-      ════════════════════════════════════════════════════ */}
-      <section id="contact" style={{ padding: "6rem 2rem", background: "#fff" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <h2 className="display-font" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", color: "#0D1F3C", marginBottom: 10 }}>{t.contactTitle}</h2>
-            <p style={{ color: "#64748b" }}>{t.contactSub}</p>
-          </div>
-
-          {formState.sent && (
-            <div style={{ background: "#ECFDF5", border: "1px solid #0B6B5C", borderRadius: 12, padding: "14px 20px", marginBottom: 24, color: "#0B6B5C", fontWeight: 500, textAlign: "center" }}>
-              ✅ Message envoyé avec succès — Nos services vous répondront dans les plus brefs délais.
-            </div>
-          )}
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            {/* Name */}
-            <div>
-              <input value={formState.name} onChange={e => setFormState(s => ({ ...s, name: e.target.value }))}
-                placeholder={t.formName}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${formErrors.name ? "#E24B4A" : "#e2e8f0"}`, fontSize: 14, color: "#1e293b", background: "#F4F6F9" }}
-              />
-              {formErrors.name && <p style={{ color: "#E24B4A", fontSize: 12, marginTop: 4 }}>{formErrors.name}</p>}
-            </div>
-            {/* Company */}
-            <div>
-              <input value={formState.company} onChange={e => setFormState(s => ({ ...s, company: e.target.value }))}
-                placeholder={t.formCompany}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1.5px solid #e2e8f0", fontSize: 14, color: "#1e293b", background: "#F4F6F9" }}
-              />
-            </div>
-            {/* Subject */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <input value={formState.subject} onChange={e => setFormState(s => ({ ...s, subject: e.target.value }))}
-                placeholder={t.formSubject}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${formErrors.subject ? "#E24B4A" : "#e2e8f0"}`, fontSize: 14, color: "#1e293b", background: "#F4F6F9" }}
-              />
-              {formErrors.subject && <p style={{ color: "#E24B4A", fontSize: 12, marginTop: 4 }}>{formErrors.subject}</p>}
-            </div>
-            {/* Message */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <textarea value={formState.message} onChange={e => setFormState(s => ({ ...s, message: e.target.value }))}
-                rows={5} placeholder={t.formMessage}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${formErrors.message ? "#E24B4A" : "#e2e8f0"}`, fontSize: 14, color: "#1e293b", background: "#F4F6F9", resize: "vertical" }}
-              />
-              {formErrors.message && <p style={{ color: "#E24B4A", fontSize: 12, marginTop: 4 }}>{formErrors.message}</p>}
-            </div>
-            {/* Submit */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <button className="btn-primary" onClick={handleSend} disabled={formState.sending}
-                style={{ padding: "14px 32px", borderRadius: 10, border: "none", background: formState.sending ? "#94a3b8" : "#0D1F3C", color: "#fff", fontSize: 15, fontWeight: 600, cursor: formState.sending ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 10 }}>
-                {formState.sending ? (
-                  <><span style={{ display: "inline-block", width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "ticker 0.8s linear infinite" }} /> Envoi...</>
-                ) : t.formSend}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════
-          SECTION 9 — FOOTER
-      ════════════════════════════════════════════════════ */}
-      <footer style={{ background: "#0D1F3C", padding: "4rem 2rem 2rem" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "3rem", paddingBottom: "3rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-            {/* Brand */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#CFA030", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 16, color: "#0D1F3C" }}>N</div>
-                <span className="display-font" style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>NASHCO <span style={{ color: "#CFA030" }}>SPA</span></span>
-              </div>
-              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>{t.footerDesc}</p>
-              <div style={{ display: "flex", gap: 12 }}>
-                {["in", "f"].map((icon) => (
-                  <button key={icon} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontWeight: 700, fontSize: 13, transition: "all 0.2s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#CFA030"; e.currentTarget.style.color = "#0D1F3C"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}>
-                    {icon}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <div>
-              <h4 style={{ color: "#CFA030", fontSize: 13, fontWeight: 700, letterSpacing: 1, marginBottom: 20, textTransform: "uppercase" }}>{t.footerNav}</h4>
-              {t.nav.map((item, i) => {
-                const ids = ["hero", "services", "containers", "contact"];
-                return (
-                  <button key={i} onClick={() => scrollTo(ids[i])} style={{ display: "block", background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: 14, cursor: "pointer", padding: "5px 0", transition: "color 0.2s" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
-                  >{item}</button>
-                );
-              })}
-            </div>
-
-            {/* Ports */}
-            <div>
-              <h4 style={{ color: "#CFA030", fontSize: 13, fontWeight: 700, letterSpacing: 1, marginBottom: 20, textTransform: "uppercase" }}>{t.footerPorts}</h4>
-              {t.ports.map((p) => (
-                <div key={p} style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, padding: "5px 0", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ color: "#CFA030", fontSize: 10 }}>⚓</span> {p}
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,.6)", lineHeight: 1.65, whiteSpace: "pre-line" }}>{val}</div>
                 </div>
               ))}
             </div>
 
-            {/* Legal */}
+            {/* Newsletter */}
             <div>
-              <h4 style={{ color: "#CFA030", fontSize: 13, fontWeight: 700, letterSpacing: 1, marginBottom: 20, textTransform: "uppercase" }}>{t.footerLegal}</h4>
-              {t.legal.map((l) => (
-                <button key={l} style={{ display: "block", background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: 14, cursor: "pointer", padding: "5px 0", transition: "color 0.2s" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
-                >{l}</button>
+              <h4 style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#CFA030", marginBottom: 20, borderBottom: "1px solid rgba(207,160,48,.2)", paddingBottom: 10 }}>{t.footer_newsletter}</h4>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.75, marginBottom: 18 }}>{t.footer_newsletter_p}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <input type="email" placeholder={t.footer_newsletter_ph} style={{ padding: "10px 14px", borderRadius: 8, border: "1.5px solid rgba(255,255,255,.12)", background: "rgba(255,255,255,.05)", color: "#fff", fontSize: 13, fontFamily: "inherit", outline: "none" }} onFocus={e => e.target.style.borderColor = "#CFA030"} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,.12)"} />
+                <button style={{ padding: "10px 14px", borderRadius: 8, border: "none", background: "#CFA030", color: "#0D1F3C", fontSize: 12, fontWeight: 800, cursor: "pointer", transition: "background .2s", letterSpacing: ".04em" }} onMouseEnter={e => e.currentTarget.style.background = "#e6b832"} onMouseLeave={e => e.currentTarget.style.background = "#CFA030"}>{t.footer_newsletter_btn}</button>
+              </div>
+            </div>
+          </div>
+
+          {/* ROW 2: Social Icons */}
+          <div style={{ padding: "2rem 0", borderBottom: "1px solid rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,.3)", letterSpacing: ".04em" }}>EPE NASHCO SPA — Filiale du Groupe G.A.T.MA</p>
+            <div style={{ display: "flex", gap: 12 }}>
+              {[
+                { ic: "in", label: "LinkedIn" },
+                { ic: "f", label: "Facebook" },
+                { ic: "tw", label: "Twitter" },
+                { ic: "yt", label: "YouTube" },
+              ].map(({ ic, label }) => (
+                <button key={ic} title={label} className="social-btn" style={{ width: 38, height: 38, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,.12)", background: "rgba(255,255,255,.05)", color: "rgba(255,255,255,.5)", cursor: "pointer", fontSize: 11, fontWeight: 800, transition: "all .25s" }}>{ic}</button>
               ))}
             </div>
           </div>
 
-          <div style={{ paddingTop: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{t.copyright}</span>
-            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Ports Commerciaux d'Algérie</span>
+          {/* ROW 3: Bottom bar */}
+          <div style={{ padding: "1.5rem 0 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,.22)" }}>{t.footer_copy}</p>
+            <div style={{ display: "flex", gap: 20 }}>
+              {t.footer_legal.map(l => (
+                <button key={l} style={{ background: "none", border: "none", color: "rgba(255,255,255,.22)", fontSize: 12, cursor: "pointer", transition: "color .2s", fontFamily: "inherit" }} onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,.7)"} onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,.22)"}>{l}</button>
+              ))}
+            </div>
           </div>
+
         </div>
       </footer>
 
-      {/* ── Container Modal ── */}
-      {selectedContainer && (
-        <ContainerModal c={selectedContainer} onClose={() => setSelectedContainer(null)} lang={lang} />
-      )}
+      {modal && <Modal c={modal} onClose={() => setModal(null)} />}
     </div>
   );
 }
