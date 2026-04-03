@@ -8,22 +8,23 @@ use App\Http\Middleware\CheckRole;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
-        api: __DIR__ . '/../routes/api.php', // <-- This enables your API routes!
+        api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // This tells Laravel to accept stateful cookies from your React SPA
         $middleware->statefulApi();
 
-        // Add this to bypass CSRF just for API testing in Thunder Client!
         $middleware->validateCsrfTokens(except: [
             'api/*'
         ]);
 
-        // This registers your custom CheckRole middleware to the 'role' keyword
         $middleware->alias([
-            'role' => CheckRole::class,
+            'role'             => CheckRole::class,
+            'blade.auth'       => \App\Http\Middleware\BladeAuthenticate::class,
+            'blade.role'       => \App\Http\Middleware\BladeRole::class,
+            'blade.permission' => \App\Http\Middleware\BladePermission::class,
+            'client.portal'    => \App\Http\Middleware\ClientPortalAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

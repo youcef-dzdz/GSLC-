@@ -13,6 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'role_id',
+        'position',
         'nom',
         'prenom',
         'email',
@@ -30,9 +31,9 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password'           => 'hashed',
+            'password' => 'hashed',
             'derniere_connexion' => 'datetime',
-            'tentatives_echouees'=> 'integer',
+            'tentatives_echouees' => 'integer',
         ];
     }
 
@@ -46,4 +47,63 @@ class User extends Authenticatable
     {
         return $this->role->permissions ?? collect();
     }
+
+
+    public function isResponsable(): bool
+    {
+        return str_contains($this->position ?? '', 'Responsable')
+            || str_contains($this->position ?? '', 'Directeur')
+            || str_contains($this->position ?? '', 'Administrateur');
+    }
+
+    public function isAgent(): bool
+    {
+        return str_contains($this->position ?? '', 'Agent');
+    }
+
+    public function serviceLabel(): string
+    {
+        return match ($this->role->label) {
+            'admin' => 'Administration',
+            'directeur' => 'Direction Générale',
+            'commercial' => 'Service Commercial',
+            'logistique' => 'Service Logistique',
+            'financier' => 'Service Financier',
+            'client' => 'Portail Client',
+            default => 'Inconnu',
+        };
+    }
+
+    public function userPermissions()
+    {
+        return $this->hasMany(UserPermission::class);
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->role->label === 'admin') {
+            return true;
+        }
+
+        if ($this->isResponsable()) {
+            return true;
+        }
+
+        $perm = $this->userPermissions()
+                     ->where('permission', $permission)
+                     ->first();
+
+        return $perm ? (bool) $perm->valeur : false;
+    }
+
+    public function syncPermissions(array $permissions): void
+    {
+        foreach ($permissions as $permission => $valeur) {
+            UserPermission::updateOrCreate(
+                ['user_id' => $this->id, 'permission' => $permission],
+                ['valeur' => (bool) $valeur]
+            );
+        }
+    }
+
 }

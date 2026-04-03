@@ -1,18 +1,23 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react'; // <-- 1. Import React
+import react from '@vitejs/plugin-react';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
     plugins: [
         laravel({
-            // <-- 2. Change app.js to app.jsx so Vite knows it contains React code
-            input: ['resources/css/app.css', 'resources/js/app.jsx'], 
+            input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
         }),
         tailwindcss(),
-        react(), // <-- 3. Activate the React plugin
+        react(),
     ],
+    resolve: {
+        alias: {
+            '@': fileURLToPath(new URL('./resources/js', import.meta.url)),
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

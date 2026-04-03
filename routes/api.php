@@ -1,24 +1,40 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\DirecteurController;
-use App\Http\Controllers\CommercialController;
-use App\Http\Controllers\DemandeImportController;
-use App\Http\Controllers\DevisController;
-use App\Http\Controllers\ContratImportController;
-use App\Http\Controllers\ClientController;
-use App\Http\Controllers\NavireController;
-use App\Http\Controllers\LogistiqueController;
-use App\Http\Controllers\ConteneurController;
-use App\Http\Controllers\MouvementController;
-use App\Http\Controllers\FinancierController;
-use App\Http\Controllers\FactureController;
-use App\Http\Controllers\ClientPortalController;
-use App\Http\Controllers\ClientDemandeController;
-use App\Http\Controllers\NotificationController;
+// Auth
+use App\Http\Controllers\Auth\AuthController;
+
+// Admin
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\DepartmentController;
+
+// Client Portal
+use App\Http\Controllers\Client\ClientController;
+use App\Http\Controllers\Client\ClientPortalController;
+use App\Http\Controllers\Client\ClientDemandeController;
+
+// Commercial
+use App\Http\Controllers\Commercial\CommercialController;
+use App\Http\Controllers\Commercial\DemandeImportController;
+use App\Http\Controllers\Commercial\DevisController;
+use App\Http\Controllers\Commercial\ContratImportController;
+
+// Logistique
+use App\Http\Controllers\Logistique\LogistiqueController;
+use App\Http\Controllers\Logistique\ConteneurController;
+use App\Http\Controllers\Logistique\NavireController;
+use App\Http\Controllers\Logistique\MouvementController;
+
+// Finance
+use App\Http\Controllers\Finance\FinancierController;
+use App\Http\Controllers\Finance\FactureController;
+
+// Direction
+use App\Http\Controllers\Direction\DirecteurController;
+
+// Shared
+use App\Http\Controllers\Shared\NotificationController;
 
 // =============================================================================
 // PUBLIC — no authentication required
@@ -39,16 +55,33 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications',                   [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read',        [NotificationController::class, 'markRead'])->name('notifications.read');
 
+    // Shared reference data — accessible to all authenticated roles
+    Route::get('/pays', fn() => \App\Models\Pays::where('actif', true)
+        ->orderBy('nom_pays')->get(['id', 'nom_pays', 'code_iso'])
+    )->name('pays.index');
+
+    // =========================================================================
+    // STANDALONE CRUD — Testing routes (no role middleware)
+    // Move each to the appropriate role group after validation
+    // =========================================================================
+    Route::apiResource('clients', \App\Http\Controllers\Client\ClientController::class);
+
     // =========================================================================
     // ADMIN
     // =========================================================================
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard',                   [AdminController::class, 'dashboard'])->name('dashboard');
-        Route::get('/users',                       [UserController::class, 'index'])->name('users.index');
-        Route::post('/users',                      [UserController::class, 'store'])->name('users.store');
-        Route::get('/users/{id}',                  [UserController::class, 'show'])->name('users.show');
-        Route::put('/users/{id}',                  [UserController::class, 'update'])->name('users.update');
-        Route::delete('/users/{id}',               [UserController::class, 'destroy'])->name('users.destroy');
+        Route::get('/users',                        [UserController::class, 'index'])->name('users.index');
+        Route::post('/users',                       [UserController::class, 'store'])->name('users.store');
+        Route::put('/users/{id}',                   [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{id}',                [UserController::class, 'destroy'])->name('users.destroy');
+        Route::post('/users/{id}/block',            [UserController::class, 'block'])->name('users.block');
+        Route::post('/users/{id}/reset-password',   [UserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::get('/roles',                        [UserController::class, 'roles'])->name('roles.index');
+        Route::get('/departments',                  [DepartmentController::class, 'index'])->name('departments.index');
+        Route::post('/departments',                 [DepartmentController::class, 'store'])->name('departments.store');
+        Route::put('/departments/{id}',             [DepartmentController::class, 'update'])->name('departments.update');
+        Route::delete('/departments/{id}',          [DepartmentController::class, 'destroy'])->name('departments.destroy');
         Route::get('/registrations',               [AdminController::class, 'registrations'])->name('registrations.index');
         Route::post('/registrations/{id}/approve', [AdminController::class, 'approveRegistration'])->name('registrations.approve');
         Route::post('/registrations/{id}/reject',  [AdminController::class, 'rejectRegistration'])->name('registrations.reject');

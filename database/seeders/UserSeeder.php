@@ -113,7 +113,7 @@ class UserSeeder extends Seeder
             'rep_tel'            => '+213 550 12 34 56',
             'rep_email'          => 'n.hadjaissa@import-express-mosta.dz',
             'rep_adresse_perso'  => '5 Cité des Palmiers, Mostaganem',
-            'statut'             => 'VALIDE',
+            'statut'             => 'APPROUVE',
             'valide_par_user_id' => $adminUser->id,
             'date_validation'    => now(),
             'motif_rejet'        => null,
