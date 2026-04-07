@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Blade;
 
 use App\Http\Controllers\Controller;
+use App\Mail\StaffPasswordResetAlert;
 use App\Models\Client;
 use App\Models\Pays;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password as PasswordBroker;
 use Illuminate\Support\Str;
 
 class BladeAuthController extends Controller
@@ -61,12 +66,12 @@ class BladeAuthController extends Controller
         $request->session()->regenerate();
 
         $destination = match ($user->role->label) {
-            'admin'      => '/blade/admin/dashboard',
+            'admin'      => '/admin/dashboard',
             'directeur'  => '/blade/direction/dashboard',
             'commercial' => '/blade/commercial/dashboard',
             'logistique' => '/blade/logistique/dashboard',
             'financier'  => '/blade/finance/dashboard',
-            default      => '/blade/admin/dashboard',
+            default      => '/admin/dashboard',
         };
 
         return redirect($destination);
@@ -169,6 +174,145 @@ class BladeAuthController extends Controller
         });
 
         return redirect('/login')->with('success', 'Demande soumise. Notre équipe la validera sous 24-48h ouvrables.');
+    }
+
+    // ── CLIENT Forgot / Reset Password ───────────────────────────
+
+    public function showClientForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendClientResetLink(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::with('role')->where('email', $request->email)->first();
+
+        if (!$user || $user->role->label !== 'client') {
+            return back()->with('error', 'Aucun compte client trouvé avec cette adresse email.');
+        }
+
+        ResetPassword::createUrlUsing(function ($notifiable, string $token) {
+            return url('/reset-password/' . $token) . '?email=' . urlencode($notifiable->getEmailForPasswordReset());
+        });
+
+        $status = PasswordBroker::sendResetLink(['email' => $request->email]);
+
+        if ($status === PasswordBroker::RESET_LINK_SENT) {
+            return back()->with('success', 'Un lien de réinitialisation a été envoyé à votre adresse email.');
+        }
+
+        return back()->with('error', 'Impossible d\'envoyer le lien. Veuillez réessayer dans quelques minutes.');
+    }
+
+    public function showClientResetForm(Request $request, string $token)
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->query('email', ''),
+        ]);
+    }
+
+    public function resetClientPassword(Request $request)
+    {
+        $request->validate([
+            'token'                 => 'required',
+            'email'                 => 'required|email',
+            'password'              => 'required|min:8|confirmed',
+            'password_confirmation' => 'required',
+        ]);
+
+        $user = User::with('role')->where('email', $request->email)->first();
+        if (!$user || $user->role->label !== 'client') {
+            return back()->with('error', 'Aucun compte client trouvé avec cette adresse email.');
+        }
+
+        $status = PasswordBroker::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $u, string $password) {
+                $u->forceFill(['password' => Hash::make($password)])
+                  ->setRememberToken(Str::random(60));
+                $u->save();
+                event(new PasswordReset($u));
+            }
+        );
+
+        if ($status === PasswordBroker::PASSWORD_RESET) {
+            return redirect('/login')->with('success', 'Mot de passe réinitialisé. Vous pouvez maintenant vous connecter.');
+        }
+
+        return back()->with('error', 'Le lien de réinitialisation est invalide ou expiré.');
+    }
+
+    // ── STAFF Forgot / Reset Password ────────────────────────────
+
+    public function showStaffForgotPassword()
+    {
+        return view('auth.staff-forgot-password');
+    }
+
+    public function sendStaffResetLink(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::with('role')->where('email', $request->email)->first();
+
+        if (!$user || $user->role->label === 'client') {
+            return back()->with('error', 'Aucun compte personnel trouvé avec cette adresse email.');
+        }
+
+        ResetPassword::createUrlUsing(function ($notifiable, string $token) {
+            return url('/staff/reset-password/' . $token) . '?email=' . urlencode($notifiable->getEmailForPasswordReset());
+        });
+
+        $status = PasswordBroker::sendResetLink(['email' => $request->email]);
+
+        if ($status === PasswordBroker::RESET_LINK_SENT) {
+            return back()->with('success', 'Un lien de réinitialisation a été envoyé à votre adresse email.');
+        }
+
+        return back()->with('error', 'Impossible d\'envoyer le lien. Veuillez réessayer dans quelques minutes.');
+    }
+
+    public function showStaffResetForm(Request $request, string $token)
+    {
+        return view('auth.staff-reset-password', [
+            'token' => $token,
+            'email' => $request->query('email', ''),
+        ]);
+    }
+
+    public function resetStaffPassword(Request $request)
+    {
+        $request->validate([
+            'token'                 => 'required',
+            'email'                 => 'required|email',
+            'password'              => 'required|min:8|confirmed',
+            'password_confirmation' => 'required',
+        ]);
+
+        $user = User::with('role')->where('email', $request->email)->first();
+        if (!$user || $user->role->label === 'client') {
+            return back()->with('error', 'Aucun compte personnel trouvé avec cette adresse email.');
+        }
+
+        $status = PasswordBroker::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $u, string $password) use ($request) {
+                $u->forceFill(['password' => Hash::make($password)])
+                  ->setRememberToken(Str::random(60));
+                $u->save();
+                event(new PasswordReset($u));
+                Mail::queue(new StaffPasswordResetAlert($u, $request->ip()));
+            }
+        );
+
+        if ($status === PasswordBroker::PASSWORD_RESET) {
+            return redirect('/staff/login')->with('success', 'Mot de passe réinitialisé. Vous pouvez maintenant vous connecter.');
+        }
+
+        return back()->with('error', 'Le lien de réinitialisation est invalide ou expiré.');
     }
 
     public function logout(Request $request)

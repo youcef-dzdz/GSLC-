@@ -89,7 +89,11 @@
     "confirm_delete_confirm": "Supprimer",
     "new": "Nouveau",
     "per_page": "par page",
-    "page_of": "sur"
+    "page_of": "sur",
+    "status": {
+      "active": "Actif",
+      "suspended": "Suspendu"
+    }
   },
   "roles": {
     "admin": "Administrateur",
@@ -138,7 +142,14 @@
     "backups": "Sauvegardes"
   },
   "landing": {
-    "nav": ["Accueil", "À Propos", "Services", "Conteneurs", "Contact"],
+    "nav": [
+      "Accueil",
+      "À Propos",
+      "Services",
+      "Conteneurs",
+      "Agences",
+      "Contact"
+    ],
     "hero_tag": "EPE NASHCO SPA — Filiale du Groupe G.A.T.MA",
     "hero_h1": "Votre partenaire logistique d'excellence en Algérie",
     "hero_p": "Solutions intelligentes de consignation, de manutention et de suivi de conteneurs pour optimiser vos opérations d'import-export.",
@@ -152,16 +163,42 @@
     "about_hist_p": "Fondée en 1991, NASHCO DZ est un acteur certifié dans le domaine de la logistique portuaire en Algérie, accompagnant armateurs et opérateurs économiques à travers l'ensemble des ports commerciaux algériens.",
     "svc_tag": "Notre Expertise",
     "svc_h2": "Nos Services de Logistique",
-    "svcs": ["Consignation Maritime", "Services Conteneurs", "Douane & Transit", "Approvisionnement Naval"],
+    "svcs": [
+      "Consignation Maritime",
+      "Services Conteneurs",
+      "Douane & Transit",
+      "Approvisionnement Naval"
+    ],
     "svc_items": [
-      ["Gestion des escales", "Suivi opérationnel", "Services aux armateurs"],
-      ["Entretien et réparation", "Nettoyage et stockage", "Logistique de terminaux"],
-      ["Formalités douanières", "Accompagnement administratif", "Transit import/export"],
-      ["Vivres & soutes", "Assistance technique", "Fournitures navires"]
+      [
+        "Gestion des escales",
+        "Suivi opérationnel",
+        "Services aux armateurs"
+      ],
+      [
+        "Entretien et réparation",
+        "Nettoyage et stockage",
+        "Logistique de terminaux"
+      ],
+      [
+        "Formalités douanières",
+        "Accompagnement administratif",
+        "Transit import/export"
+      ],
+      [
+        "Vivres & soutes",
+        "Assistance technique",
+        "Fournitures navires"
+      ]
     ],
     "cat_tag": "Notre Flotte",
     "cat_h2": "Catalogue de Conteneurs",
-    "stats": ["Années d'expérience", "Conteneurs traités/an", "Clients importateurs", "Ports couverts"],
+    "stats": [
+      "Années d'expérience",
+      "Conteneurs traités/an",
+      "Clients importateurs",
+      "Ports couverts"
+    ],
     "form_send": "Envoyer le message"
   },
   "clients": {
@@ -217,5 +254,115 @@
     "date_to": "Au",
     "reset_filters": "Réinitialiser",
     "delete_blocked": "Impossible de supprimer : des enregistrements liés existent."
+  },
+  "agencies": {
+    "title": "Nos Agences",
+    "subtitle": "Présents dans les principaux ports commerciaux d'Algérie",
+    "primary_badge": "Agence Principale — Plateforme GSLC",
+    "branch": "Antenne",
+    "phone": "Téléphone",
+    "email": "Email",
+    "address": "Adresse",
+    "cities": {
+      "mostaganem": "Mostaganem",
+      "alger": "Alger",
+      "oran": "Oran",
+      "annaba": "Annaba",
+      "skikda": "Skikda",
+      "jijel": "Jijel",
+      "bejaia": "Béjaïa",
+      "ghazaouet": "Ghazaouet",
+      "arzew": "Arzew",
+      "tenes": "Ténès",
+      "jijel_djen": "Jijel / Djen-Djen"
+    },
+    "addresses": {
+      "mostaganem": "Coopérative Colonel Amirouche N° B 01, Mostaganem",
+      "alger": "01 Rue des Frères Oukid, Square Port Saïd, Alger",
+      "oran": "08 Rue Tami Abdelkader, Miramar, Oran",
+      "annaba": "Boulevard Ben Adelmalek Ramdane, BP N° 172, Annaba",
+      "skikda": "Zone de Dépôt Hamrouche Hamoudi, BP N° 186, Skikda",
+      "jijel": "10 Avenue Emir Abdelkader, Jijel 18000",
+      "bejaia": "Résidence la plaine, Béjaïa Ville"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Tableau de bord",
+      "total_users": "Total Utilisateurs",
+      "active_users": "Utilisateurs Actifs",
+      "suspended": "Suspendus",
+      "pending": "En Attente",
+      "users_by_role": "Utilisateurs par rôle",
+      "pending_registrations": "Inscriptions en attente",
+      "recent_activity": "Activité récente",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "no_pending": "Aucune inscription en attente",
+      "rejection_reason": "Motif du rejet"
+    },
+    "users": {
+      "title": "Gestion des Utilisateurs",
+      "new_user": "Nouvel utilisateur",
+      "search_placeholder": "Rechercher par nom ou email...",
+      "all_roles": "Tous les rôles",
+      "all_statuses": "Tous les statuts",
+      "block": "Bloquer",
+      "unblock": "Débloquer",
+      "reset_password": "Réinitialiser MDP",
+      "edit": "Modifier",
+      "confirm_block": "Êtes-vous sûr de vouloir bloquer cet utilisateur ?",
+      "no_users": "Aucun utilisateur trouvé",
+      "create_success": "Utilisateur créé avec succès",
+      "update_success": "Utilisateur mis à jour",
+      "block_success": "Utilisateur bloqué",
+      "reset_success": "Lien de réinitialisation envoyé.",
+      "col_user": "Utilisateur",
+      "col_email": "Email",
+      "col_role": "Rôle",
+      "col_status": "Statut",
+      "col_created": "Créé le",
+      "col_actions": "Actions",
+      "col_service": "Service",
+      "service": "Service",
+      "position": "Poste",
+      "all_services": "Tous les services",
+      "all_positions": "Tous les postes",
+      "total": "{{count}} utilisateurs au total",
+      "total_label": "utilisateurs"
+    }
+  },
+  "contact": {
+    "objet": {
+      "demande_location": "Demande de location de conteneurs",
+      "demande_devis": "Demande de devis",
+      "suivi_expedition": "Suivi d'expédition",
+      "information_services": "Information sur les services",
+      "reclamation": "Réclamation",
+      "autre": "Autre"
+    },
+    "submit": {
+      "default": "Envoyer le message →",
+      "loading": "Envoi en cours..."
+    },
+    "success_message": "Votre message a bien été envoyé. Notre équipe commerciale vous contactera dans les 48 heures.",
+    "errors": {
+      "required": "Ce champ est obligatoire",
+      "email_invalid": "Adresse email invalide",
+      "message_too_short": "Minimum 10 caractères",
+      "server_error": "Erreur serveur. Veuillez réessayer."
+    }
+  },
+  "positions": {
+    "responsable_commercial": "Responsable Commercial",
+    "agent_commercial": "Agent Commercial",
+    "agent_administratif": "Agent Administratif",
+    "responsable_financier": "Responsable Financier",
+    "agent_financier": "Agent Financier",
+    "responsable_logistique": "Responsable Logistique",
+    "agent_logistique": "Agent Logistique",
+    "directeur": "Directeur",
+    "administrateur_systeme": "Administrateur Système",
+    "secretaire": "Secrétaire"
   }
 }

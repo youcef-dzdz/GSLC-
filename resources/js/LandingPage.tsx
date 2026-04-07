@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
 /* ── TRANSLATIONS ─────────────────────────────────────────── */
 const T: Record<string, any> = {
   FR: {
     dir: "ltr",
-    nav: ["Accueil", "À Propos", "Services", "Conteneurs", "Contact"],
+    nav: ["Accueil", "À Propos", "Services", "Conteneurs", "Agences", "Contact"],
     login: "Connexion", register: "S'inscrire",
     hero_tag: "EPE NASHCO SPA — Filiale du Groupe G.A.T.MA",
     hero_h1: "Votre partenaire logistique d'excellence en Algérie",
@@ -38,10 +39,10 @@ const T: Record<string, any> = {
     footer_nav: "Liens Rapides", footer_svc: "Services", footer_contact: "Contact",
     footer_newsletter: "Newsletter", footer_newsletter_p: "Abonnez-vous pour recevoir les dernières actualités du secteur maritime algérien.",
     footer_newsletter_ph: "Votre adresse e-mail", footer_newsletter_btn: "S'abonner",
-    footer_addr_label: "Adresse", footer_addr: "02 Rue de Béjaïa, Port d'Alger",
+    footer_addr_label: "Adresse", footer_addr: "Coopérative Colonel Amirouche N° B 01, Mostaganem",
     phone_email_label: "Téléphone & Email",
-    footer_phone_label: "Téléphone", footer_phone: "+213 (0)21 43 XX XX",
-    footer_email_label: "E-mail", footer_email_val: "contact@nashco-dz.com",
+    footer_phone_label: "Téléphone", footer_phone: "+213 (0)45 41 78 76",
+    footer_email_label: "E-mail", footer_email_val: "direc-mos@nashco.com.dz",
     footer_hours_label: "Horaires", footer_hours: "Lun–Jeu : 08h–17h\nDim : 08h–13h",
     footer_copy: "© 2026 EPE NASHCO Spa. Tous droits réservés.",
     footer_legal: ["Confidentialité", "Mentions Légales", "Cookies"],
@@ -59,7 +60,7 @@ const T: Record<string, any> = {
   },
   AR: {
     dir: "rtl",
-    nav: ["الرئيسية", "من نحن", "خدماتنا", "الحاويات", "اتصل بنا"],
+    nav: ["الرئيسية", "من نحن", "خدماتنا", "الحاويات", "وكالاتنا", "اتصل بنا"],
     login: "تسجيل الدخول", register: "إنشاء حساب",
     hero_tag: "ناشكو — فرع مجموعة غاتما للنقل البحري",
     hero_h1: "شريككم الموثوق في اللوجستيات والشحن البحري بالجزائر",
@@ -91,10 +92,10 @@ const T: Record<string, any> = {
     footer_nav: "روابط سريعة", footer_svc: "خدماتنا", footer_contact: "معلومات التواصل",
     footer_newsletter: "النشرة الإخبارية", footer_newsletter_p: "اشترك لتصلك آخر أخبار قطاع الشحن والملاحة البحرية في الجزائر.",
     footer_newsletter_ph: "بريدك الإلكتروني", footer_newsletter_btn: "اشتراك",
-    footer_addr_label: "العنوان", footer_addr: "02 شارع بجاية، ميناء الجزائر",
+    footer_addr_label: "العنوان", footer_addr: "عمارة العقيد عميروش رقم B 01، مستغانم",
     phone_email_label: "الهاتف والبريد الإلكتروني",
-    footer_phone_label: "الهاتف", footer_phone: "+213 (0)21 43 XX XX",
-    footer_email_label: "البريد", footer_email_val: "contact@nashco-dz.com",
+    footer_phone_label: "الهاتف", footer_phone: "+213 (0)45 41 78 76",
+    footer_email_label: "البريد", footer_email_val: "direc-mos@nashco.com.dz",
     footer_hours_label: "أوقات العمل", footer_hours: "الإثنين – الخميس: 08:00 – 17:00\nالأحد: 08:00 – 13:00",
     footer_copy: "© 2026 مؤسسة ناشكو — جميع الحقوق محفوظة.",
     footer_legal: ["سياسة الخصوصية", "الشروط القانونية", "ملفات تعريف الارتباط"],
@@ -112,7 +113,7 @@ const T: Record<string, any> = {
   },
   EN: {
     dir: "ltr",
-    nav: ["Home", "About", "Services", "Containers", "Contact"],
+    nav: ["Home", "About", "Services", "Containers", "Agencies", "Contact"],
     login: "Login", register: "Sign Up",
     hero_tag: "EPE NASHCO SPA — Subsidiary of G.A.T.MA Group",
     hero_h1: "Algeria's Premier Logistics & Maritime Partner",
@@ -201,7 +202,7 @@ const STATS = [
   { value: 10, suffix: "+", bg: "#fffbeb" },
 ];
 
-const PORTS = ["Alger", "Oran", "Annaba", "Skikda", "Béjaïa", "Mostaganem", "Jijel / Djen-Djen", "Ghazaouet", "Arzew", "Ténès"];
+const PORTS = ["alger", "oran", "annaba", "skikda", "bejaia", "mostaganem", "jijel_djen", "ghazaouet", "arzew", "tenes"];
 
 // Color + type metadata for each container (independent of language)
 const CONTAINER_META: Record<string, { color: string; type: string }> = {
@@ -217,16 +218,16 @@ const CONTAINER_META: Record<string, { color: string; type: string }> = {
 // Port positions on the Algeria SVG map (viewBox 0 0 600 250)
 // Calculated from real lat/lon: x=(lon+2.2)*55, y=(38-lat)*70
 const MAP_PORTS: { name: string; x: number; y: number; main?: boolean; lx?: number; ly?: number }[] = [
-  { name: 'Ghazaouet',  x: 19,  y: 188, lx: 19,  ly: 176 },
-  { name: 'Oran',       x: 86,  y: 152, lx: 86,  ly: 140, main: true },
-  { name: 'Arzew',      x: 104, y: 145 },
-  { name: 'Mostaganem', x: 126, y: 137, lx: 118, ly: 150 },
-  { name: 'Ténès',      x: 193, y: 97,  lx: 193, ly: 85  },
-  { name: 'Alger',      x: 289, y: 79,  lx: 289, ly: 67,  main: true },
-  { name: 'Béjaïa',     x: 401, y: 79,  lx: 401, ly: 67,  main: true },
-  { name: 'Jijel',      x: 438, y: 74  },
-  { name: 'Skikda',     x: 501, y: 69,  lx: 501, ly: 57,  main: true },
-  { name: 'Annaba',     x: 548, y: 67,  lx: 548, ly: 80,  main: true },
+  { name: 'ghazaouet',  x: 19,  y: 188, lx: 19,  ly: 176 },
+  { name: 'oran',       x: 86,  y: 152, lx: 86,  ly: 140, main: true },
+  { name: 'arzew',      x: 104, y: 145 },
+  { name: 'mostaganem', x: 126, y: 137, lx: 118, ly: 150 },
+  { name: 'tenes',      x: 193, y: 97,  lx: 193, ly: 85  },
+  { name: 'alger',      x: 289, y: 79,  lx: 289, ly: 67,  main: true },
+  { name: 'bejaia',     x: 401, y: 79,  lx: 401, ly: 67,  main: true },
+  { name: 'jijel',      x: 438, y: 74  },
+  { name: 'skikda',     x: 501, y: 69,  lx: 501, ly: 57,  main: true },
+  { name: 'annaba',     x: 548, y: 67,  lx: 548, ly: 80,  main: true },
 ];
 
 /* ── HOOKS ─────────────────────────────────────────────────── */
@@ -356,10 +357,11 @@ export default function LandingPage() {
 
   const [scrolled, setScrolled] = useState(false);
   const [modal, setModal] = useState<any>(null);
-  const [formSent, setFormSent] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [form, setForm] = useState({ nom_complet: "", entreprise: "", email: "", objet: "", message: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [heroSlide, setHeroSlide] = useState(0);
-  const [form, setForm] = useState({ name: "", company: "", email: "", subject: "", message: "" });
   
   const statsRef = useRef(null);
   const statsVis = useInView(statsRef);
@@ -378,11 +380,34 @@ export default function LandingPage() {
 
   const scrollTo = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); };
   const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault(); setSending(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setSending(false); setFormSent(true);
-    setForm({ name: "", company: "", email: "", subject: "", message: "" });
-    setTimeout(() => setFormSent(false), 5000);
+    e.preventDefault();
+    setErrors({});
+    let newErrors: Record<string, string> = {};
+
+    if (!form.nom_complet.trim()) newErrors.nom_complet = i18n.t('contact.errors.required');
+    if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email)) newErrors.email = i18n.t('contact.errors.email_invalid');
+    if (!form.objet) newErrors.objet = i18n.t('contact.errors.required');
+    if (!form.message || form.message.length < 10) newErrors.message = i18n.t('contact.errors.message_too_short');
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post('/api/contact', form);
+      setSubmitted(true);
+      setForm({ nom_complet: "", entreprise: "", email: "", objet: "", message: "" });
+    } catch (err: any) {
+      if (err.response && err.response.status === 422) {
+        setErrors(err.response.data.errors);
+      } else {
+        setErrors({ general: i18n.t('contact.errors.server_error') });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputStyle = { padding: "12px 16px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: 14, color: "#1e293b", fontFamily: "inherit", width: "100%", transition: "border-color .2s" };
@@ -427,7 +452,7 @@ export default function LandingPage() {
           {/* Main Website Routing */}
           <nav style={{ display: "flex", gap: "2rem", alignItems: "center", marginRight: '2rem' }}>
             {t.nav.map((n: string, i: number) => (
-              <button key={i} className="nav-btn" onClick={() => scrollTo(["home", "about", "services", "catalogue", "contact"][i])} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#475569", transition: "color .2s", letterSpacing: ".02em" }}>{n}</button>
+              <button key={i} className="nav-btn" onClick={() => scrollTo(["home", "about", "services", "catalogue", "agencies", "contact"][i])} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#475569", transition: "color .2s", letterSpacing: ".02em" }}>{n}</button>
             ))}
           </nav>
           
@@ -445,22 +470,22 @@ export default function LandingPage() {
           </div>
 
           {/* Bold Noticeable Buttons connected dynamically via React Router dom native */}
-          <button 
-             onClick={() => navigate('/login')} 
-             style={{ padding: "10px 22px", border: "2px solid #CFA030", borderRadius: 8, background: "#fff", color: "#CFA030", fontSize: 13, fontWeight: 800, cursor: "pointer", transition: "all .2s" }} 
+          <a 
+             href="/login"
+             style={{ display: "inline-block", textDecoration: "none", padding: "10px 22px", border: "2px solid #CFA030", borderRadius: 8, background: "#fff", color: "#CFA030", fontSize: 13, fontWeight: 800, cursor: "pointer", transition: "all .2s" }} 
              onMouseEnter={e => { e.currentTarget.style.background = "#CFA030"; e.currentTarget.style.color = "#fff"; }} 
              onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#CFA030"; }}
           >
             {t.login}
-          </button>
-          <button 
-             onClick={() => navigate('/register')} 
-             style={{ padding: "10px 22px", border: "2px solid var(--color-primary)", borderRadius: 8, background: "var(--color-primary)", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 12px rgba(13,31,60,.25)", transition: "all .2s" }} 
+          </a>
+          <a 
+             href="/register"
+             style={{ display: "inline-block", textDecoration: "none", padding: "10px 22px", border: "2px solid var(--color-primary)", borderRadius: 8, background: "var(--color-primary)", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 12px rgba(13,31,60,.25)", transition: "all .2s" }} 
              onMouseEnter={e => { e.currentTarget.style.background = "#1a4a8c"; e.currentTarget.style.borderColor = "#1a4a8c"; }} 
              onMouseLeave={e => { e.currentTarget.style.background = "var(--color-primary)"; e.currentTarget.style.borderColor = "var(--color-primary)"; }}
           >
             {t.register}
-          </button>
+          </a>
         </div>
       </header>
 
@@ -480,7 +505,7 @@ export default function LandingPage() {
             <p style={{ fontSize: 17, color: "rgba(255,255,255,.8)", lineHeight: 1.85, marginBottom: 44, maxWidth: 560 }}>{t.hero_p}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
               <button onClick={() => scrollTo("contact")} style={{ padding: "15px 36px", borderRadius: 10, border: "none", background: "#CFA030", color: "#0D1F3C", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 28px rgba(207,160,48,.4)", transition: "all .25s" }} onMouseEnter={e => e.currentTarget.style.background = "#e6b832"} onMouseLeave={e => e.currentTarget.style.background = "#CFA030"}>{t.hero_cta1}</button>
-              <button onClick={() => navigate('/register')} style={{ padding: "15px 36px", borderRadius: 10, border: "2px solid rgba(255,255,255,.6)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all .25s" }} onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#0D1F3C"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#fff"; }}>{t.hero_cta2}</button>
+              <a href="/register" style={{ display: "inline-block", textDecoration: "none", padding: "15px 36px", borderRadius: 10, border: "2px solid rgba(255,255,255,.6)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all .25s" }} onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#0D1F3C"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#fff"; }}>{t.hero_cta2}</a>
             </div>
           </div>
         </div>
@@ -677,9 +702,8 @@ export default function LandingPage() {
                         textAnchor="middle"
                         fill={port.main ? "#fff" : "rgba(255,255,255,0.7)"}
                         fontSize={port.main ? 9 : 8}
-                        fontWeight={port.main ? "700" : "500"}
                         fontFamily="'Inter',sans-serif"
-                      >{port.name}</text>
+                      >{i18n.t(`agencies.cities.${port.name}`)}</text>
                     )}
                   </g>
                 ))}
@@ -710,7 +734,7 @@ export default function LandingPage() {
                   <div key={port.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: port.main ? "#CFA030" : "rgba(207,160,48,0.4)", flexShrink: 0 }}/>
                     <span style={{ fontSize: 13, color: port.main ? "#fff" : "rgba(255,255,255,0.6)", fontWeight: port.main ? 600 : 400 }}>
-                      {port.name}
+                      {i18n.t(`agencies.cities.${port.name}`)}
                     </span>
                     {port.main && (
                       <span style={{ marginLeft: "auto", fontSize: 10, color: "#CFA030", fontWeight: 700, background: "rgba(207,160,48,0.12)", padding: "2px 8px", borderRadius: 20 }}>
@@ -726,13 +750,124 @@ export default function LandingPage() {
                   {langKey === 'AR' ? 'المقر الرئيسي' : langKey === 'EN' ? 'Head Office' : 'Siège Social'}
                 </div>
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.7 }}>
-                  50 Bis Route de Gué de Constantine<br/>
-                  Kouba — Alger, Algérie<br/>
+                  {langKey === 'AR' ? (
+                    <>50 مكرر طريق جسر قسنطينة<br/>القبة — الجزائر العاصمة، الجزائر<br/></>
+                  ) : langKey === 'EN' ? (
+                    <>50 Bis Gué de Constantine Route<br/>Kouba — Algiers, Algeria<br/></>
+                  ) : (
+                    <>50 Bis Route de Gué de Constantine<br/>Kouba — Alger, Algérie<br/></>
+                  )}
                   {/* Phone always LTR regardless of page direction */}
                   <span style={{ color: "#CFA030", direction: "ltr", display: "inline-block" }}>{t.footer_phone}</span>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── NOS AGENCES ────────────────────────────── */}
+      <section 
+        id="agencies" 
+        dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+        style={{ padding: "7rem 2.5rem", background: "#f4f6fa", textAlign: i18n.language === 'ar' ? 'right' : 'left' }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ marginBottom: "4rem" }} className="fade-up">
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#CFA030", textTransform: "uppercase", letterSpacing: "0.3em", marginBottom: 12, display: "block" }}>
+              {i18n.t('agencies.title')}
+            </span>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: "clamp(2rem,3vw,2.8rem)", fontWeight: 900, color: "#0D1F3C", letterSpacing: "-0.5px" }}>
+              {i18n.t('agencies.subtitle')}
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { id: "mostaganem", cityKey: "mostaganem", address: "Coopérative Colonel Amirouche N° B 01, Mostaganem", tel: "+213 45 41 78 76", email: ["direc-mos@nashco.com.dz", "com-mos@nashco.com.dz"], primary: true },
+              { id: "alger", cityKey: "alger", address: "01 Rue des Frères Oukid, Square Port Saïd, Alger", tel: "+213 21 43 94 46", email: ["direc-alg@nashco.com.dz", "com-alg@nashco.com.dz"] },
+              { id: "oran", cityKey: "oran", address: "08 Rue Tami Abdelkader, Miramar, Oran", tel: "+213 41 41 59 58", email: ["direc-oran@nashco.com.dz", "com-oran@nashco.com.dz"] },
+              { id: "annaba", cityKey: "annaba", address: "Boulevard Ben Adelmalek Ramdane, BP N° 172, Annaba", tel: "+213 38 86 71 56", email: ["direc-anb@nashco.com.dz", "com-anb@nashco.com.dz"] },
+              { id: "skikda", cityKey: "skikda", address: "Zone de Dépôt Hamrouche Hamoudi, BP N° 186, Skikda", tel: "+213 38 93 17 97", email: ["direc-skd@nashco.com.dz", "com-skd@nashco.com.dz"] },
+              { id: "jijel", cityKey: "jijel", address: "10 Avenue Emir Abdelkader, Jijel 18000", tel: "+213 34 499 236", email: ["djendjen@nashco.com.dz"], branch: true },
+              { id: "bejaia", cityKey: "bejaia", address: "Résidence la plaine, Béjaïa Ville", tel: "+213 34 09 01 21", email: ["direc-bej@nashco.com.dz", "com-bej@nashco.com.dz"] }
+            ].map((a, i) => (
+              <div 
+                key={a.id} 
+                className={`cnt-btn fade-up flex flex-col ${a.primary ? 'col-span-1 md:col-span-2' : 'col-span-1'}`}
+                style={{ 
+                  background: "#0D1F3C", 
+                  border: a.primary ? "1.5px solid #CFA030" : "1.5px solid #e2e8f0",
+                  borderRadius: 16,
+                  padding: "1.25rem .75rem",
+                  position: "relative",
+                  overflow: "hidden",
+                  transition: "all .3s",
+                  animationDelay: `${i * 0.1}s`
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: a.primary ? 22 : 18 }}>📍</span>
+                    <h3 style={{ fontSize: a.primary ? 20 : 16, fontWeight: 800, color: "#fff", margin: 0 }}>
+                      {i18n.t(`agencies.cities.${a.cityKey}`)}
+                    </h3>
+                  </div>
+                  {a.primary && (
+                    <span style={{ background: "rgba(207,160,48,0.15)", color: "#CFA030", fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 20, whiteSpace: "nowrap", border: "1px solid rgba(207,160,48,0.3)", display: "flex", alignItems: "center", gap: 6 }}>
+                      <span>⚓</span> <span>{i18n.t('agencies.primary_badge')}</span>
+                    </span>
+                  )}
+                  {a.branch && (
+                    <span style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 20 }}>
+                      {i18n.t('agencies.branch')}
+                    </span>
+                  )}
+                </div>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <span style={{ opacity: 0.6, marginTop: 2 }}>🏢</span>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#CFA030", marginBottom: 2 }}>
+                        {i18n.t('agencies.address')}
+                      </span>
+                      <span dir="ltr" style={{ lineHeight: 1.5, textAlign: i18n.language === 'ar' ? 'right' : 'left' }}>
+                        {i18n.t(`agencies.addresses.${a.id}`)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <span style={{ opacity: 0.6, marginTop: 2 }}>📞</span>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#CFA030", marginBottom: 2 }}>
+                        {i18n.t('agencies.phone')}
+                      </span>
+                      <span dir="ltr" style={{ color: "#fff", fontWeight: 600, textAlign: i18n.language === 'ar' ? 'right' : 'left' }}>
+                        {a.tel}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <span style={{ opacity: 0.6, marginTop: 2 }}>✉️</span>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#CFA030", marginBottom: 2 }}>
+                        {i18n.t('agencies.email')}
+                      </span>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        {a.email.map(e => (
+                          <span key={e} dir="ltr" style={{ textAlign: i18n.language === 'ar' ? 'right' : 'left' }}>
+                            <a href={`mailto:${e}`} style={{ color: "#e2e8f0", textDecoration: "none" }}>{e}</a>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -762,7 +897,7 @@ export default function LandingPage() {
                   {PORTS.map(p => (
                     <div key={p} style={{ fontSize: 13, color: "#64748b", display: "flex", alignItems: "center", gap: 6, padding: "4px 0", borderBottom: "1px solid #f1f5f9" }}>
                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#CFA030", flexShrink: 0 }} />
-                      {p}
+                      {i18n.t(`agencies.cities.${p}`)}
                     </div>
                   ))}
                 </div>
@@ -772,24 +907,57 @@ export default function LandingPage() {
             {/* Form */}
             <div style={{ background: "#fff", borderRadius: 24, border: "1px solid #e2e8f0", boxShadow: "0 20px 60px rgba(0,0,0,.08)", padding: "2.5rem" }}>
               <h3 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 900, color: "#0D1F3C", marginBottom: "2rem" }}>
-                {t.form_subject}
+                {t.contact_h2}
               </h3>
-              {formSent && <div style={{ background: "#ecfdf5", border: "1px solid #86efac", borderRadius: 10, padding: "12px 16px", marginBottom: 20, color: "#166534", fontSize: 13, fontWeight: 600 }}>{t.form_ok}</div>}
-              <form onSubmit={handleSend} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  <input required className="inp" type="text" placeholder={t.form_name} value={form.name} onChange={e => setForm(s => ({ ...s, name: e.target.value }))} style={inputStyle} />
-                  <input className="inp" type="text" placeholder={t.form_company} value={form.company} onChange={e => setForm(s => ({ ...s, company: e.target.value }))} style={inputStyle} />
+              
+              {submitted ? (
+                <div style={{ background: "#ecfdf5", border: "1px solid #86efac", borderRadius: 12, padding: "2rem", color: "#166534", fontSize: 15, fontWeight: 600, textAlign: "center", lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 32, marginBottom: "1rem" }}>✅</div>
+                  {i18n.t('contact.success_message')}
                 </div>
-                <input required className="inp" type="email" placeholder={t.form_email} value={form.email} onChange={e => setForm(s => ({ ...s, email: e.target.value }))} style={inputStyle} />
-                <select className="inp" value={form.subject} onChange={e => setForm(s => ({ ...s, subject: e.target.value }))} style={{ ...inputStyle, color: form.subject ? "#1e293b" : "#94a3b8" }}>
-                  <option value="">{t.form_subject}</option>
-                  {t.form_opts.map((o: string) => <option key={o}>{o}</option>)}
-                </select>
-                <textarea required className="inp" rows={5} placeholder={t.form_msg} value={form.message} onChange={e => setForm(s => ({ ...s, message: e.target.value }))} style={{ ...inputStyle, resize: "vertical" }} />
-                <button type="submit" disabled={sending} style={{ background: sending ? "#94a3b8" : "#0D1F3C", color: "#fff", border: "none", borderRadius: 12, padding: "15px", fontSize: 13, fontWeight: 700, cursor: sending ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background .2s" }} onMouseEnter={e => { if (!sending) e.currentTarget.style.background = "#1a4a8c"; }} onMouseLeave={e => { if (!sending) e.currentTarget.style.background = "#0D1F3C"; }}>
-                  {sending ? <><span className="spinner" style={{ display: "inline-block", width: 16, height: 16, border: "2px solid rgba(255,255,255,.3)", borderTopColor: "#fff", borderRadius: "50%" }} />{t.form_sending}</> : t.form_send}
-                </button>
-              </form>
+              ) : (
+                <form onSubmit={handleSend} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <input className="inp" type="text" placeholder={t.form_name || "Nom complet *"} value={form.nom_complet} onChange={e => setForm(s => ({ ...s, nom_complet: e.target.value }))} style={{...inputStyle, borderColor: errors.nom_complet ? "#ef4444" : "#e2e8f0"}} />
+                      {errors.nom_complet && <span style={{ color: "#ef4444", fontSize: 11, fontWeight: 600 }}>{errors.nom_complet}</span>}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <input className="inp" type="text" placeholder={t.form_company || "Entreprise"} value={form.entreprise} onChange={e => setForm(s => ({ ...s, entreprise: e.target.value }))} style={{...inputStyle, borderColor: errors.entreprise ? "#ef4444" : "#e2e8f0"}} />
+                      {errors.entreprise && <span style={{ color: "#ef4444", fontSize: 11, fontWeight: 600 }}>{errors.entreprise}</span>}
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <input className="inp" type="email" placeholder={t.form_email || "E-mail *"} value={form.email} onChange={e => setForm(s => ({ ...s, email: e.target.value }))} style={{...inputStyle, borderColor: errors.email ? "#ef4444" : "#e2e8f0"}} />
+                    {errors.email && <span style={{ color: "#ef4444", fontSize: 11, fontWeight: 600 }}>{errors.email}</span>}
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <select className="inp" value={form.objet} onChange={e => setForm(s => ({ ...s, objet: e.target.value }))} style={{ ...inputStyle, borderColor: errors.objet ? "#ef4444" : "#e2e8f0", color: form.objet ? "#1e293b" : "#94a3b8" }}>
+                      <option value="">{t.form_subject || "Objet de votre demande *"}</option>
+                      <option value="demande_location">{i18n.t('contact.objet.demande_location')}</option>
+                      <option value="demande_devis">{i18n.t('contact.objet.demande_devis')}</option>
+                      <option value="suivi_expedition">{i18n.t('contact.objet.suivi_expedition')}</option>
+                      <option value="information_services">{i18n.t('contact.objet.information_services')}</option>
+                      <option value="reclamation">{i18n.t('contact.objet.reclamation')}</option>
+                      <option value="autre">{i18n.t('contact.objet.autre')}</option>
+                    </select>
+                    {errors.objet && <span style={{ color: "#ef4444", fontSize: 11, fontWeight: 600 }}>{errors.objet}</span>}
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <textarea className="inp" rows={5} placeholder={t.form_msg || "Votre message *"} value={form.message} onChange={e => setForm(s => ({ ...s, message: e.target.value }))} style={{ ...inputStyle, resize: "vertical", borderColor: errors.message ? "#ef4444" : "#e2e8f0" }} />
+                    {errors.message && <span style={{ color: "#ef4444", fontSize: 11, fontWeight: 600 }}>{errors.message}</span>}
+                  </div>
+
+                  {errors.general && <div style={{ background: "#fef2f2", color: "#b91c1c", padding: "10px", borderRadius: 8, fontSize: 13, fontWeight: 600 }}>{errors.general}</div>}
+
+                  <button type="submit" disabled={loading} style={{ background: loading ? "#94a3b8" : "#0D1F3C", color: "#fff", border: "none", borderRadius: 12, padding: "15px", fontSize: 13, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background .2s" }} onMouseEnter={e => { if (!loading) e.currentTarget.style.background = "#1a4a8c"; }} onMouseLeave={e => { if (!loading) e.currentTarget.style.background = "#0D1F3C"; }}>
+                    {loading ? <><span className="spinner" style={{ display: "inline-block", width: 16, height: 16, border: "2px solid rgba(255,255,255,.3)", borderTopColor: "#fff", borderRadius: "50%" }} />{i18n.t('contact.submit.loading')}</> : i18n.t('contact.submit.default')}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>
@@ -808,7 +976,7 @@ export default function LandingPage() {
             <div>
               <h4 style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#CFA030", marginBottom: 20, borderBottom: "1px solid rgba(207,160,48,.2)", paddingBottom: 10 }}>{t.footer_nav}</h4>
               {t.nav.map((n: string, i: number) => (
-                <button key={i} onClick={() => scrollTo(["home", "about", "services", "catalogue", "contact"][i])} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,255,255,.5)", fontSize: 13, cursor: "pointer", padding: "6px 0", transition: "color .2s", fontFamily: "inherit", width: "100%", textAlign: t.dir === "rtl" ? "right" : "left" }} onMouseEnter={e => e.currentTarget.style.color = "#CFA030"} onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,.5)"}>
+                <button key={i} onClick={() => scrollTo(["home", "about", "services", "catalogue", "agencies", "contact"][i])} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,255,255,.5)", fontSize: 13, cursor: "pointer", padding: "6px 0", transition: "color .2s", fontFamily: "inherit", width: "100%", textAlign: t.dir === "rtl" ? "right" : "left" }} onMouseEnter={e => e.currentTarget.style.color = "#CFA030"} onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,.5)"}>
                   <span style={{ color: "#CFA030", fontSize: 8 }}>▶</span>{n}
                 </button>
               ))}

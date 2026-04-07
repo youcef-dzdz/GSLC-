@@ -1,31 +1,9 @@
 <!DOCTYPE html>
 @php
-    $lang = session('gslc_lang', 'fr');
-    
-    if (!in_array($lang, ['fr', 'en', 'ar'])) {
-        $lang = 'fr';
-    }
-
-    $isRtl = $lang === 'ar';
-
-    // Inline Translation Dictionary
-    $dict = [
-        'Dashboard'     => ['fr' => 'Dashboard',    'en' => 'Dashboard',    'ar' => 'لوحة القيادة'],
-        'Clients'       => ['fr' => 'Clients',      'en' => 'Customers',    'ar' => 'العملاء'],
-        'Demandes'      => ['fr' => 'Demandes',     'en' => 'Requests',     'ar' => 'الطلبات'],
-        'Devis'         => ['fr' => 'Devis',        'en' => 'Quotes',       'ar' => 'عروض الأسعار'],
-        'Contrats'      => ['fr' => 'Contrats',     'en' => 'Contracts',    'ar' => 'العقود'],
-        'Mes Demandes'  => ['fr' => 'Mes Demandes', 'en' => 'My Requests',  'ar' => 'طلباتي'],
-        'Déconnexion'   => ['fr' => 'Déconnexion',  'en' => 'Logout',       'ar' => 'تسجيل الخروج'],
-        'Pages'         => ['fr' => 'Pages',        'en' => 'Pages',        'ar' => 'الصفحات'],
-        'Rechercher...' => ['fr' => 'Rechercher...', 'en' => 'Search...',   'ar' => 'بحث...'],
-        'Succès'        => ['fr' => 'Succès',       'en' => 'Success',      'ar' => 'نجاح'],
-    ];
-
-    // Translation Helper Function
-    $t = function($key) use ($dict, $lang) {
-        return $dict[$key][$lang] ?? $key;
-    };
+    // $lang, $isRtl, $t are injected by AppServiceProvider View Composer
+    if (!isset($lang) || !in_array($lang, ['fr','en','ar'])) { $lang = 'fr'; }
+    if (!isset($isRtl)) { $isRtl = false; }
+    if (!isset($t))     { $t = fn($k) => $k; }
 @endphp
 <html lang="{{ $lang }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
@@ -114,8 +92,12 @@
                 } 
                 elseif($role === 'client') {
                     $navItems = [
-                        ['url' => '/client/dashboard',   'icon' => 'fa-border-all', 'label' => $t('Dashboard'),    'match' => 'client/dashboard'],
-                        ['url' => '/client/demands',     'icon' => 'fa-inbox',      'label' => $t('Mes Demandes'), 'match' => 'client/demands*'],
+                        ['url' => '/client/dashboard',   'icon' => 'fa-border-all',      'label' => $t('Dashboard'),      'match' => 'client/dashboard'],
+                        ['url' => '/client/demands',     'icon' => 'fa-inbox',           'label' => $t('Mes Demandes'),   'match' => 'client/demands*'],
+                        ['url' => '/client/quotes',      'icon' => 'fa-file-alt',        'label' => $t('Mes Devis'),      'match' => 'client/quotes*'],
+                        ['url' => '/client/contracts',   'icon' => 'fa-file-contract',   'label' => $t('Mes Contrats'),   'match' => 'client/contracts*'],
+                        ['url' => '/client/invoices',    'icon' => 'fa-file-invoice',    'label' => $t('Mes Factures'),   'match' => 'client/invoices*'],
+                        ['url' => '/client/containers',  'icon' => 'fa-box',             'label' => $t('Mes Conteneurs'), 'match' => 'client/containers*'],
                     ];
                 }
             @endphp

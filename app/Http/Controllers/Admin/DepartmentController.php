@@ -14,7 +14,7 @@ class DepartmentController extends Controller
     public function index()
     {
         return response()->json(
-            Role::orderBy('niveau')->orderBy('nom_role')->get(['id', 'nom_role', 'label', 'niveau'])
+            \Illuminate\Support\Facades\DB::table('departments')->orderBy('name')->get()
         );
     }
 

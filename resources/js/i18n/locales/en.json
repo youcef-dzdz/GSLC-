@@ -89,7 +89,11 @@
     "confirm_delete_confirm": "Delete",
     "new": "New",
     "per_page": "per page",
-    "page_of": "of"
+    "page_of": "of",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    }
   },
   "roles": {
     "admin": "Administrator",
@@ -138,7 +142,14 @@
     "backups": "Backups"
   },
   "landing": {
-    "nav": ["Home", "About", "Services", "Containers", "Contact"],
+    "nav": [
+      "Home",
+      "About",
+      "Services",
+      "Containers",
+      "Agencies",
+      "Contact"
+    ],
     "hero_tag": "EPE NASHCO SPA — Subsidiary of G.A.T.MA Group",
     "hero_h1": "Algeria's Premier Logistics & Maritime Partner",
     "hero_p": "Smart consignment, container handling and tracking solutions to optimize your import-export operations across Algerian ports.",
@@ -152,16 +163,42 @@
     "about_hist_p": "Founded in 1991, NASHCO DZ is a certified player in Algerian port logistics, supporting shipowners and economic operators across all Algerian commercial ports.",
     "svc_tag": "Our Expertise",
     "svc_h2": "Our Logistics Services",
-    "svcs": ["Maritime Consignment", "Container Services", "Customs & Transit", "Naval Supply"],
+    "svcs": [
+      "Maritime Consignment",
+      "Container Services",
+      "Customs & Transit",
+      "Naval Supply"
+    ],
     "svc_items": [
-      ["Port call management", "Operational tracking", "Shipowner services"],
-      ["Maintenance & repair", "Cleaning & storage", "Terminal logistics"],
-      ["Customs procedures", "Administrative support", "Import/export transit"],
-      ["Provisions & bunkers", "Technical assistance", "Ship supplies"]
+      [
+        "Port call management",
+        "Operational tracking",
+        "Shipowner services"
+      ],
+      [
+        "Maintenance & repair",
+        "Cleaning & storage",
+        "Terminal logistics"
+      ],
+      [
+        "Customs procedures",
+        "Administrative support",
+        "Import/export transit"
+      ],
+      [
+        "Provisions & bunkers",
+        "Technical assistance",
+        "Ship supplies"
+      ]
     ],
     "cat_tag": "Our Fleet",
     "cat_h2": "Container Catalogue",
-    "stats": ["Years of experience", "Containers/year", "Importer clients", "Ports covered"],
+    "stats": [
+      "Years of experience",
+      "Containers/year",
+      "Importer clients",
+      "Ports covered"
+    ],
     "form_send": "Send Message"
   },
   "clients": {
@@ -217,5 +254,115 @@
     "date_to": "To",
     "reset_filters": "Reset",
     "delete_blocked": "Cannot delete: linked records exist."
+  },
+  "agencies": {
+    "title": "Our Agencies",
+    "subtitle": "Present in Algeria's main commercial ports",
+    "primary_badge": "Primary Agency — GSLC Platform",
+    "branch": "Branch",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "cities": {
+      "mostaganem": "Mostaganem",
+      "alger": "Algiers",
+      "oran": "Oran",
+      "annaba": "Annaba",
+      "skikda": "Skikda",
+      "jijel": "Jijel",
+      "bejaia": "Béjaïa",
+      "ghazaouet": "Ghazaouet",
+      "arzew": "Arzew",
+      "tenes": "Ténès",
+      "jijel_djen": "Jijel / Djen-Djen"
+    },
+    "addresses": {
+      "mostaganem": "Colonel Amirouche Cooperative No. B 01, Mostaganem",
+      "alger": "01 Frères Oukid Street, Port Said Square, Algiers",
+      "oran": "08 Tami Abdelkader Street, Miramar, Oran",
+      "annaba": "Ben Adelmalek Ramdane Boulevard, PO Box 172, Annaba",
+      "skikda": "Hamrouche Hamoudi Depot Zone, PO Box 186, Skikda",
+      "jijel": "10 Emir Abdelkader Avenue, Jijel 18000",
+      "bejaia": "La Plaine Residence, Béjaïa City"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Dashboard",
+      "total_users": "Total Users",
+      "active_users": "Active Users",
+      "suspended": "Suspended",
+      "pending": "Pending",
+      "users_by_role": "Users by role",
+      "pending_registrations": "Pending registrations",
+      "recent_activity": "Recent activity",
+      "approve": "Approve",
+      "reject": "Reject",
+      "no_pending": "No pending registrations",
+      "rejection_reason": "Rejection reason"
+    },
+    "users": {
+      "title": "User Management",
+      "new_user": "New user",
+      "search_placeholder": "Search by name or email...",
+      "all_roles": "All roles",
+      "all_statuses": "All statuses",
+      "block": "Block",
+      "unblock": "Unblock",
+      "reset_password": "Reset Password",
+      "edit": "Edit",
+      "confirm_block": "Are you sure you want to block this user?",
+      "no_users": "No users found",
+      "create_success": "User created successfully",
+      "update_success": "User updated",
+      "block_success": "User blocked",
+      "reset_success": "Reset link sent.",
+      "col_user": "User",
+      "col_email": "Email",
+      "col_role": "Role",
+      "col_status": "Status",
+      "col_created": "Created",
+      "col_actions": "Actions",
+      "col_service": "Department",
+      "service": "Department",
+      "position": "Position",
+      "all_services": "All departments",
+      "all_positions": "All positions",
+      "total": "{{count}} users total",
+      "total_label": "users"
+    }
+  },
+  "contact": {
+    "objet": {
+      "demande_location": "Container rental inquiry",
+      "demande_devis": "Request a quote",
+      "suivi_expedition": "Shipment tracking",
+      "information_services": "Service information",
+      "reclamation": "Complaint",
+      "autre": "Other"
+    },
+    "submit": {
+      "default": "Send message →",
+      "loading": "Sending..."
+    },
+    "success_message": "Your message has been sent. Our commercial team will get back to you within 48 hours.",
+    "errors": {
+      "required": "This field is required",
+      "email_invalid": "Invalid email address",
+      "message_too_short": "Minimum 10 characters",
+      "server_error": "Server error. Please try again."
+    }
+  },
+  "positions": {
+    "responsable_commercial": "Commercial Manager",
+    "agent_commercial": "Commercial Agent",
+    "agent_administratif": "Admin Agent",
+    "responsable_financier": "Finance Manager",
+    "agent_financier": "Finance Agent",
+    "responsable_logistique": "Logistics Manager",
+    "agent_logistique": "Logistics Agent",
+    "directeur": "Director",
+    "administrateur_systeme": "System Admin",
+    "secretaire": "Secretary"
   }
 }

@@ -42,6 +42,7 @@ use App\Http\Controllers\Shared\NotificationController;
 
 Route::post('/login',    [AuthController::class, 'login'])->name('api.login');
 Route::post('/register', [AuthController::class, 'register'])->name('api.register');
+Route::post('/contact',  [App\Http\Controllers\Public\ContactMessageController::class, 'store'])->middleware('throttle:5,1');
 
 // =============================================================================
 // PROTECTED — must be logged in
@@ -78,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users/{id}/block',            [UserController::class, 'block'])->name('users.block');
         Route::post('/users/{id}/reset-password',   [UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::get('/roles',                        [UserController::class, 'roles'])->name('roles.index');
+        Route::post('/roles',                       [UserController::class, 'storeRole'])->name('roles.store');
         Route::get('/departments',                  [DepartmentController::class, 'index'])->name('departments.index');
         Route::post('/departments',                 [DepartmentController::class, 'store'])->name('departments.store');
         Route::put('/departments/{id}',             [DepartmentController::class, 'update'])->name('departments.update');

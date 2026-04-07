@@ -115,4 +115,13 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Contact Receiver
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    'contact_receiver' => env('NASHCO_CONTACT_EMAIL', 'contact@nashco.com.dz'),
+
 ];

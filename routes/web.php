@@ -19,6 +19,18 @@ Route::post('/staff/login',  [BladeAuthController::class, 'staffLogin'])->name('
 Route::post('/blade/logout', [BladeAuthController::class, 'logout'])->middleware('auth')->name('blade.logout');
 Route::post('/blade/lang',   [BladeAuthController::class, 'setLanguage'])->name('blade.lang');
 
+// ── Client password reset ─────────────────────────────────────
+Route::get('/forgot-password',        [BladeAuthController::class, 'showClientForgotPassword'])->name('client.password.request');
+Route::post('/forgot-password',       [BladeAuthController::class, 'sendClientResetLink'])->name('client.password.email');
+Route::get('/reset-password/{token}', [BladeAuthController::class, 'showClientResetForm'])->name('client.password.reset');
+Route::post('/reset-password',        [BladeAuthController::class, 'resetClientPassword'])->name('client.password.update');
+
+// ── Staff password reset ──────────────────────────────────────
+Route::get('/staff/forgot-password',        [BladeAuthController::class, 'showStaffForgotPassword'])->name('staff.password.request');
+Route::post('/staff/forgot-password',       [BladeAuthController::class, 'sendStaffResetLink'])->name('staff.password.email');
+Route::get('/staff/reset-password/{token}', [BladeAuthController::class, 'showStaffResetForm'])->name('staff.password.reset');
+Route::post('/staff/reset-password',        [BladeAuthController::class, 'resetStaffPassword'])->name('staff.password.update');
+
 // ── Staff Blade routes ────────────────────────────────────────
 Route::middleware(['auth', 'blade.auth'])->prefix('blade')->name('blade.')->group(function () {
 

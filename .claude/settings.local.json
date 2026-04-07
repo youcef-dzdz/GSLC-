@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Read(//c/xampp/htdocs/GSLC/**)"
+    ]
+  }
+}

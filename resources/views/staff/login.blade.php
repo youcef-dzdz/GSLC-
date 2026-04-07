@@ -432,7 +432,7 @@
                     </div>
 
                     <div style="text-align:right; margin-bottom:1.5rem;">
-                        <a href="#" onclick="openForgot()" id="lbl-forgot"
+                        <a href="{{ route('staff.password.request') }}" id="lbl-forgot"
                             style="font-size:0.78rem; color:var(--gold); text-decoration:none; font-weight:500; transition:opacity 0.2s;">Mot
                             de passe oublié ?</a>
                     </div>

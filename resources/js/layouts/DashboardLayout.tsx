@@ -6,7 +6,11 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { Footer } from '../components/layout/Footer';
 
 export const DashboardLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // On desktop (≥1024px) the sidebar starts open and has no toggle button,
+  // so it stays open permanently. On mobile it starts closed and can be toggled.
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 1024
+  );
   const { i18n } = useTranslation();
   const isRTL = i18n.language.startsWith('ar');
 
@@ -17,8 +21,7 @@ export const DashboardLayout = () => {
       <div className="flex flex-1 pt-16">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Push content away from the sidebar on large screens.
-            Sidebar sits on the LEFT in LTR, RIGHT in RTL. */}
+        {/* Content is always offset by sidebar width on large screens */}
         <div className={`flex flex-col flex-1 w-full min-w-0 transition-all duration-300 ${isRTL ? 'lg:pr-[240px]' : 'lg:pl-[240px]'}`}>
           <main className="flex-1 p-4 sm:p-6">
             <Outlet />

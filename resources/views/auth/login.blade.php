@@ -410,7 +410,7 @@
                     </div>
 
                     <div style="text-align:right; margin-bottom:1.75rem;">
-                        <a href="#" id="t-forgot"
+                        <a href="{{ route('client.password.request') }}" id="t-forgot"
                             style="font-size:0.78rem; color:var(--navy); text-decoration:none; font-weight:600;">Mot de
                             passe oublié ?</a>
                     </div>

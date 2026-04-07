@@ -205,16 +205,16 @@ class BladeAdminController extends Controller
         $dateFrom  = request('date_from');
         $dateTo    = request('date_to');
 
-        $query = JournalAudit::with('user')->orderByDesc('created_at');
+        $query = JournalAudit::with('utilisateur')->orderByDesc('date_action');
 
-        if ($search)   $query->where(fn($q) => $q->where('description', 'ilike', "%{$search}%")->orWhere('table_name', 'ilike', "%{$search}%"));
+        if ($search)   $query->where(fn($q) => $q->where('table_cible', 'ilike', "%{$search}%")->orWhere('action', 'ilike', "%{$search}%"));
         if ($action)   $query->where('action', $action);
-        if ($table)    $query->where('table_name', $table);
-        if ($dateFrom) $query->whereDate('created_at', '>=', $dateFrom);
-        if ($dateTo)   $query->whereDate('created_at', '<=', $dateTo);
+        if ($table)    $query->where('table_cible', $table);
+        if ($dateFrom) $query->whereDate('date_action', '>=', $dateFrom);
+        if ($dateTo)   $query->whereDate('date_action', '<=', $dateTo);
 
         $logs   = $query->paginate(50)->withQueryString();
-        $tables = JournalAudit::distinct()->orderBy('table_name')->pluck('table_name');
+        $tables = JournalAudit::distinct()->orderBy('table_cible')->pluck('table_cible');
 
         return view('blade.admin.audit', compact('logs', 'tables', 'action', 'table', 'dateFrom', 'dateTo', 'search'));
     }

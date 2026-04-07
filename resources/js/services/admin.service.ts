@@ -20,13 +20,19 @@ export const adminService = {
   blockUser: (id: number) =>
     apiClient.post(`/api/admin/users/${id}/block`),
 
-  resetPassword: (id: number) =>
-    apiClient.post(`/api/admin/users/${id}/reset-password`),
+  resetPassword: (id: number, password?: string) =>
+    apiClient.post(`/api/admin/users/${id}/reset-password`, password ? { password } : {}),
 
   // ─── Roles ──────────────────────────────────────────────────────────────────
 
   getRoles: () =>
     apiClient.get('/api/admin/roles'),
+
+  createRole: (data: { nom_role: string; label: string; niveau: number }) =>
+    apiClient.post('/api/admin/roles', data),
+
+  getDepartments: () =>
+    apiClient.get('/api/admin/departments'),
 
   // ─── Registrations ──────────────────────────────────────────────────────────
 
