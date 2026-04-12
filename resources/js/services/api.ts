@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// The base URL for the API routes. 
-// Laravel usually serves API at /api, but Sanctum CSRF is at root.
+export const TOKEN_KEY = 'gslc_token';
+
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
   headers: {
@@ -9,27 +9,25 @@ export const apiClient = axios.create({
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // This is CRITICAL for Sanctum stateful cookies
+  withCredentials: false,
 });
 
-// Interceptor to handle global UNAUTHORIZED responses globally
+// Attach Bearer token on every request if one exists in localStorage
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// On 401 just clear the token — let AuthContext + ProtectedRoute handle the redirect
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // If the error is 401 Unauthenticated, the user session expired or is invalid
     if (error.response?.status === 401) {
-      // Clear any frontend persistent Auth states if necessary here or trigger a custom event
-      localStorage.removeItem('user_session'); // Example cleanup
-      
-      // Optionally redirect to login, but usually the AuthContext detects this
-      // window.location.href = '/login'; 
+      localStorage.removeItem(TOKEN_KEY);
     }
-    
-    // For 419 Page Expired (CSRF token mismatch)
-    if (error.response?.status === 419) {
-      // Sometimes fetching the csrf-cookie again solves this
-    }
-
     return Promise.reject(error);
   }
 );

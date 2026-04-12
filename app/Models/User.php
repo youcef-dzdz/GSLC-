@@ -16,6 +16,7 @@ class User extends Authenticatable
         'role_id',
         'department_id',
         'position',
+        'position_id',
         'nom',
         'prenom',
         'email',
@@ -47,6 +48,28 @@ class User extends Authenticatable
     public function department()
     {
         return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    /**
+     * Relationship to the normalized Position record.
+     * Named positionRelation to avoid collision with the legacy `position` column.
+     */
+    public function positionRelation()
+    {
+        return $this->belongsTo(Position::class, 'position_id');
+    }
+
+    public function getPositionAttribute(): ?string
+    {
+        return $this->positionRelation?->title ?? $this->getRawOriginal('position');
+    }
+
+    /**
+     * Associated client record (if any).
+     */
+    public function client()
+    {
+        return $this->hasOne(Client::class);
     }
 
     public function permissions()

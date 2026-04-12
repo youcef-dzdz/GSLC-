@@ -37,10 +37,11 @@ trait Auditable
         ?int    $enregistrementId = null,
         ?array  $anciennesValeurs = null,
         ?array  $nouvellesValeurs = null,
-        string  $resultat = 'SUCCES'
+        string  $resultat = 'SUCCES',
+        ?int    $userId = null
     ): void {
         JournalAudit::create([
-            'utilisateur_id'    => Auth::id(),
+            'utilisateur_id'    => $userId ?? Auth::id(),
             'action'            => $action,
             'table_cible'       => $tableCible,
             'enregistrement_id' => $enregistrementId,

@@ -471,7 +471,7 @@ export default function LandingPage() {
 
           {/* Bold Noticeable Buttons connected dynamically via React Router dom native */}
           <a 
-             href="/login"
+             href="http://127.0.0.1:8000/login"
              style={{ display: "inline-block", textDecoration: "none", padding: "10px 22px", border: "2px solid #CFA030", borderRadius: 8, background: "#fff", color: "#CFA030", fontSize: 13, fontWeight: 800, cursor: "pointer", transition: "all .2s" }} 
              onMouseEnter={e => { e.currentTarget.style.background = "#CFA030"; e.currentTarget.style.color = "#fff"; }} 
              onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#CFA030"; }}
@@ -479,7 +479,7 @@ export default function LandingPage() {
             {t.login}
           </a>
           <a 
-             href="/register"
+             href="http://127.0.0.1:8000/register"
              style={{ display: "inline-block", textDecoration: "none", padding: "10px 22px", border: "2px solid var(--color-primary)", borderRadius: 8, background: "var(--color-primary)", color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 12px rgba(13,31,60,.25)", transition: "all .2s" }} 
              onMouseEnter={e => { e.currentTarget.style.background = "#1a4a8c"; e.currentTarget.style.borderColor = "#1a4a8c"; }} 
              onMouseLeave={e => { e.currentTarget.style.background = "var(--color-primary)"; e.currentTarget.style.borderColor = "var(--color-primary)"; }}
@@ -505,7 +505,7 @@ export default function LandingPage() {
             <p style={{ fontSize: 17, color: "rgba(255,255,255,.8)", lineHeight: 1.85, marginBottom: 44, maxWidth: 560 }}>{t.hero_p}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
               <button onClick={() => scrollTo("contact")} style={{ padding: "15px 36px", borderRadius: 10, border: "none", background: "#CFA030", color: "#0D1F3C", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 28px rgba(207,160,48,.4)", transition: "all .25s" }} onMouseEnter={e => e.currentTarget.style.background = "#e6b832"} onMouseLeave={e => e.currentTarget.style.background = "#CFA030"}>{t.hero_cta1}</button>
-              <a href="/register" style={{ display: "inline-block", textDecoration: "none", padding: "15px 36px", borderRadius: 10, border: "2px solid rgba(255,255,255,.6)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all .25s" }} onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#0D1F3C"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#fff"; }}>{t.hero_cta2}</a>
+              <a href="http://127.0.0.1:8000/register" style={{ display: "inline-block", textDecoration: "none", padding: "15px 36px", borderRadius: 10, border: "2px solid rgba(255,255,255,.6)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all .25s" }} onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#0D1F3C"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#fff"; }}>{t.hero_cta2}</a>
             </div>
           </div>
         </div>

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Traits\Auditable;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Client;
+use App\Models\Position;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -23,7 +25,7 @@ class UserController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = User::with(['role', 'department'])->orderByDesc('created_at');
+        $query = User::with(['role', 'department', 'positionRelation'])->orderByDesc('created_at');
 
         // Search by name or email
         if ($request->filled('search')) {
@@ -50,7 +52,13 @@ class UserController extends Controller
             'nom'                 => $u->nom,
             'prenom'              => $u->prenom,
             'email'               => $u->email,
-            'position'            => $u->position,
+            'position'            => $u->positionRelation?->title ?? $u->getOriginal('position'),
+            'position_id'         => $u->position_id,
+            'position_obj'        => $u->positionRelation ? [
+                'id'            => $u->positionRelation->id,
+                'title'         => $u->positionRelation->title,
+                'department_id' => $u->positionRelation->department_id,
+            ] : null,
             'statut'              => $u->statut,
             'tentatives_echouees' => $u->tentatives_echouees,
             'derniere_connexion'  => $u->derniere_connexion,
@@ -90,6 +98,14 @@ class UserController extends Controller
             'statut'        => 'nullable|in:ACTIF,SUSPENDU,VERROUILLE',
         ]);
 
+        // Resolve position: find-or-create a Position record and keep the legacy column in sync
+        $positionId  = null;
+        $positionStr = $request->filled('position') ? trim($request->position) : null;
+        if ($positionStr) {
+            $pos        = Position::firstOrCreate(['title' => $positionStr], ['department_id' => $request->department_id]);
+            $positionId = $pos->id;
+        }
+
         $user = User::create([
             'nom'                 => $request->nom,
             'prenom'              => $request->prenom,
@@ -97,7 +113,8 @@ class UserController extends Controller
             'password'            => bcrypt($request->password),
             'role_id'             => $request->role_id,
             'department_id'       => $request->department_id,
-            'position'            => $request->position,
+            'position'            => $positionStr,   // keep legacy column synced
+            'position_id'         => $positionId,
             'statut'              => $request->statut ?? 'ACTIF',
             'tentatives_echouees' => 0,
         ]);
@@ -136,7 +153,23 @@ class UserController extends Controller
 
         $old = $user->toArray();
 
-        $user->fill($request->only(['nom', 'prenom', 'email', 'role_id', 'department_id', 'position', 'statut']));
+        $fillable = $request->only(['nom', 'prenom', 'email', 'role_id', 'department_id', 'statut']);
+
+        // Resolve position: find-or-create a Position record and keep the legacy column in sync
+        if ($request->has('position')) {
+            $positionStr = $request->filled('position') ? trim($request->position) : null;
+            if ($positionStr) {
+                $deptId      = $request->department_id ?? $user->department_id;
+                $pos         = Position::firstOrCreate(['title' => $positionStr], ['department_id' => $deptId]);
+                $fillable['position']    = $positionStr;
+                $fillable['position_id'] = $pos->id;
+            } else {
+                $fillable['position']    = null;
+                $fillable['position_id'] = null;
+            }
+        }
+
+        $user->fill($fillable);
         $user->save();
 
         if ($request->filled('password')) {
@@ -156,17 +189,25 @@ class UserController extends Controller
     // DELETE — DELETE /api/admin/users/{id}
     // =========================================================================
 
-    public function destroy(int $id): JsonResponse
+    public function destroy($id): JsonResponse
     {
+        // We use findOrFail to get the active user. 
+        // We use forceDelete to permanently remove records and free up the email.
+        $user = User::findOrFail($id);
+
         try {
-            // Use withTrashed() to find even soft-deleted records, then force-delete
-            $user = User::withTrashed()->findOrFail($id);
-            $old  = $user->toArray();
-            $user->forceDelete(); // permanent hard delete — email becomes reusable
-            $this->audit('DELETE', 'users', $id, $old, null);
-            return response()->json(['message' => 'Utilisateur supprimé définitivement']);
+            // Delete associated client record first (frees the email)
+            if ($user->client) {
+                $user->client->forceDelete();
+            }
+
+            $user->forceDelete();
+
+            return response()->json(['message' => 'Utilisateur et client associé supprimés définitivement.']);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 400);
+            return response()->json([
+                'message' => 'Impossible de supprimer: ' . $e->getMessage()
+            ], 422);
         }
     }
 
@@ -175,7 +216,7 @@ class UserController extends Controller
     // Toggles between SUSPENDU and ACTIF
     // =========================================================================
 
-    public function block(int $id): JsonResponse
+    public function block($id): JsonResponse
     {
         $user = User::findOrFail($id);
         $user->statut = $user->statut === 'ACTIF' ? 'SUSPENDU' : 'ACTIF';

@@ -8,6 +8,11 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\PositionController;
+use App\Http\Controllers\Admin\DeviseController;
+use App\Http\Controllers\Admin\AuditController;
+use App\Http\Controllers\Admin\ConfigController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 
 // Client Portal
 use App\Http\Controllers\Client\ClientController;
@@ -25,6 +30,7 @@ use App\Http\Controllers\Logistique\LogistiqueController;
 use App\Http\Controllers\Logistique\ConteneurController;
 use App\Http\Controllers\Logistique\NavireController;
 use App\Http\Controllers\Logistique\MouvementController;
+use App\Http\Controllers\Logistique\SurestarieController;
 
 // Finance
 use App\Http\Controllers\Finance\FinancierController;
@@ -42,6 +48,8 @@ use App\Http\Controllers\Shared\NotificationController;
 
 Route::post('/login',    [AuthController::class, 'login'])->name('api.login');
 Route::post('/register', [AuthController::class, 'register'])->name('api.register');
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('api.forgot-password');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('api.reset-password');
 Route::post('/contact',  [App\Http\Controllers\Public\ContactMessageController::class, 'store'])->middleware('throttle:5,1');
 
 // =============================================================================
@@ -84,12 +92,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/departments',                 [DepartmentController::class, 'store'])->name('departments.store');
         Route::put('/departments/{id}',             [DepartmentController::class, 'update'])->name('departments.update');
         Route::delete('/departments/{id}',          [DepartmentController::class, 'destroy'])->name('departments.destroy');
+        Route::get('/positions',                    [PositionController::class, 'index'])->name('positions.index');
+        Route::post('/positions',                   [PositionController::class, 'store'])->name('positions.store');
+        Route::put('/positions/{id}',               [PositionController::class, 'update'])->name('positions.update');
+        Route::delete('/positions/{id}',            [PositionController::class, 'destroy'])->name('positions.destroy');
         Route::get('/registrations',               [AdminController::class, 'registrations'])->name('registrations.index');
         Route::post('/registrations/{id}/approve', [AdminController::class, 'approveRegistration'])->name('registrations.approve');
         Route::post('/registrations/{id}/reject',  [AdminController::class, 'rejectRegistration'])->name('registrations.reject');
+        Route::delete('/registrations/{id}',       [AdminController::class, 'destroyRegistration'])->name('registrations.destroy');
         Route::get('/audit',                       [AdminController::class, 'auditLog'])->name('audit');
+        Route::get('/audit-logs/export',            [AuditController::class, 'export'])->name('audit-logs.export');
+        Route::get('/audit-logs',                  [AuditController::class, 'index'])->name('audit-logs.index');
         Route::get('/config',                      [AdminController::class, 'config'])->name('config.index');
         Route::post('/config',                     [AdminController::class, 'updateConfig'])->name('config.update');
+        Route::get('/system-config',               [ConfigController::class, 'index'])->name('system-config.index');
+        Route::post('/system-config/{section}',    [ConfigController::class, 'update'])->name('system-config.update');
+
+        // Currency rates
+        Route::get('/currencies',                  [DeviseController::class, 'index'])->name('currencies.index');
+        Route::post('/currencies/sync',            [DeviseController::class, 'sync'])->name('currencies.sync');
+        Route::post('/currencies/{code}/update',   [DeviseController::class, 'updateRate'])->name('currencies.update');
+
+        // Admin notifications
+        Route::get('/notifications',               [AdminNotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/read-all',     [AdminNotificationController::class, 'markAllRead'])->name('notifications.read-all');
+        Route::post('/notifications/{id}/read',    [AdminNotificationController::class, 'markRead'])->name('notifications.mark-read');
     });
 
     // =========================================================================
@@ -141,6 +168,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/vessels',                     [LogistiqueController::class, 'vesselSchedule'])->name('vessels');
         Route::post('/vessels/{id}/arrive',        [LogistiqueController::class, 'registerArrival'])->name('vessels.arrive');
         Route::get('/movements',                   [MouvementController::class, 'index'])->name('movements.index');
+
+        // Surestarie engine
+        Route::get('/containers/{id}/surestarie',          [SurestarieController::class, 'show'])->name('containers.surestarie.show');
+        Route::post('/containers/{id}/surestarie/calculer',[SurestarieController::class, 'calculer'])->name('containers.surestarie.calculer');
+        Route::get('/containers/{id}/surestarie/predict',  [SurestarieController::class, 'predict'])->name('containers.surestarie.predict');
+        Route::get('/surestarie/simulation',               [SurestarieController::class, 'simulation'])->name('surestarie.simulation');
     });
 
     // =========================================================================
@@ -155,6 +188,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/invoices/{id}/payment',      [FactureController::class, 'recordPayment'])->name('invoices.payment');
         Route::post('/invoices/{id}/legal',        [FactureController::class, 'legalAction'])->name('invoices.legal');
         Route::get('/payments',                    [FactureController::class, 'payments'])->name('payments.index');
+
+        // Surestarie records (finance view)
+        Route::get('/surestaries',                         [SurestarieController::class, 'index'])->name('surestaries.index');
+        Route::get('/containers/{id}/surestarie',          [SurestarieController::class, 'show'])->name('finance.containers.surestarie.show');
+        Route::post('/containers/{id}/surestarie/calculer',[SurestarieController::class, 'calculer'])->name('finance.containers.surestarie.calculer');
+        Route::get('/surestarie/simulation',               [SurestarieController::class, 'simulation'])->name('finance.surestarie.simulation');
     });
 
     // =========================================================================

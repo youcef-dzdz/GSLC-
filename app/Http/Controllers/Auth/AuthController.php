@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
@@ -56,13 +57,14 @@ class AuthController extends Controller
             'derniere_connexion'  => now(),
         ]);
 
-        $request->session()->regenerate();
-        Auth::login($user);
+        // Revoke old tokens, issue a fresh one
+        $user->tokens()->delete();
+        $token = $user->createToken('api-token')->plainTextToken;
 
         $this->audit('LOGIN', 'users', $user->id, null, [
             'email' => $user->email,
             'role'  => $user->role->label,
-        ]);
+        ], 'SUCCES', $user->id);
 
         $redirectTo = match($user->role->label) {
             'admin'      => '/admin/dashboard',
@@ -76,6 +78,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message'     => 'Connexion réussie.',
+            'token'       => $token,
             'user'        => [
                 'id'      => $user->id,
                 'nom'     => $user->nom,
@@ -98,13 +101,12 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        if (Auth::check()) {
-            $this->audit('LOGOUT', 'users', Auth::id());
-        }
+        $user = $request->user();
 
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($user) {
+            $this->audit('LOGOUT', 'users', $user->id);
+            $user->currentAccessToken()->delete();
+        }
 
         return response()->json(['message' => 'Déconnexion réussie.'], 200);
     }
@@ -206,5 +208,67 @@ class AuthController extends Controller
             'message' => 'Inscription soumise avec succès. Votre compte sera activé après validation par notre équipe.',
             'user_id' => $user->id,
         ], 201);
+    }
+
+    // =========================================================================
+    // FORGOT PASSWORD
+    // =========================================================================
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        // Always return 200 so we don't leak if an email exists
+        if (! $user || $user->statut !== 'ACTIF') {
+            return response()->json([
+                'message' => 'Si cet email correspond à un compte actif, un lien de réinitialisation a été envoyé.'
+            ], 200);
+        }
+
+        // Generate token manually
+        $token = Password::createToken($user);
+
+        // Build React reset URL
+        $resetUrl = 'http://localhost:5173/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+
+        // Send email using Mail::raw()
+        \Mail::raw("Bonjour,\n\nCliquez sur ce lien pour réinitialiser votre mot de passe :\n\n" . $resetUrl . "\n\nCe lien expire dans 60 minutes.\n\nSi vous n'avez pas demandé cette réinitialisation, ignorez cet email.", function($message) use ($user) {
+            $message->to($user->email)
+                    ->subject('Réinitialisation de votre mot de passe - NASHCO/GSLC');
+        });
+
+        $this->audit('SYSTEM', 'users', $user->id, null, [
+            'action' => 'reinitialisation_mot_de_passe_envoyee',
+            'email'  => $request->email,
+        ]);
+
+        return response()->json([
+            'message' => 'Un lien de réinitialisation a été envoyé à votre adresse e-mail.'
+        ], 200);
+    }
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token'                 => 'required',
+            'email'                 => 'required|email',
+            'password'              => 'required|min:8|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill(['password' => bcrypt($password)])->save();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json(['message' => 'Mot de passe réinitialisé avec succès.'], 200);
+        }
+
+        return response()->json(['message' => 'Lien invalide ou expiré.'], 400);
     }
 }

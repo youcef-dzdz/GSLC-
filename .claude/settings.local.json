@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(php artisan:*)",
-      "Read(//c/xampp/htdocs/GSLC/**)"
+      "Read(//c/xampp/htdocs/GSLC/**)",
+      "Bash(npm run:*)",
+      "Read(//c/Users/Pc-27/.claude/skills/ui-ux-pro-max/**)",
+      "Bash(python scripts/search.py \"admin dashboard analytics KPI sidebar navigation\" --domain style -n 3)",
+      "Bash(python scripts/search.py \"enterprise fintech logistics admin\" --domain color -n 3)",
+      "Bash(npx tsc:*)",
+      "Bash(node -e ':*)",
+      "Bash(node -e \"require\\('./resources/js/i18n/locales/fr.json'\\); console.log\\('fr OK'\\)\")",
+      "Bash(node -e \"require\\('./resources/js/i18n/locales/en.json'\\); console.log\\('en OK'\\)\")",
+      "Bash(node -e \"require\\('./resources/js/i18n/locales/ar.json'\\); console.log\\('ar OK'\\)\")"
     ]
   }
 }

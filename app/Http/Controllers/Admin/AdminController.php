@@ -175,6 +175,34 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * Delete a processed registration (APPROUVE or REJETE only).
+     * Soft-deletes the linked user account and hard-deletes the client record.
+     */
+    public function destroyRegistration(int $id): JsonResponse
+    {
+        $client = Client::with('user')->findOrFail($id);
+
+        if (!in_array($client->statut, ['APPROUVE', 'REJETE'])) {
+            return response()->json([
+                'message' => 'Seules les demandes approuvées ou rejetées peuvent être supprimées.',
+            ], 422);
+        }
+
+        $oldClient = $client->toArray();
+
+        // Soft-delete the linked user account
+        if ($client->user) {
+            $client->user->delete();
+        }
+
+        $client->delete();
+
+        $this->audit('DELETE', 'clients', $id, $oldClient, null);
+
+        return response()->json(['message' => 'Demande supprimée avec succès.']);
+    }
+
     // =========================================================================
     // AUDIT LOG
     // =========================================================================

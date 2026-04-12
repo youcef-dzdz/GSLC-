@@ -20,11 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'role'             => CheckRole::class,
-            'blade.auth'       => \App\Http\Middleware\BladeAuthenticate::class,
-            'blade.role'       => \App\Http\Middleware\BladeRole::class,
-            'blade.permission' => \App\Http\Middleware\BladePermission::class,
-            'client.portal'    => \App\Http\Middleware\ClientPortalAccess::class,
+            'role' => CheckRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -99,7 +99,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
       ? { right: 0, left: 'auto', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: 'none' }
       : { left: 0, right: 'auto', borderRight: '1px solid rgba(255,255,255,0.08)', borderLeft: 'none' }),
     width: 240,
-    background: '#0D1F3C',
+    background: 'linear-gradient(180deg, #0D1F3C 0%, #081828 100%)',
     zIndex: 40,
     overflowY: 'auto',
     display: 'flex',
@@ -123,9 +123,10 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
         {/* Role + user identity */}
         <div style={{
-          padding: '12px 16px',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          padding: '14px 16px',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
           textAlign: isRTL ? 'right' : 'left',
+          background: 'rgba(207,160,48,0.05)',
         }}>
           <span style={{
             fontSize: 10, fontWeight: 700, color: '#CFA030',
@@ -162,7 +163,8 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                   fontWeight: isActive ? 700 : 500,
                   textDecoration: 'none',
                   color: isActive ? '#fff' : '#CBD5E1',
-                  background: isActive ? 'rgba(207,160,48,0.15)' : 'transparent',
+                  background: isActive ? 'rgba(207,160,48,0.18)' : 'transparent',
+                  boxShadow: isActive ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
                   ...(isRTL
                     ? { borderRight: isActive ? '3px solid #CFA030' : '3px solid transparent', borderLeft: 'none' }
                     : { borderLeft: isActive ? '3px solid #CFA030' : '3px solid transparent', borderRight: 'none' }),
@@ -171,7 +173,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 onMouseEnter={e => {
                   const el = e.currentTarget;
                   if (!el.style.background.includes('207,160,48')) {
-                    el.style.background = 'rgba(255,255,255,0.07)';
+                    el.style.background = 'rgba(255,255,255,0.09)';
                     el.style.color = '#fff';
                   }
                 }}

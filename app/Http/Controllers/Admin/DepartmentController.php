@@ -3,64 +3,113 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
+use App\Http\Controllers\Traits\Auditable;
+use App\Models\Department;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
-    // System roles that cannot be renamed or deleted
-    private const PROTECTED_LABELS = ['admin', 'client'];
+    use Auditable;
 
-    public function index()
+    // =========================================================================
+    // LIST — GET /api/admin/departments
+    // =========================================================================
+
+    public function index(): JsonResponse
     {
-        return response()->json(
-            \Illuminate\Support\Facades\DB::table('departments')->orderBy('name')->get()
-        );
+        $departments = Department::with('responsable:id,nom,prenom,email')
+            ->withCount('users')
+            ->orderBy('name')
+            ->get()
+            ->map(fn($d) => [
+                'id'             => $d->id,
+                'name'           => $d->name,
+                'code'           => $d->code,
+                'description'    => $d->description,
+                'responsable_id' => $d->responsable_id,
+                'responsable'    => $d->responsable ? [
+                    'id'     => $d->responsable->id,
+                    'nom'    => $d->responsable->nom,
+                    'prenom' => $d->responsable->prenom,
+                    'email'  => $d->responsable->email,
+                ] : null,
+                'membres_count'  => $d->users_count,
+                'created_at'     => $d->created_at,
+            ]);
+
+        return response()->json(['departments' => $departments]);
     }
 
-    public function store(Request $request)
+    // =========================================================================
+    // CREATE — POST /api/admin/departments
+    // =========================================================================
+
+    public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'nom_role' => 'required|string|max:100|unique:roles,nom_role',
-            'label'    => 'required|string|max:50|unique:roles,label|regex:/^[a-z_]+$/',
-            'niveau'   => 'required|integer|min:1|max:10',
+            'name'           => 'required|string|max:100|unique:departments,name',
+            'code'           => 'required|string|max:20|unique:departments,code|regex:/^[A-Z0-9_]+$/i',
+            'description'    => 'nullable|string|max:500',
+            'responsable_id' => 'nullable|exists:users,id',
         ]);
 
-        $role = Role::create($data);
+        $dept = Department::create($data);
+        $dept->load('responsable:id,nom,prenom,email');
 
-        return response()->json($role, 201);
+        $this->audit('CREATE', 'departments', $dept->id, null, $dept->toArray());
+
+        return response()->json([
+            'department' => $dept,
+            'message'    => 'Département créé avec succès.',
+        ], 201);
     }
 
-    public function update(Request $request, int $id)
-    {
-        $role = Role::findOrFail($id);
+    // =========================================================================
+    // UPDATE — PUT /api/admin/departments/{id}
+    // =========================================================================
 
-        if (in_array($role->label, self::PROTECTED_LABELS)) {
-            return response()->json(['message' => 'Ce rôle système ne peut pas être modifié.'], 403);
-        }
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $dept = Department::findOrFail($id);
+        $old  = $dept->toArray();
 
         $data = $request->validate([
-            'nom_role' => 'required|string|max:100|unique:roles,nom_role,' . $id,
+            'name'           => 'required|string|max:100|unique:departments,name,' . $id,
+            'code'           => 'required|string|max:20|unique:departments,code,' . $id . '|regex:/^[A-Z0-9_]+$/i',
+            'description'    => 'nullable|string|max:500',
+            'responsable_id' => 'nullable|exists:users,id',
         ]);
 
-        $role->update(['nom_role' => $data['nom_role']]);
+        $dept->update($data);
+        $dept->load('responsable:id,nom,prenom,email');
 
-        return response()->json($role);
+        $this->audit('UPDATE', 'departments', $dept->id, $old, $dept->fresh()->toArray());
+
+        return response()->json([
+            'department' => $dept,
+            'message'    => 'Département mis à jour.',
+        ]);
     }
 
-    public function destroy(int $id)
+    // =========================================================================
+    // DELETE — DELETE /api/admin/departments/{id}
+    // =========================================================================
+
+    public function destroy(int $id): JsonResponse
     {
-        $role = Role::findOrFail($id);
+        $dept = Department::withCount('users')->findOrFail($id);
 
-        if (in_array($role->label, self::PROTECTED_LABELS)) {
-            return response()->json(['message' => 'Ce rôle système ne peut pas être supprimé.'], 403);
+        if ($dept->users_count > 0) {
+            return response()->json([
+                'message' => "Impossible de supprimer ce département : {$dept->users_count} utilisateur(s) y sont rattachés.",
+            ], 422);
         }
 
-        if ($role->users()->count() > 0) {
-            return response()->json(['message' => 'Impossible de supprimer un département qui a des utilisateurs actifs.'], 422);
-        }
+        $old = $dept->toArray();
+        $dept->delete();
 
-        $role->delete();
+        $this->audit('DELETE', 'departments', $id, $old, null);
 
         return response()->json(['message' => 'Département supprimé.']);
     }

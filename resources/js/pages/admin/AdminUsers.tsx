@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, Edit2, Trash2, Lock, Unlock, Key, X, Building2, Briefcase, Loader2, ChevronDown, Check, AlertCircle } from 'lucide-react';
@@ -6,15 +7,19 @@ import { adminService } from '../../services/admin.service';
 
 interface Department { id: number; code: string; name: string; }
 interface Role { id: number; nom_role: string; label: string; niveau: number; }
+interface PositionOption { id: number; title: string; department_id: number | null; }
 interface AdminUser {
   id: number; nom: string; prenom: string; email: string;
   statut: string; created_at: string;
   department: Department | null; department_id: number | null;
   role: Role | null;
+  /** Resolved position title — from accessor (normalized or legacy string) */
+  position: string | null;
+  position_id: number | null;
 }
 interface FormData {
   nom: string; prenom: string; email: string; password: string;
-  department_code: string; poste: string; statut: string;
+  department_code: string; poste: string; role_nom: string; statut: string;
 }
 
 const DEPT_TRANSLATIONS: Record<string, Record<string,string>> = {
@@ -51,7 +56,7 @@ const LABEL_TO_CODE: Record<string,string> = {
   commercial:'COM', financier:'FIN', logistique:'LOG',
   admin:'ADMIN', administrateur:'ADMIN', directeur:'DIR',
 };
-const EMPTY_FORM: FormData = { nom:'', prenom:'', email:'', password:'', department_code:'', poste:'', statut:'ACTIF' };
+const EMPTY_FORM: FormData = { nom:'', prenom:'', email:'', password:'', department_code:'', poste:'', role_nom:'', statut:'ACTIF' };
 
 const TABLE_HEADERS: Record<string, string[]> = {
   fr: ['Utilisateur', 'Service', 'Poste', 'Statut', 'Créé le', 'Actions'],
@@ -114,7 +119,7 @@ const TEXTS: Record<string, Record<'fr'|'en'|'ar', string>> = {
 };
 
 export default function AdminUsers() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const lang = (i18n.language?.split('-')[0]?.split('_')[0] ?? 'fr') as 'fr'|'en'|'ar';
   const isRTL = lang === 'ar';
   const qc = useQueryClient();
@@ -143,11 +148,19 @@ export default function AdminUsers() {
     setTimeout(() => setToast(null), 3500);
   };
 
+  const resetFilters = () => {
+    setSearch('');
+    setDeptFilter('');
+    setNiveauFilter('');
+    setStatFilter('');
+  };
+
   /* ── Data helpers ── */
   const safeArray = (res: any): any[] => {
     const d = res?.data;
     if (Array.isArray(d)) return d;
     if (Array.isArray(d?.data)) return d.data;
+    if (Array.isArray(d?.departments)) return d.departments;
     return [];
   };
 
@@ -159,6 +172,8 @@ export default function AdminUsers() {
   const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ['admin-departments'],
     queryFn: async () => safeArray(await adminService.getDepartments()),
+    select: (d: unknown): Department[] =>
+      Array.isArray(d) ? d : (d as any)?.data ?? [],
   });
 
   const { data: roles = [] } = useQuery<Role[]>({
@@ -166,21 +181,30 @@ export default function AdminUsers() {
     queryFn: async () => safeArray(await adminService.getRoles()),
   });
 
-  /* ── Derived ── */
-  const positionsByDept = useMemo(() => {
-    const map: Record<string, Role[]> = {};
-    roles.forEach(r => {
-      const code = LABEL_TO_CODE[r.label?.toLowerCase()] ?? r.label?.toUpperCase();
-      if (!code) return;
-      if (!map[code]) map[code] = [];
-      map[code].push(r);
-    });
-    return map;
-  }, [roles]);
+  const { data: allPositions = [] } = useQuery<PositionOption[]>({
+    queryKey: ['admin-positions'],
+    queryFn: async () => {
+      const res = await adminService.getPositions();
+      const d = res?.data;
+      if (Array.isArray(d?.positions)) return d.positions;
+      if (Array.isArray(d)) return d;
+      return [];
+    },
+    retry: false,
+    initialData: { positions: [] },
+  });
 
-  const availableRolesForModal = form.department_code
-    ? (positionsByDept[form.department_code] ?? [])
-    : roles.filter(r => r.niveau !== 6);
+  /* ── Derived ── */
+  // Positions filtered by the currently selected department (or all if none selected)
+  const availablePositions = useMemo<PositionOption[]>(() => {
+    if (!form.department_code) return allPositions;
+    const dept = departments.find(d => d.code === form.department_code);
+    if (!dept) return allPositions;
+    return allPositions.filter(p => p.department_id === dept.id || p.department_id === null);
+  }, [allPositions, departments, form.department_code]);
+
+  // Keep roles dropdown for system access level — exclude client role from staff modal
+  const availableRolesForModal = roles.filter(r => r.niveau !== 6);
 
   const filtered = useMemo(() => {
     let list = [...allUsers];
@@ -192,9 +216,20 @@ export default function AdminUsers() {
         u.email.toLowerCase().includes(q)
       );
     }
-    if (deptFilter) list = list.filter(u => u.department?.code === deptFilter || String(u.department_id) === String(deptFilter));
-    if (niveauFilter !== '') list = list.filter(u => u.role?.niveau === Number(niveauFilter));
-    if (statFilter) list = list.filter(u => u.statut?.trim().toUpperCase() === statFilter);
+    if (deptFilter) {
+      list = list.filter(u =>
+        u.department?.code === deptFilter ||
+        String(u.department_id) === String(deptFilter)
+      );
+    }
+    if (niveauFilter !== '') {
+      list = list.filter(u => Number(u.role?.niveau) === Number(niveauFilter));
+    }
+    if (statFilter) {
+      list = list.filter(u =>
+        u.statut?.trim().toUpperCase() === statFilter.trim().toUpperCase()
+      );
+    }
     return list;
   }, [allUsers, search, deptFilter, niveauFilter, statFilter]);
 
@@ -214,13 +249,9 @@ export default function AdminUsers() {
   });
 
   const blockMut = useMutation({
-    mutationFn: ({ id }: { id: number; currentStatut: string }) => adminService.blockUser(id),
-    onMutate: ({ id }) => setBlockingId(id),
-    onSuccess: (_res, { currentStatut }) => {
-      const wasActive = currentStatut === 'ACTIF';
-      showToast(wasActive ? TEXTS.block_success[lang] : TEXTS.unblock_success[lang], 'success');
-      qc.invalidateQueries({ queryKey: ['admin-users'] });
-    },
+    mutationFn: (id: number) => adminService.blockUser(id),
+    onMutate: (id) => setBlockingId(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
     onError: (err: any) => showToast(err?.response?.data?.message ?? TEXTS.block_error[lang], 'error'),
     onSettled: () => setBlockingId(null),
   });
@@ -228,11 +259,10 @@ export default function AdminUsers() {
   const deleteMut = useMutation({
     mutationFn: (id: number) => adminService.deleteUser(id),
     onMutate: (id) => setDeletingId(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-users'] });
-      showToast(TEXTS.delete_success[lang], 'success');
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
+    onError: (error: any) => {
+      alert(error?.response?.data?.message ?? 'Impossible de supprimer cet utilisateur.');
     },
-    onError: (err: any) => showToast(err?.response?.data?.message ?? TEXTS.delete_error[lang], 'error'),
     onSettled: () => setDeletingId(null),
   });
 
@@ -241,6 +271,7 @@ export default function AdminUsers() {
       editingUser ? adminService.updateUser(editingUser.id, payload) : adminService.createUser(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-users'] });
+      qc.invalidateQueries({ queryKey: ['admin-positions'] }); // refresh in case a new position was auto-created
       showToast(editingUser ? TEXTS.edit_success[lang] : TEXTS.create_success[lang], 'success');
       closeModal();
     },
@@ -281,8 +312,10 @@ export default function AdminUsers() {
   const initials = (u: AdminUser) =>
     `${u.nom?.[0] ?? ''}${u.prenom?.[0] ?? ''}`.toUpperCase();
 
-  const isClientUser = (u: AdminUser | null) =>
-    u ? u.role?.label?.toLowerCase() === 'client' : false;
+  const isClient = (u: AdminUser | null) => {
+    if (!u) return false;
+    return u.role?.label?.toLowerCase() === 'client' || u.role?.niveau === 6;
+  };
 
   const openCreate = () => {
     setEditingUser(null);
@@ -298,7 +331,8 @@ export default function AdminUsers() {
       email: user.email,
       password: '',
       department_code: user.department?.code ?? '',
-      poste: user.role?.nom_role ?? '',
+      poste: user.position ?? '',          // normalized position title (from accessor or legacy)
+      role_nom: user.role?.nom_role ?? '', // system role stays separate
       statut: user.statut,
     });
     setShowModal(true);
@@ -336,43 +370,31 @@ export default function AdminUsers() {
     resetMut.mutate({ id: resetTarget.id, password: resetPwd || undefined });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsSubmitting(true);
-
-    if (isClientUser(editingUser)) {
-      const payload: any = {
-        nom: form.nom,
-        prenom: form.prenom,
-        email: form.email,
-        statut: form.statut,
-      };
-      if (form.password) payload.password = form.password;
-      saveMut.mutate(payload);
-      return;
-    }
-
-    const selectedRole = roles.find(r => r.nom_role === form.poste);
-    const selectedDept = departments.find(d => d.code === form.department_code);
-
-    if (!editingUser && !form.password) {
-      setIsSubmitting(false);
-      return showToast(tlx('pass_req'), 'error');
-    }
-
     const payload: any = {
       nom: form.nom,
       prenom: form.prenom,
       email: form.email,
-      role_id: selectedRole?.id ?? editingUser?.role?.id,
-      department_id: selectedDept?.id ?? editingUser?.department_id,
-      position: form.poste || editingUser?.role?.nom_role,
       statut: form.statut,
     };
     if (form.password) payload.password = form.password;
-    if (!editingUser) {
-      if (!payload.role_id) { setIsSubmitting(false); return showToast(tlx('pos_req'), 'error'); }
+
+    if (!editingUser || !isClient(editingUser)) {
+      const selectedRole = roles.find(r => r.nom_role === form.role_nom);
+      const selectedDept = departments.find(d => d.code === form.department_code);
+
+      if (selectedRole) payload.role_id = selectedRole.id;
+      if (selectedDept) payload.department_id = selectedDept.id;
+      if (form.poste)   payload.position    = form.poste;  // position title → backend normalizes to position_id
+
+      if (!editingUser && !payload.role_id) {
+        setIsSubmitting(false);
+        return showToast(tlx('pos_req'), 'error');
+      }
     }
+    
     saveMut.mutate(payload);
   };
 
@@ -385,12 +407,12 @@ export default function AdminUsers() {
 
   if (isError) return (
     <div className="flex flex-col items-center justify-center h-64 gap-4">
-      <p className="text-red-600 font-medium">Erreur de chargement</p>
+      <p className="text-red-600 font-medium">{tlx('error_load')}</p>
       <button
         onClick={() => qc.invalidateQueries({ queryKey: ['admin-users'] })}
         className="px-4 py-2 bg-[#0D1F3C] text-white rounded-lg text-sm hover:bg-[#1a3360] transition"
       >
-        Réessayer
+        {tlx('retry')}
       </button>
     </div>
   );
@@ -417,7 +439,7 @@ export default function AdminUsers() {
         <div>
           <h1 className="text-2xl font-bold text-[#0D1F3C]">{tlx('users')}</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {filtered.length} / {allUsers.length} {tlx('members')}
+            {filtered.length} / {allUsers.length} {t('admin.users.members_count')}
           </p>
         </div>
         <button
@@ -434,45 +456,43 @@ export default function AdminUsers() {
         <div className="flex flex-wrap gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={FILTER_LABELS.search[lang]}
-              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
+              placeholder={t('admin.users.search_placeholder')}
+              className={`w-full py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'}`}
             />
           </div>
 
           {/* Service */}
           <div className="relative min-w-[170px]">
-            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <Building2 className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
             <select
               value={deptFilter}
               onChange={e => { setDeptFilter(e.target.value); setNiveauFilter(''); }}
-              className="w-full appearance-none pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
+              className={`w-full appearance-none py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'pr-9 pl-8' : 'pl-9 pr-8'}`}
             >
-              <option value="">{FILTER_LABELS.all_services[lang]}</option>
+              <option value="">{t('admin.users.all_services')}</option>
               {departments.map(d => (
                 <option key={d.id} value={d.code}>{translateDept(d.name)}</option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
           </div>
 
           {/* Poste niveau */}
-          <div className="relative min-w-[160px]">
-            <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <div className="relative">
             <select
               value={niveauFilter}
               onChange={e => setNiveauFilter(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full appearance-none pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C] bg-white min-w-[150px]"
             >
-              <option value="">{FILTER_LABELS.all_positions[lang]}</option>
-              {[3, 4, 5].map(niv => (
-                <option key={niv} value={niv}>{translateNiveau(niv)}</option>
-              ))}
+              <option value="">{t('admin.users.all_positions')}</option>
+              <option value={3}>{NIVEAU_LABELS[3][lang]}</option>
+              <option value={4}>{NIVEAU_LABELS[4][lang]}</option>
+              <option value={5}>{NIVEAU_LABELS[5][lang]}</option>
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           </div>
 
           {/* Statut */}
@@ -480,30 +500,38 @@ export default function AdminUsers() {
             <select
               value={statFilter}
               onChange={e => setStatFilter(e.target.value)}
-              className="w-full appearance-none pl-3 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
+              className={`w-full appearance-none py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'pr-3 pl-8' : 'pl-3 pr-8'}`}
             >
-              <option value="">{FILTER_LABELS.all_statuses[lang]}</option>
+              <option value="">{t('admin.users.all_statuses')}</option>
               <option value="ACTIF">{translateStatus('ACTIF')}</option>
               <option value="SUSPENDU">{translateStatus('SUSPENDU')}</option>
               <option value="VERROUILLE">{translateStatus('VERROUILLE')}</option>
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
           </div>
+
+          {/* Reset filters */}
+          <button
+            onClick={resetFilters}
+            className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition text-gray-600 cursor-pointer whitespace-nowrap"
+          >
+            {t('admin.users.reset_filters')}
+          </button>
         </div>
       </div>
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div>
-          <table className="w-full text-sm table-fixed" dir={isRTL ? 'rtl' : 'ltr'}>
+          <table className="w-full text-sm" dir={isRTL ? 'rtl' : 'ltr'}>
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[32%] ${isRTL ? 'text-right' : 'text-left'}`}>{(TABLE_HEADERS[lang] ?? TABLE_HEADERS['fr'])[0]}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[16%] ${isRTL ? 'text-right' : 'text-left'}`}>{(TABLE_HEADERS[lang] ?? TABLE_HEADERS['fr'])[1]}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[16%] ${isRTL ? 'text-right' : 'text-left'}`}>{(TABLE_HEADERS[lang] ?? TABLE_HEADERS['fr'])[2]}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[12%] ${isRTL ? 'text-right' : 'text-left'}`}>{(TABLE_HEADERS[lang] ?? TABLE_HEADERS['fr'])[3]}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%] ${isRTL ? 'text-right' : 'text-left'}`}>{(TABLE_HEADERS[lang] ?? TABLE_HEADERS['fr'])[4]}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[14%] ${isRTL ? 'text-right' : 'text-left'}`}>{(TABLE_HEADERS[lang] ?? TABLE_HEADERS['fr'])[5]}</th>
+                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_user')}</th>
+                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_service')}</th>
+                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_position')}</th>
+                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_status')}</th>
+                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_created')}</th>
+                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -527,7 +555,7 @@ export default function AdminUsers() {
                   <tr key={user.id} className="hover:bg-gray-50/60 transition-colors">
                     {/* Utilisateur — avatar + name + email */}
                     <td className={`px-3 py-3`}>
-                      <div className={`flex items-center gap-2.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex items-center gap-2.5">
                         <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm`}>
                           {initials(user)}
                         </div>
@@ -539,32 +567,19 @@ export default function AdminUsers() {
                     </td>
 
                     {/* Service */}
-                    <td className={`px-3 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${badge}`}>
+                    <td className={`px-3 py-3 truncate ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${badge}`}>
                         {translateDept(user.department?.name ?? null)}
                       </span>
                     </td>
 
                     {/* Poste */}
-                    <td className={`px-3 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {isRTL ? (
-                        // In Arabic: show translated label as primary, French nom_role as secondary
-                        <>
-                          <p className="font-medium text-gray-800 text-xs leading-tight">
-                            {getNiveauLabel(user) || user.role?.nom_role || '—'}
-                          </p>
-                          {user.role && user.role.nom_role && getNiveauLabel(user) && (
-                            <p className="text-[11px] text-gray-400 mt-0.5 dir-ltr" dir="ltr">{user.role.nom_role}</p>
-                          )}
-                        </>
-                      ) : (
-                        // In FR/EN: show nom_role as primary, niveau label as secondary
-                        <>
-                          <p className="font-medium text-gray-800 text-xs leading-tight">{user.role?.nom_role ?? '—'}</p>
-                          {user.role && getNiveauLabel(user) && (
-                            <p className="text-[11px] text-gray-400 mt-0.5">{getNiveauLabel(user)}</p>
-                          )}
-                        </>
+                    <td className={`px-3 py-3 truncate ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <p className="font-medium text-gray-800 text-xs leading-tight truncate">
+                        {user.position ?? user.role?.nom_role ?? '—'}
+                      </p>
+                      {user.role?.nom_role && (
+                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">{user.role.nom_role}</p>
                       )}
                     </td>
 
@@ -587,11 +602,11 @@ export default function AdminUsers() {
 
                     {/* Actions */}
                     <td className={`px-3 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      <div className={`flex items-center gap-0.5 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                      <div className="flex items-center gap-1.5 whitespace-nowrap">
                         {/* Edit */}
                         <button
                           onClick={() => openEdit(user)}
-                          title="Modifier"
+                          title={t('admin.users.edit')}
                           className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -612,21 +627,17 @@ export default function AdminUsers() {
 
                         {/* Block / unblock */}
                         <button
-                          onClick={() => blockMut.mutate({ id: user.id, currentStatut: user.statut })}
+                          onClick={() => blockMut.mutate(user.id)}
                           disabled={blockingId === user.id}
-                          title={user.statut === 'ACTIF' ? tlx('block_success') : tlx('unblock_success')}
-                          className={`p-1.5 rounded-lg transition disabled:opacity-40 ${
-                            user.statut === 'ACTIF'
-                              ? 'hover:bg-orange-50 text-orange-500 hover:text-orange-700'
-                              : 'hover:bg-green-50 text-green-500 hover:text-green-700'
-                          }`}
+                          className={`text-xs px-2 py-1 rounded transition font-medium whitespace-nowrap
+                            ${user.statut === 'ACTIF'
+                              ? 'bg-red-50 hover:bg-red-100 text-red-600'
+                              : 'bg-green-50 hover:bg-green-100 text-green-600'
+                            }`}
                         >
                           {blockingId === user.id
-                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            : user.statut === 'ACTIF'
-                              ? <Lock className="w-3.5 h-3.5" />
-                              : <Unlock className="w-3.5 h-3.5" />
-                          }
+                            ? '...'
+                            : user.statut === 'ACTIF' ? t('admin.users.block') : t('admin.users.unblock')}
                         </button>
 
                         {/* Delete */}
@@ -634,7 +645,7 @@ export default function AdminUsers() {
                           <button
                             onClick={() => setUserToDelete(user)}
                             disabled={deletingId === user.id}
-                            title="Supprimer"
+                            title={t('common.delete')}
                             className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-700 transition disabled:opacity-40"
                           >
                             {deletingId === user.id
@@ -654,8 +665,8 @@ export default function AdminUsers() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {userToDelete && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {userToDelete && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" style={{ zIndex: 999999 }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center text-center transform transition-all">
             <div className="w-14 h-14 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-4">
               <Trash2 className="w-6 h-6" />
@@ -685,12 +696,17 @@ export default function AdminUsers() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
       {/* ── Password Reset Modal ── */}
-      {resetTarget && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+      {resetTarget && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center bg-black/50 p-4"
+          style={{ zIndex: 999999 }}
+          onClick={e => { if (e.target === e.currentTarget) setResetTarget(null); }}
+        >
+          <div className="bg-white w-full max-w-sm max-h-[90vh] rounded-2xl flex flex-col overflow-hidden">
+            <div className="overflow-y-auto flex-1 min-h-0 p-6 flex flex-col gap-4">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -764,17 +780,20 @@ export default function AdminUsers() {
             </div>
           </div>
         </div>
+      </div>,
+      document.body
       )}
 
       {/* Modal User Form */}
-      {showModal && (
+      {showModal && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 flex items-center justify-center bg-black/50 p-4"
+          style={{ zIndex: 999999 }}
           onClick={e => { if (e.target === e.currentTarget) closeModal(); }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] flex flex-col">
+          <div className="bg-white w-full max-w-md max-h-[90vh] rounded-2xl flex flex-col overflow-hidden">
             {/* Modal header */}
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
               <h2 className="text-base font-bold text-[#0D1F3C]">
                 {editingUser ? tlx('edit_title') : tlx('new_title')}
               </h2>
@@ -787,7 +806,7 @@ export default function AdminUsers() {
             </div>
 
             {/* Modal body */}
-            <div className="overflow-y-auto flex-1 px-6 py-4">
+            <div className="overflow-y-auto flex-1 min-h-0 px-6 py-4">
               <form id="user-form" onSubmit={handleSubmit} className="space-y-4">
                 {/* Nom + Prénom */}
                 <div className="grid grid-cols-2 gap-3">
@@ -841,7 +860,7 @@ export default function AdminUsers() {
                 </div>
 
                 {/* Service + Poste (staff only) */}
-                {(!editingUser || !isClientUser(editingUser)) && (
+                {(!editingUser || !isClient(editingUser)) && (
                   <>
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">{tlx('service')} *</label>
@@ -850,33 +869,53 @@ export default function AdminUsers() {
                           required={!editingUser}
                           value={form.department_code}
                           onChange={e => setForm(f => ({...f, department_code: e.target.value, poste: ''}))}
-                          className="w-full appearance-none border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
+                          className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
                         >
                           <option value="">{tlx('sel_service')}</option>
                           {departments.map(d => (
                             <option key={d.id} value={d.code}>{translateDept(d.name)}</option>
                           ))}
                         </select>
-                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
                       </div>
                     </div>
 
+                    {/* Poste (normalized position) */}
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">{tlx('poste')} *</label>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">{tlx('poste')}</label>
+                      <div className="relative">
+                        <select
+                          value={form.poste}
+                          onChange={e => setForm(f => ({...f, poste: e.target.value}))}
+                          className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
+                        >
+                          <option value="">{tlx('sel_poste')}</option>
+                          {availablePositions.map(p => (
+                            <option key={p.id} value={p.title}>{p.title}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
+                      </div>
+                    </div>
+
+                    {/* Rôle système (access level) */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">
+                        {t('admin.users.field_role')} *
+                      </label>
                       <div className="relative">
                         <select
                           required={!editingUser}
-                          value={form.poste}
-                          onChange={e => setForm(f => ({...f, poste: e.target.value}))}
-                          disabled={!form.department_code && !editingUser}
-                          className="w-full appearance-none border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] disabled:bg-gray-50 disabled:text-gray-400"
+                          value={form.role_nom}
+                          onChange={e => setForm(f => ({...f, role_nom: e.target.value}))}
+                          className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
                         >
-                          <option value="">{tlx('sel_poste')}</option>
+                          <option value="">{t('admin.users.select_role')}</option>
                           {availableRolesForModal.map(r => (
                             <option key={r.id} value={r.nom_role}>{r.nom_role}</option>
                           ))}
                         </select>
-                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
                       </div>
                     </div>
                   </>
@@ -890,20 +929,20 @@ export default function AdminUsers() {
                       required
                       value={form.statut}
                       onChange={e => setForm(f => ({...f, statut: e.target.value}))}
-                      className="w-full appearance-none border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
+                      className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
                     >
                       <option value="ACTIF">{tlx('active')}</option>
                       <option value="SUSPENDU">{tlx('suspended')}</option>
                       <option value="VERROUILLE">{tlx('locked')}</option>
                     </select>
-                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
                   </div>
                 </div>
               </form>
             </div>
 
             {/* Modal footer */}
-            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 justify-end">
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 justify-end shrink-0">
               <button
                 type="button"
                 onClick={closeModal}
@@ -922,7 +961,8 @@ export default function AdminUsers() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -34,6 +34,9 @@ export const adminService = {
   getDepartments: () =>
     apiClient.get('/api/admin/departments'),
 
+  getPositions: (departmentId?: number) =>
+    apiClient.get('/api/admin/positions', departmentId ? { params: { department_id: departmentId } } : undefined),
+
   // ─── Registrations ──────────────────────────────────────────────────────────
 
   getRegistrations: (statut = 'EN_ATTENTE_VALIDATION') =>
@@ -50,7 +53,7 @@ export const adminService = {
   getAuditLog: (params?: Record<string, string>) =>
     apiClient.get('/api/admin/audit', { params }),
 
-  // ─── System Config ──────────────────────────────────────────────────────────
+  // ─── System Config (configuration_systeme — legacy) ─────────────────────────
 
   getConfig: () =>
     apiClient.get('/api/admin/config'),
@@ -58,8 +61,27 @@ export const adminService = {
   updateConfig: (cle: string, valeur: string) =>
     apiClient.post('/api/admin/config', { cle, valeur }),
 
+  // ─── System Config (system_config — new) ────────────────────────────────────
+
+  getSystemConfig: () =>
+    apiClient.get('/api/admin/system-config'),
+
+  updateSystemConfigSection: (section: string, data: Record<string, string>) =>
+    apiClient.post(`/api/admin/system-config/${section}`, data),
+
   // ─── Dashboard ──────────────────────────────────────────────────────────────
 
   getDashboard: () =>
     apiClient.get('/api/admin/dashboard'),
+
+  // ─── Currencies ─────────────────────────────────────────────────────────────
+
+  getCurrencies: () =>
+    apiClient.get('/api/admin/currencies'),
+
+  syncCurrencies: () =>
+    apiClient.post('/api/admin/currencies/sync'),
+
+  updateCurrencyRate: (code: string, taux: number) =>
+    apiClient.post(`/api/admin/currencies/${code}/update`, { taux }),
 };

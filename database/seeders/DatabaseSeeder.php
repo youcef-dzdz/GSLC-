@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
         $this->call(TypeConteneurSeeder::class); // 6. types_conteneur (no dependencies)
         $this->call(PortSeeder::class);       // 7. ports (needs pays)
         $this->call(FranchiseSeeder::class);  // 8. franchises (no dependencies)
+        $this->call(PenaliteSeeder::class);   // 9. penalites (needs types_conteneur, devises)
+        $this->call(WorkflowSeeder::class);   // 10. workflows + etapes (no dependencies)
 
         $this->command->info('');
 
@@ -30,6 +32,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('── Layer 2 : Données de test ──');
 
         $this->call(UserSeeder::class);       // 9. users + clients (needs roles, pays)
+        $this->call(PositionSeeder::class);  // 10. positions table + link existing users
 
         $this->command->info('');
         $this->command->info('✅ Seeding terminé avec succès !');

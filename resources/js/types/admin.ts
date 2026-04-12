@@ -7,6 +7,16 @@ export interface Role {
   niveau: number;
 }
 
+// ─── Positions ────────────────────────────────────────────────────────────────
+
+export interface Position {
+  id: number;
+  title: string;
+  description: string | null;
+  department_id: number | null;
+  department: { id: number; name: string; code: string } | null;
+}
+
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 export type UserStatut = 'ACTIF' | 'INACTIF' | 'SUSPENDU' | 'VERROUILLE' | 'EN_ATTENTE_VALIDATION' | 'REJETE';
@@ -16,7 +26,10 @@ export interface AdminUser {
   nom: string;
   prenom: string;
   email: string;
+  /** Resolved position title — comes through the Laravel accessor (normalized or legacy string) */
   position: string | null;
+  position_id: number | null;
+  position_obj: { id: number; title: string; department_id: number | null } | null;
   statut: UserStatut;
   tentatives_echouees: number;
   derniere_connexion: string | null;
@@ -29,6 +42,7 @@ export interface CreateUserPayload {
   prenom: string;
   email: string;
   role_id: number;
+  department_id?: number;
   position?: string;
 }
 
@@ -37,6 +51,7 @@ export interface UpdateUserPayload {
   prenom?: string;
   email?: string;
   role_id?: number;
+  department_id?: number;
   position?: string;
   statut?: UserStatut;
 }
