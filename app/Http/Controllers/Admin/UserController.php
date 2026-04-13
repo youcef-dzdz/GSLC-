@@ -196,12 +196,16 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         try {
+            $userData = $user->toArray();
+
             // Delete associated client record first (frees the email)
             if ($user->client) {
                 $user->client->forceDelete();
             }
 
             $user->forceDelete();
+
+            $this->audit('DELETE', 'users', $id, $userData, null);
 
             return response()->json(['message' => 'Utilisateur et client associé supprimés définitivement.']);
         } catch (\Exception $e) {
@@ -243,8 +247,25 @@ class UserController extends Controller
             'password' => 'nullable|string|min:6',
         ]);
 
-        $user->password = Hash::make($newPassword);
+        $user->password             = Hash::make($newPassword);
+        $user->must_change_password = true;
         $user->save();
+
+        $lang = $request->input('lang',
+            $user->preferred_lang
+            ?? app()->getLocale()
+            ?? 'fr'
+        );
+
+        // Email 1 — nouveau mot de passe envoyé au staff
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)
+                ->queue(new \App\Mail\StaffNewPassword($user, $newPassword, $lang));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error(
+                'StaffNewPassword email failed: ' . $e->getMessage()
+            );
+        }
 
         $this->audit('UPDATE', 'users', $user->id, ['password' => '***'], ['password' => '*** (reset by admin)']);
 

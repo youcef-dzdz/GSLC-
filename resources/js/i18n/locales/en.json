@@ -48,7 +48,32 @@
     "mobile_label": "Employee Space",
     "footer": "Access reserved for authorized personnel.",
     "error_invalid": "Incorrect credentials or unauthorized access.",
-    "error_forbidden": "This account is not authorized to access the staff portal."
+    "error_forbidden": "This account is not authorized to access the staff portal.",
+    "force_password": {
+      "title": "Password change required",
+      "subtitle": "Your temporary password must be changed before continuing.",
+      "new_password": "New password",
+      "confirm_password": "Confirm password",
+      "placeholder_new": "Minimum 8 characters",
+      "placeholder_confirm": "Repeat password",
+      "submit": "Change my password",
+      "submitting": "Changing...",
+      "error_mismatch": "Passwords do not match.",
+      "error_short": "Password must be at least 8 characters.",
+      "success": "Password changed successfully.",
+      "security_note": "For your security, choose a unique password you don't use anywhere else."
+    }
+  },
+  "force_change": {
+    "title": "Password change required",
+    "subtitle": "Your temporary password must be changed before continuing.",
+    "new_password": "New password",
+    "confirm_password": "Confirm password",
+    "submit": "Change my password",
+    "submitting": "Changing...",
+    "success": "Password changed successfully.",
+    "error_mismatch": "Passwords do not match.",
+    "error_short": "Password must be at least 8 characters."
   },
   "forgot": {
     "title": "Forgot your password?",
@@ -164,6 +189,7 @@
     "dashboard": "Dashboard",
     "users": "User Management",
     "departments": "Services & Departments",
+    "positions": "Positions",
     "registrations": "Registration Requests",
     "audit": "Audit Log",
     "config": "System Configuration",
@@ -189,7 +215,8 @@
       "no_notifications": "No notifications",
       "see_audit": "See audit log →",
       "live": "Live",
-      "unread": "unread"
+      "unread": "unread",
+      "see_all": "See all notifications →"
     }
   },
   "landing": {
@@ -428,7 +455,11 @@
       "field_status": "Status",
       "select_service": "Select a department",
       "select_position": "Select a position",
-      "select_role": "Select a role"
+      "select_role": "Select a role",
+      "generate_password": "Generate a password",
+      "confirm_send": "Confirm & send",
+      "temp_password_for": "Temporary password generated for",
+      "copy_warning": "Copy this password before confirming. It will not be shown again."
     },
     "departments": {
       "title": "Services & Departments",
@@ -535,6 +566,20 @@
       "error_load": "Error loading configuration.",
       "confirm_maintenance_title": "Enable maintenance mode?",
       "confirm_maintenance_message": "The site will be inaccessible to non-admin users. Confirm?"
+    },
+    "notifications_page": {
+      "title": "All notifications",
+      "mark_all_read": "Mark all as read",
+      "filter_all": "All",
+      "filter_unread": "Unread",
+      "filter_read": "Read",
+      "empty": "No notifications",
+      "see": "View →",
+      "canal_system": "System",
+      "canal_email": "Email",
+      "delete": "Delete",
+      "delete_read": "Delete read",
+      "delete_confirm": "Delete this notification?"
     }
   },
   "contact": {

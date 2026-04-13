@@ -11,6 +11,7 @@ import { ToastProvider } from './components/ui/Toast';
 import LandingPage from './LandingPage';
 import ClientLogin from './pages/auth/ClientLogin';
 import StaffLogin from './pages/auth/StaffLogin';
+import ForcePasswordChange from './pages/staff/ForcePasswordChange';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -20,9 +21,11 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminRegistrations from './pages/admin/AdminRegistrations';
+import AdminPositions from './pages/admin/AdminPositions';
 import DepartmentsPage from './pages/admin/DepartmentsPage';
 import AuditPage from './pages/admin/AuditPage';
 import ConfigPage from './pages/admin/ConfigPage';
+import NotificationsPage from './pages/admin/NotificationsPage';
 
 import CommercialDashboard from './pages/commercial/CommercialDashboard';
 import CommercialDemands from './pages/commercial/CommercialDemands';
@@ -66,6 +69,7 @@ const App = () => {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<ClientLogin />} />
               <Route path="/staff/login" element={<StaffLogin />} />
+              <Route path="/staff/change-password" element={<ForcePasswordChange />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/staff/forgot-password" element={<ForgotPassword />} />
@@ -80,6 +84,8 @@ const App = () => {
                   <Route path="/admin/registrations" element={<AdminRegistrations />} />
                   <Route path="/admin/config" element={<ConfigPage />} />
                   <Route path="/admin/departments" element={<DepartmentsPage />} />
+                  <Route path="/admin/positions"   element={<AdminPositions />} />
+                  <Route path="/admin/notifications" element={<NotificationsPage />} />
                 </Route>
               </Route>
 

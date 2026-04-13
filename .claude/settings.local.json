@@ -11,7 +11,9 @@
       "Bash(node -e ':*)",
       "Bash(node -e \"require\\('./resources/js/i18n/locales/fr.json'\\); console.log\\('fr OK'\\)\")",
       "Bash(node -e \"require\\('./resources/js/i18n/locales/en.json'\\); console.log\\('en OK'\\)\")",
-      "Bash(node -e \"require\\('./resources/js/i18n/locales/ar.json'\\); console.log\\('ar OK'\\)\")"
+      "Bash(node -e \"require\\('./resources/js/i18n/locales/ar.json'\\); console.log\\('ar OK'\\)\")",
+      "Bash(php c:/xampp/htdocs/GSLC/artisan route:list --path=api/admin/notifications)",
+      "Bash(php c:/xampp/htdocs/GSLC/artisan tinker '--execute=:*)"
     ]
   }
 }

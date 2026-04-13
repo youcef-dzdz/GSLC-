@@ -36,6 +36,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (credentials: LoginCredentials) => {
     const data = await authService.login(credentials);
     setUser(data.user);
+    if (data.user.must_change_password) {
+      return '/staff/change-password';
+    }
     return data.redirect_to;
   };
 

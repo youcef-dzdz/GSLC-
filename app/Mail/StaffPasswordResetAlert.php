@@ -17,12 +17,14 @@ class StaffPasswordResetAlert extends Mailable implements ShouldQueue
     public User $staffUser;
     public string $ipAddress;
     public string $resetAt;
+    public string $lang;
 
-    public function __construct(User $staffUser, string $ipAddress)
+    public function __construct(User $staffUser, string $ipAddress, string $lang = 'fr')
     {
         $this->staffUser = $staffUser;
         $this->ipAddress = $ipAddress;
         $this->resetAt   = now()->format('d/m/Y à H:i:s');
+        $this->lang      = $lang;
     }
 
     public function envelope(): Envelope
@@ -35,13 +37,29 @@ class StaffPasswordResetAlert extends Mailable implements ShouldQueue
 
         return new Envelope(
             to: $to,
-            subject: sprintf(
-                '[GSLC] Réinitialisation mot de passe — %s %s (%s) — %s',
-                $this->staffUser->nom,
-                $this->staffUser->prenom,
-                $this->staffUser->role->nom_role,
-                $this->resetAt
-            ),
+            subject: match($this->lang) {
+                'ar' => sprintf(
+                    '[GSLC] إعادة تعيين كلمة المرور — %s %s (%s) — %s',
+                    $this->staffUser->nom,
+                    $this->staffUser->prenom,
+                    $this->staffUser->role->nom_role,
+                    $this->resetAt
+                ),
+                'en' => sprintf(
+                    '[GSLC] Password reset — %s %s (%s) — %s',
+                    $this->staffUser->nom,
+                    $this->staffUser->prenom,
+                    $this->staffUser->role->nom_role,
+                    $this->resetAt
+                ),
+                default => sprintf(
+                    '[GSLC] Réinitialisation mot de passe — %s %s (%s) — %s',
+                    $this->staffUser->nom,
+                    $this->staffUser->prenom,
+                    $this->staffUser->role->nom_role,
+                    $this->resetAt
+                ),
+            },
         );
     }
 

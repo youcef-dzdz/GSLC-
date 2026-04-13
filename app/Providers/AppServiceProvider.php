@@ -12,6 +12,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         View::composer('*', function ($view) {
+            // Ne pas écraser $lang dans les vues email — elles gèrent leur propre langue
+            if (str_starts_with($view->getName(), 'emails.')) {
+                return;
+            }
+
             $lang   = session('gslc_lang', 'fr');
             $isRtl  = $lang === 'ar';
 

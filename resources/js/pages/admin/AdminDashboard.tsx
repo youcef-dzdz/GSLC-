@@ -332,10 +332,12 @@ const AdminDashboard: React.FC = () => {
 
   // ── Derived data ───────────────────────────────────────────────────────────
 
-  const deptCount: number = Array.isArray(deptsRaw)
-    ? deptsRaw.length
-    : Array.isArray((deptsRaw as { data?: unknown[] } | null)?.data)
-    ? (deptsRaw as { data: unknown[] }).data.length
+  const deptCount: number = Array.isArray((deptsRaw as any)?.departments)
+    ? (deptsRaw as any).departments.length
+    : Array.isArray(deptsRaw)
+    ? (deptsRaw as unknown[]).length
+    : Array.isArray((deptsRaw as any)?.data)
+    ? (deptsRaw as any).data.length
     : 0;
 
   const devises = (currRaw?.devises ?? []).filter(d => d.code !== 'DZD');

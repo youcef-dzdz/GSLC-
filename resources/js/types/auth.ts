@@ -12,6 +12,7 @@ export interface User {
   prenom: string;
   email: string;
   statut: string;
+  must_change_password?: boolean;
   role: UserRole;
   client_profile?: any; // To type stricter later based on DB
   derniere_connexion?: string;

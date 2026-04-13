@@ -80,12 +80,13 @@ class AuthController extends Controller
             'message'     => 'Connexion réussie.',
             'token'       => $token,
             'user'        => [
-                'id'      => $user->id,
-                'nom'     => $user->nom,
-                'prenom'  => $user->prenom,
-                'email'   => $user->email,
-                'statut'  => $user->statut,
-                'role'    => [
+                'id'                   => $user->id,
+                'nom'                  => $user->nom,
+                'prenom'               => $user->prenom,
+                'email'                => $user->email,
+                'statut'               => $user->statut,
+                'must_change_password' => (bool) $user->must_change_password,
+                'role'                 => [
                     'id'    => $user->role->id,
                     'label' => $user->role->label,
                     'nom'   => $user->role->nom_role,
@@ -270,5 +271,58 @@ class AuthController extends Controller
         }
 
         return response()->json(['message' => 'Lien invalide ou expiré.'], 400);
+    }
+
+    // =========================================================================
+    // CHANGE PASSWORD (forced — must_change_password = true)
+    // POST /api/staff/change-password   middleware: auth:sanctum
+    // =========================================================================
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = auth()->user();
+
+        $user->update([
+            'password'             => Hash::make($request->password),
+            'must_change_password' => false,
+        ]);
+
+        // Alerte sécurité à l'admin — le staff a changé son mot de passe
+        try {
+            \Illuminate\Support\Facades\Mail::queue(
+                new \App\Mail\StaffPasswordResetAlert(
+                    $user,
+                    $request->ip() ?? '127.0.0.1'
+                )
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error(
+                'StaffPasswordResetAlert email failed: ' . $e->getMessage()
+            );
+        }
+
+        // Notification bell pour les admins
+        $adminIds = \App\Models\User::whereHas('role',
+            fn($q) => $q->where('label', 'admin')
+        )->pluck('id');
+
+        foreach ($adminIds as $adminId) {
+            \App\Models\Notification::create([
+                'destinataire_id' => $adminId,
+                'titre'           => 'Mot de passe modifié',
+                'message'         => $user->prenom . ' ' . $user->nom
+                                     . ' a changé son mot de passe.',
+                'canal'           => 'SYSTEME',
+                'lien_action'     => '/admin/users',
+                'lu'              => false,
+                'date_creation'   => now(),
+            ]);
+        }
+
+        return response()->json(['message' => 'Mot de passe mis à jour.']);
     }
 }

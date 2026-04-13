@@ -42,6 +42,7 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
   const [notifs,       setNotifs]       = useState<Notif[]>([]);
   const [unread,       setUnread]       = useState(0);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [hoveredNotif, setHoveredNotif] = useState<number|null>(null);
 
   const fetchNotifs = async () => {
     setNotifLoading(true);
@@ -71,6 +72,15 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
       await apiClient.post('/api/admin/notifications/read-all');
       setNotifs(prev => prev.map(n => ({ ...n, lu: true })));
       setUnread(0);
+    } catch { /* silencieux */ }
+  };
+
+  const deleteNotif = async (id: number) => {
+    try {
+      const wasUnread = notifs.find(n => n.id === id)?.lu === false;
+      await apiClient.delete(`/api/admin/notifications/${id}`);
+      setNotifs(prev => prev.filter(n => n.id !== id));
+      if (wasUnread) setUnread(prev => Math.max(0, prev - 1));
     } catch { /* silencieux */ }
   };
 
@@ -316,7 +326,9 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
                             key={n.id}
                             onClick={() => {
                               if (!n.lu) markRead(n.id);
-                              if (n.lien_action) { navigate(n.lien_action); setNotifOpen(false); }
+                              const dest = n.lien_action ?? '/admin/notifications';
+                              navigate(dest);
+                              setNotifOpen(false);
                             }}
                             style={{
                               display: 'flex', gap: 12,
@@ -326,8 +338,8 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
                               background: n.lu ? '#fff' : '#FFFBEB',
                               transition: 'background .15s',
                             }}
-                            onMouseEnter={e => { e.currentTarget.style.background = n.lu ? '#F8F9FB' : '#FEF3C7'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = n.lu ? '#fff' : '#FFFBEB'; }}
+                            onMouseEnter={e => { e.currentTarget.style.background = n.lu ? '#F8F9FB' : '#FEF3C7'; setHoveredNotif(n.id); }}
+                            onMouseLeave={e => { e.currentTarget.style.background = n.lu ? '#fff' : '#FFFBEB'; setHoveredNotif(null); }}
                           >
                             {/* Indicateur non lu */}
                             <div style={{ flexShrink: 0, marginTop: 6 }}>
@@ -359,6 +371,15 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
                                 })}
                               </p>
                             </div>
+                            {/* Bouton supprimer */}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); markRead(n.id); }}
+                              className="flex-shrink-0 p-1 rounded-lg transition-opacity hover:bg-red-50 cursor-pointer"
+                              title={t('admin.notifications_page.delete')}
+                              style={{ background: 'none', border: 'none', alignSelf: 'center', opacity: hoveredNotif === n.id ? 1 : 0 }}
+                            >
+                              <X size={12} className="text-[#94A3B8] hover:text-[#EF4444]" />
+                            </button>
                           </div>
                         ))
                       )}
@@ -371,13 +392,13 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
                         borderTop: '1px solid #F1F5F9', textAlign: 'center',
                       }}>
                         <button
-                          onClick={() => { navigate('/admin/audit'); setNotifOpen(false); }}
+                          onClick={() => { navigate('/admin/notifications'); setNotifOpen(false); }}
                           style={{
                             fontSize: 12, fontWeight: 700, color: '#3B82F6',
                             background: 'none', border: 'none', cursor: 'pointer',
                           }}
                         >
-                          {t('nav.notifications.see_audit')}
+                          {t('nav.notifications.see_all')}
                         </button>
                       </div>
                     )}

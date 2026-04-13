@@ -48,7 +48,32 @@
     "mobile_label": "Espace Employé",
     "footer": "Accès réservé au personnel autorisé par la DSIG.",
     "error_invalid": "Identifiants incorrects ou accès non autorisé.",
-    "error_forbidden": "Ce compte n'est pas autorisé à accéder au portail staff."
+    "error_forbidden": "Ce compte n'est pas autorisé à accéder au portail staff.",
+    "force_password": {
+      "title": "Changement de mot de passe requis",
+      "subtitle": "Votre mot de passe temporaire doit être changé avant de continuer.",
+      "new_password": "Nouveau mot de passe",
+      "confirm_password": "Confirmer le mot de passe",
+      "placeholder_new": "Minimum 8 caractères",
+      "placeholder_confirm": "Répéter le mot de passe",
+      "submit": "Changer mon mot de passe",
+      "submitting": "Changement en cours...",
+      "error_mismatch": "Les mots de passe ne correspondent pas.",
+      "error_short": "Le mot de passe doit contenir au moins 8 caractères.",
+      "success": "Mot de passe changé avec succès.",
+      "security_note": "Pour votre sécurité, choisissez un mot de passe unique que vous n'utilisez nulle part ailleurs."
+    }
+  },
+  "force_change": {
+    "title": "Changement de mot de passe requis",
+    "subtitle": "Votre mot de passe temporaire doit être changé avant de continuer.",
+    "new_password": "Nouveau mot de passe",
+    "confirm_password": "Confirmer le mot de passe",
+    "submit": "Changer mon mot de passe",
+    "submitting": "Changement en cours...",
+    "success": "Mot de passe changé avec succès.",
+    "error_mismatch": "Les mots de passe ne correspondent pas.",
+    "error_short": "Le mot de passe doit contenir au moins 8 caractères."
   },
   "forgot": {
     "title": "Mot de passe oublié ?",
@@ -164,6 +189,7 @@
     "dashboard": "Tableau de bord",
     "users": "Gestion des Utilisateurs",
     "departments": "Services & Départements",
+    "positions": "Postes",
     "registrations": "Demandes d'inscription",
     "audit": "Journal d'audit",
     "config": "Configuration système",
@@ -189,7 +215,8 @@
       "no_notifications": "Aucune notification",
       "see_audit": "Voir le journal d'audit →",
       "live": "En direct",
-      "unread": "non lue(s)"
+      "unread": "non lue(s)",
+      "see_all": "Voir toutes les notifications →"
     }
   },
   "landing": {
@@ -428,7 +455,11 @@
       "field_status": "Statut",
       "select_service": "Sélectionner un service",
       "select_position": "Sélectionner un poste",
-      "select_role": "Sélectionner un rôle"
+      "select_role": "Sélectionner un rôle",
+      "generate_password": "Générer un mot de passe",
+      "confirm_send": "Confirmer l'envoi",
+      "temp_password_for": "Mot de passe temporaire généré pour",
+      "copy_warning": "Copiez ce mot de passe avant de confirmer. Il ne sera plus affiché après."
     },
     "departments": {
       "title": "Services & Départements",
@@ -535,6 +566,20 @@
       "error_load": "Erreur de chargement de la configuration.",
       "confirm_maintenance_title": "Activer le mode maintenance ?",
       "confirm_maintenance_message": "Le site sera inaccessible aux utilisateurs non-admins. Confirmer ?"
+    },
+    "notifications_page": {
+      "title": "Toutes les notifications",
+      "mark_all_read": "Tout marquer comme lu",
+      "filter_all": "Toutes",
+      "filter_unread": "Non lues",
+      "filter_read": "Lues",
+      "empty": "Aucune notification",
+      "see": "Voir →",
+      "canal_system": "Système",
+      "canal_email": "Email",
+      "delete": "Supprimer",
+      "delete_read": "Supprimer les lues",
+      "delete_confirm": "Supprimer cette notification ?"
     }
   },
   "contact": {

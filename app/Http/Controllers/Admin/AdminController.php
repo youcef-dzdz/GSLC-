@@ -90,7 +90,7 @@ class AdminController extends Controller
      * Approve a client registration.
      * Sets user statut = ACTIF and client statut = VALIDE.
      */
-    public function approveRegistration(int $id): JsonResponse
+    public function approveRegistration(Request $request, int $id): JsonResponse
     {
         $client = Client::with('user')->findOrFail($id);
 
@@ -122,6 +122,20 @@ class AdminController extends Controller
             'lu'              => false,
             'date_creation'   => now(),
         ]);
+
+        // Send approval email
+        try {
+            $lang = $request->input('lang', 'fr');
+            if (!in_array($lang, ['fr', 'en', 'ar'])) $lang = 'fr';
+            \Illuminate\Support\Facades\Mail::to($client->user->email)
+                ->queue(new \App\Mail\ClientRegistrationApproved(
+                    $client->raison_sociale ?? $client->user->prenom . ' ' . $client->user->nom,
+                    $client->user->email,
+                    $lang
+                ));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Approval email failed: ' . $e->getMessage());
+        }
 
         $this->audit('UPDATE', 'clients', $client->id, $oldClient, $client->fresh()->toArray());
 
@@ -166,6 +180,20 @@ class AdminController extends Controller
             'lu'              => false,
             'date_creation'   => now(),
         ]);
+
+        // Send rejection email
+        try {
+            $lang = \DB::table('system_config')->where('key', 'default_lang')->value('value') ?? 'fr';
+            \Illuminate\Support\Facades\Mail::to($client->user->email)
+                ->queue(new \App\Mail\ClientRegistrationRejected(
+                    $client->raison_sociale ?? $client->user->prenom . ' ' . $client->user->nom,
+                    $client->user->email,
+                    $request->motif,
+                    $lang
+                ));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Rejection email failed: ' . $e->getMessage());
+        }
 
         $this->audit('UPDATE', 'clients', $client->id, $oldClient, $client->fresh()->toArray());
 

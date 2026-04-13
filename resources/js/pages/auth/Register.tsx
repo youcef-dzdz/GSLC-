@@ -58,6 +58,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('SUBMIT FIRED', form);
     setError('');
 
     if (form.password !== form.password_confirmation) {
@@ -258,6 +259,7 @@ export default function Register() {
                       type="text"
                       value={form.nis}
                       onChange={set('nis')}
+                      required
                       dir="ltr"
                       className={inputCls(isRTL ? 'text-right' : '')}
                     />
@@ -271,6 +273,7 @@ export default function Register() {
                       type="text"
                       value={form.rc}
                       onChange={set('rc')}
+                      required
                       dir="ltr"
                       className={inputCls(isRTL ? 'text-right' : '')}
                     />

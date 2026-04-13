@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import {
   ChevronDown, Loader2, AlertCircle, Eye, CheckCircle, XCircle,
   FileText, Calendar, MapPin, Briefcase, Trash2
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { adminService } from '../../services/admin.service';
 import { apiClient } from '../../services/api';
 
@@ -96,6 +97,11 @@ export default function AdminRegistrations() {
   const isRTL = lang === 'ar';
   const qc = useQueryClient();
 
+  const [searchParams] = useSearchParams();
+  const highlightId = Number(searchParams.get('highlight')) || null;
+
+  const [highlightedId, setHighlightedId] = useState<number | null>(null);
+
   const [search, setSearch] = useState('');
   const [statutFilter, setStatutFilter] = useState('');
   const [detailTarget, setDetailTarget] = useState<Registration | null>(null);
@@ -128,6 +134,27 @@ export default function AdminRegistrations() {
     queryKey: ['admin-registrations', 'EN_ATTENTE_VALIDATION'],
     queryFn: async () => safeArray(await adminService.getRegistrations('EN_ATTENTE_VALIDATION')),
   });
+
+  useEffect(() => {
+    if (!highlightId || !pending) return;
+    setHighlightedId(highlightId);
+    // Attendre que React rende les lignes avant de scroller
+    const scrollTimer = setTimeout(() => {
+      const el = document.getElementById(`reg-row-${highlightId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 400);
+    // Fade out après 3.5 secondes
+    const fadeTimer = setTimeout(() => {
+      setHighlightedId(null);
+    }, 3500);
+    return () => {
+      clearTimeout(scrollTimer);
+      clearTimeout(fadeTimer);
+    };
+  }, [highlightId, pending]);
+
   const { data: approved = [], isLoading: loadingApproved } = useQuery<Registration[]>({
     queryKey: ['admin-registrations', 'APPROUVE'],
     queryFn: async () => safeArray(await adminService.getRegistrations('APPROUVE')),
@@ -160,7 +187,7 @@ export default function AdminRegistrations() {
   // ─── Mutations ───────────────────────────────────────────────────────────────
 
   const approveMut = useMutation({
-    mutationFn: (id: number) => adminService.approveRegistration(id),
+    mutationFn: (id: number) => apiClient.post(`/api/admin/registrations/${id}/approve`, { lang }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-registrations'] });
       showToast(tlx('approve_success'), 'success');
@@ -326,7 +353,15 @@ export default function AdminRegistrations() {
                 {filtered.map(reg => {
                   const sm = STATUS_META[reg.statut];
                   return (
-                    <tr key={reg.id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr
+                      key={reg.id}
+                      id={`reg-row-${reg.id}`}
+                      className="transition-all duration-700 hover:bg-gray-50/50"
+                      style={highlightedId === reg.id ? {
+                        backgroundColor: '#FFFBEB',
+                        boxShadow: 'inset 0 0 0 2px #CFA030',
+                      } : {}}
+                    >
                       {/* Company */}
                       <td className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
                         <div className="flex items-center gap-2.5">

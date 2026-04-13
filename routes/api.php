@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Shared — all authenticated users
     Route::get('/user',                            [AuthController::class, 'me'])->name('api.user');
     Route::post('/logout',                         [AuthController::class, 'logout'])->name('api.logout');
+    Route::post('/staff/change-password',          [AuthController::class, 'changePassword'])->name('staff.change-password');
     Route::get('/notifications',                   [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read',        [NotificationController::class, 'markRead'])->name('notifications.read');
 
@@ -115,8 +116,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Admin notifications
         Route::get('/notifications',               [AdminNotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/all',           [AdminNotificationController::class, 'all'])->name('notifications.all');
         Route::post('/notifications/read-all',     [AdminNotificationController::class, 'markAllRead'])->name('notifications.read-all');
         Route::post('/notifications/{id}/read',    [AdminNotificationController::class, 'markRead'])->name('notifications.mark-read');
+        Route::delete('/notifications/read',       [AdminNotificationController::class, 'destroyRead'])->name('notifications.destroy-read');
+        Route::delete('/notifications/{id}',       [AdminNotificationController::class, 'destroy'])->name('notifications.destroy');
     });
 
     // =========================================================================

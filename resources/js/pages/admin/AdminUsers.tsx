@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Search, Plus, Edit2, Trash2, Lock, Unlock, Key, X, Building2, Briefcase, Loader2, ChevronDown, Check, AlertCircle } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Lock, Unlock, Key, X, Building2, Briefcase, Loader2, ChevronDown, Check, AlertCircle, Copy } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
+import { apiClient } from '../../services/api';
 
 interface Department { id: number; code: string; name: string; }
 interface Role { id: number; nom_role: string; label: string; niveau: number; }
@@ -126,7 +127,8 @@ export default function AdminUsers() {
 
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
-  const [niveauFilter, setNiveauFilter] = useState<number|''>('');
+  const [posteFilter, setPosteFilter] = useState('');
+  const [posteOpen, setPosteOpen] = useState(false);
   const [statFilter, setStatFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser|null>(null);
@@ -151,7 +153,7 @@ export default function AdminUsers() {
   const resetFilters = () => {
     setSearch('');
     setDeptFilter('');
-    setNiveauFilter('');
+    setPosteFilter('');
     setStatFilter('');
   };
 
@@ -169,11 +171,17 @@ export default function AdminUsers() {
     queryFn: async () => safeArray(await adminService.getUsers()),
   });
 
-  const { data: departments = [] } = useQuery<Department[]>({
+  const { data: departments = [] } = useQuery({
     queryKey: ['admin-departments'],
-    queryFn: async () => safeArray(await adminService.getDepartments()),
-    select: (d: unknown): Department[] =>
-      Array.isArray(d) ? d : (d as any)?.data ?? [],
+    queryFn: () => adminService.getDepartments(),
+    select: (data: unknown): Department[] => {
+      if (Array.isArray(data)) return data;
+      if (Array.isArray((data as { departments?: Department[] })?.departments))
+        return (data as { departments: Department[] }).departments;
+      if (Array.isArray((data as { data?: Department[] })?.data))
+        return (data as { data: Department[] }).data;
+      return [];
+    },
   });
 
   const { data: roles = [] } = useQuery<Role[]>({
@@ -190,8 +198,8 @@ export default function AdminUsers() {
       if (Array.isArray(d)) return d;
       return [];
     },
-    retry: false,
-    initialData: { positions: [] },
+    select: (data: any) => Array.isArray(data) ? data : [],
+    initialData: [],
   });
 
   /* ── Derived ── */
@@ -222,8 +230,10 @@ export default function AdminUsers() {
         String(u.department_id) === String(deptFilter)
       );
     }
-    if (niveauFilter !== '') {
-      list = list.filter(u => Number(u.role?.niveau) === Number(niveauFilter));
+    if (posteFilter) {
+      list = list.filter(u => 
+        u.position?.toLowerCase().includes(posteFilter.toLowerCase())
+      );
     }
     if (statFilter) {
       list = list.filter(u =>
@@ -231,18 +241,17 @@ export default function AdminUsers() {
       );
     }
     return list;
-  }, [allUsers, search, deptFilter, niveauFilter, statFilter]);
+  }, [allUsers, search, deptFilter, posteFilter, statFilter]);
 
   /* ── Mutations ── */
   const resetMut = useMutation({
-    mutationFn: ({ id, password }: { id: number; password?: string }) =>
-      adminService.resetPassword(id, password),
+    mutationFn: ({ id, password, lang: reqLang }: { id: number; password?: string; lang: string }) =>
+      apiClient.post(`/api/admin/users/${id}/reset-password`, { password, lang: reqLang }),
     onMutate: ({ id }) => setResettingId(id),
-    onSuccess: (res: any) => {
-      const newPwd = res?.data?.new_password;
-      if (newPwd) setGeneratedPwd(newPwd);
+    onSuccess: () => {
       showToast(TEXTS.reset_success[lang], 'success');
       qc.invalidateQueries({ queryKey: ['admin-users'] });
+      closeResetModal();
     },
     onError: (err: any) => showToast(err?.response?.data?.message ?? TEXTS.reset_error[lang], 'error'),
     onSettled: () => setResettingId(null),
@@ -365,9 +374,18 @@ export default function AdminUsers() {
     });
   };
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!';
+    const pwd = Array.from({ length: 10 }, () =>
+      chars[Math.floor(Math.random() * chars.length)]
+    ).join('');
+    setGeneratedPwd(pwd);
+    setCopied(false);
+  };
+
   const handleResetSubmit = () => {
-    if (!resetTarget) return;
-    resetMut.mutate({ id: resetTarget.id, password: resetPwd || undefined });
+    if (!resetTarget || !generatedPwd) return;
+    resetMut.mutate({ id: resetTarget.id, password: generatedPwd, lang: i18n.language?.substring(0, 2) ?? 'fr' });
   };
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -470,7 +488,7 @@ export default function AdminUsers() {
             <Building2 className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
             <select
               value={deptFilter}
-              onChange={e => { setDeptFilter(e.target.value); setNiveauFilter(''); }}
+              onChange={e => { setDeptFilter(e.target.value); setPosteFilter(''); }}
               className={`w-full appearance-none py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'pr-9 pl-8' : 'pl-9 pr-8'}`}
             >
               <option value="">{t('admin.users.all_services')}</option>
@@ -481,18 +499,47 @@ export default function AdminUsers() {
             <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
           </div>
 
-          {/* Poste niveau */}
           <div className="relative">
-            <select
-              value={niveauFilter}
-              onChange={e => setNiveauFilter(e.target.value === '' ? '' : Number(e.target.value))}
+            <input
+              type="text"
+              value={posteFilter}
+              onChange={e => { setPosteFilter(e.target.value); setPosteOpen(true); }}
+              onFocus={() => setPosteOpen(true)}
+              onBlur={() => setTimeout(() => setPosteOpen(false), 150)}
+              placeholder={tl(FILTER_LABELS.all_positions)}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C] bg-white min-w-[150px]"
-            >
-              <option value="">{t('admin.users.all_positions')}</option>
-              <option value={3}>{NIVEAU_LABELS[3][lang]}</option>
-              <option value={4}>{NIVEAU_LABELS[4][lang]}</option>
-              <option value={5}>{NIVEAU_LABELS[5][lang]}</option>
-            </select>
+            />
+            {posteOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0,
+                background: '#fff', border: '1px solid #E2E8F0',
+                borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
+                zIndex: 50, maxHeight: 200, overflowY: 'auto'
+              }}>
+                <div
+                  onMouseDown={() => { setPosteFilter(''); setPosteOpen(false); }}
+                  style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13,
+                           color: '#64748B', borderBottom: '1px solid #F1F5F9' }}
+                >
+                  {tl(FILTER_LABELS.all_positions)}
+                </div>
+                {[...new Set((Array.isArray(allPositions) ? allPositions : []).map(p => p.title))]
+                  .filter(title => title.toLowerCase().includes(posteFilter.toLowerCase()))
+                  .sort((a, b) => a.localeCompare(b))
+                  .map(title => (
+                    <div
+                      key={title}
+                      onMouseDown={() => { setPosteFilter(title); setPosteOpen(false); }}
+                      style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13,
+                               color: '#0D1F3C',
+                               background: posteFilter === title ? '#F1F5F9' : 'transparent' }}
+                    >
+                      {title}
+                    </div>
+                  ))
+                }
+              </div>
+            )}
           </div>
 
           {/* Statut */}
@@ -723,58 +770,71 @@ export default function AdminUsers() {
               </button>
             </div>
 
-            {/* Generated password result box */}
-            {generatedPwd && (
-              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs text-indigo-500 font-medium mb-0.5">{tlx('temp_pass_msg')}</p>
-                  <p className="font-mono text-indigo-900 font-bold text-base tracking-widest">{generatedPwd}</p>
-                </div>
-                <button
-                  onClick={() => handleCopy(generatedPwd)}
-                  className="flex-shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition font-medium"
-                >
-                  {copied ? <><Check className="w-3 h-3" />{tlx('copied')}</> : <>{tlx('copy')}</>}
-                </button>
-              </div>
-            )}
-
-            {/* If no generated pwd yet, show input */}
+            {/* ── ÉTAT INITIAL : mot de passe pas encore généré ── */}
             {!generatedPwd && (
               <>
                 <p className="text-sm text-gray-500">
-                  {tlx('reset_desc')} <span className="font-semibold text-gray-700">{resetTarget.nom} {resetTarget.prenom}</span>.
-                  <br/><span className="text-xs text-gray-400">{tlx('pass_hint')}</span>
+                  {t('admin.users.temp_password_for')}{' '}
+                  <span className="font-semibold text-gray-700">{resetTarget.prenom} {resetTarget.nom}</span>.
                 </p>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">{tlx('new_pass')}</label>
-                  <input
-                    type="text"
-                    value={resetPwd}
-                    onChange={e => setResetPwd(e.target.value)}
-                    placeholder="(laisser vide = générer automatiquement)"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-500"
-                  />
-                </div>
+                <button
+                  onClick={generatePassword}
+                  className="w-full px-4 py-2.5 text-sm font-semibold bg-[#0B1D3A] text-white rounded-xl hover:bg-[#1a3360] transition flex items-center justify-center gap-2"
+                >
+                  <Key className="w-4 h-4" />
+                  {t('admin.users.generate_password')}
+                </button>
               </>
             )}
 
-            {/* Buttons */}
+            {/* ── ÉTAT PREVIEW : mot de passe généré, pas encore envoyé ── */}
+            {generatedPwd && (
+              <>
+                <p className="text-sm text-gray-500">
+                  {t('admin.users.temp_password_for')}{' '}
+                  <span className="font-semibold text-gray-700">{resetTarget.prenom} {resetTarget.nom}</span> :
+                </p>
+
+                {/* Password box */}
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center justify-between gap-3">
+                  <p className="font-mono text-[#0B1D3A] font-bold text-base tracking-widest select-all flex-1 min-w-0 break-all">
+                    {generatedPwd}
+                  </p>
+                  <button
+                    onClick={() => handleCopy(generatedPwd)}
+                    className="flex-shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition font-medium text-gray-600"
+                    title="Copier"
+                  >
+                    {copied
+                      ? <><Check className="w-3.5 h-3.5 text-green-600" /><span className="text-green-600">Copié</span></>
+                      : <><Copy className="w-3.5 h-3.5" /><span>Copier</span></>
+                    }
+                  </button>
+                </div>
+
+                {/* Warning */}
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                  ⚠ {t('admin.users.copy_warning')}
+                </p>
+              </>
+            )}
+
+            {/* ── BOUTONS ── */}
             <div className="flex gap-3">
               <button
                 onClick={closeResetModal}
                 className="flex-1 px-4 py-2.5 text-sm font-medium border border-gray-200 rounded-xl hover:bg-gray-50 transition text-gray-600"
               >
-                {generatedPwd ? tlx('close') : tlx('cancel')}
+                {t('common.cancel')}
               </button>
-              {!generatedPwd && (
+              {generatedPwd && (
                 <button
                   onClick={handleResetSubmit}
                   disabled={resettingId === resetTarget.id}
-                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-[#0B1D3A] text-white rounded-xl hover:bg-[#1a3360] transition flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {resettingId === resetTarget.id && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  {tlx('reset_confirm')}
+                  {t('admin.users.confirm_send')}
                 </button>
               )}
             </div>
@@ -890,7 +950,7 @@ export default function AdminUsers() {
                           className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
                         >
                           <option value="">{tlx('sel_poste')}</option>
-                          {availablePositions.map(p => (
+                          {(Array.isArray(availablePositions) ? availablePositions : []).map(p => (
                             <option key={p.id} value={p.title}>{p.title}</option>
                           ))}
                         </select>

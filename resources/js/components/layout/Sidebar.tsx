@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, FileText, Anchor, Truck,
   CreditCard, Box, Settings, ClipboardList, Briefcase,
-  BarChart2, MapPin, Receipt, Package, Ship,
+  BarChart2, MapPin, Receipt, Package, Ship, Bell,
 } from 'lucide-react';
 
 interface NavLinkDef {
@@ -22,9 +22,11 @@ const getNavLinks = (role: string): NavLinkDef[] => {
         dashboard,
         { to: '/admin/users',         icon: Users,         labelKey: 'nav.users' },
         { to: '/admin/departments',   icon: Briefcase,     labelKey: 'nav.departments' },
+        { to: '/admin/positions',     icon: Briefcase,     labelKey: 'nav.positions' },
         { to: '/admin/registrations', icon: ClipboardList, labelKey: 'nav.registrations' },
         { to: '/admin/audit',         icon: FileText,      labelKey: 'nav.audit' },
         { to: '/admin/config',        icon: Settings,      labelKey: 'nav.config' },
+        { to: '/admin/notifications', icon: Bell,          labelKey: 'nav.notifications.title' },
       ];
     case 'client':
       return [
