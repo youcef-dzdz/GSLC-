@@ -7,6 +7,7 @@ import {
   LogIn, Plus, Edit2, Trash2, Shield, RefreshCw,
   CheckCircle, XCircle, AlertCircle, Inbox,
   Database, Mail, Wrench, Server, Pencil,
+  AlertTriangle, Loader2,
 } from 'lucide-react';
 import {
   LineChart, Line, PieChart, Pie, Cell,
@@ -15,6 +16,7 @@ import {
 import { format } from 'date-fns';
 import { adminService } from '@/services/admin.service';
 import { useToast } from '@/components/ui/Toast';
+import { usePermission } from '../../hooks/usePermission';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -64,11 +66,11 @@ interface Devise {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const ROLE_COLORS: Record<string, string> = {
-  admin:      '#0B1D3A',
-  directeur:  '#CFA030',
+  admin:      '#1E40AF',
+  directeur:  '#F59E0B',
   commercial: '#3B82F6',
   logistique: '#10B981',
-  financier:  '#F59E0B',
+  financier:  '#0EA5E9',
   client:     '#94A3B8',
   agent:      '#8B5CF6',
 };
@@ -116,7 +118,7 @@ function relativeTime(dateStr: string): string {
 }
 
 function avatarBg(name: string): string {
-  const p = ['#0B1D3A','#CFA030','#3B82F6','#10B981','#8B5CF6','#EF4444','#F59E0B'];
+  const p = ['#1E40AF','#F59E0B','#3B82F6','#10B981','#8B5CF6','#EF4444','#0EA5E9'];
   let h = 0;
   for (const c of name) h = ((h * 31) + c.charCodeAt(0)) >>> 0;
   return p[h % p.length];
@@ -153,7 +155,7 @@ function useCountUp(target: number, duration = 800): number {
 // ── Spinner ───────────────────────────────────────────────────────────────────
 
 const Spinner = ({ size = 6 }: { size?: number }) => (
-  <svg className={`w-${size} h-${size} animate-spin text-[#0B1D3A]`} fill="none" viewBox="0 0 24 24">
+  <svg className={`w-${size} h-${size} animate-spin text-[#1E40AF]`} fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
   </svg>
@@ -234,7 +236,7 @@ const CardHeader = ({
   <div className="flex items-center justify-between px-5 py-4 border-b border-[#F1F5F9]">
     <div className="flex items-center gap-2.5">
       {icon}
-      <h3 className="text-sm font-black text-[#0B1D3A]">{title}</h3>
+      <h3 className="text-sm font-black text-[#1E3A8A]">{title}</h3>
       {badge}
     </div>
     {action}
@@ -247,6 +249,7 @@ const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { hasPermission } = usePermission();
 
   // Live clock
   const [now, setNow] = useState(new Date());
@@ -262,6 +265,8 @@ const AdminDashboard: React.FC = () => {
   } = useQuery<DashboardData>({
     queryKey: ['admin-dashboard'],
     queryFn:  () => adminService.getDashboard().then(r => r.data),
+    retry: false,
+    staleTime: 30_000,
   });
 
   const {
@@ -269,6 +274,8 @@ const AdminDashboard: React.FC = () => {
   } = useQuery({
     queryKey: ['admin-departments'],
     queryFn:  () => adminService.getDepartments().then(r => r.data),
+    retry: false,
+    staleTime: 30_000,
   });
 
   const {
@@ -276,6 +283,8 @@ const AdminDashboard: React.FC = () => {
   } = useQuery<{ devises: Devise[] }>({
     queryKey: ['admin-currencies'],
     queryFn:  () => adminService.getCurrencies().then(r => r.data),
+    retry: false,
+    staleTime: 120_000, // Currencies don't change often
   });
 
   const {
@@ -283,6 +292,8 @@ const AdminDashboard: React.FC = () => {
   } = useQuery<{ data: Registration[] }>({
     queryKey: ['admin-registrations'],
     queryFn:  () => adminService.getRegistrations('EN_ATTENTE_VALIDATION').then(r => r.data),
+    retry: false,
+    staleTime: 60_000,
   });
 
   const {
@@ -290,6 +301,8 @@ const AdminDashboard: React.FC = () => {
   } = useQuery<Record<string, string>>({
     queryKey: ['system-config'],
     queryFn:  () => adminService.getSystemConfig().then((r: { data: Record<string, string> }) => r.data),
+    retry: false,
+    staleTime: 300_000,
   });
 
   // ── Sync mutation ──────────────────────────────────────────────────────────
@@ -362,38 +375,44 @@ const AdminDashboard: React.FC = () => {
 
   if (dashLoading) {
     return (
-      <div className="p-6 space-y-4">
-        <Skel h="h-28" />
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          {[0,1,2,3].map(i => <Skel key={i} h="h-28" />)}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          <Skel h="h-64" className="lg:col-span-3" />
-          <Skel h="h-64" className="lg:col-span-2" />
-        </div>
-        <Skel h="h-40" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 size={32} className="animate-spin text-slate-400" />
       </div>
     );
   }
-
-  // ── Error ──────────────────────────────────────────────────────────────────
 
   if (dashError || !dash) {
+    // Try multiple ways to extract status code
+    const errorAny = dashError as any;
+    const status = errorAny?.response?.status ?? 
+                   errorAny?.status ?? 
+                   errorAny?.data?.status ?? 
+                   0;
+    const is403 = status === 403 || 
+                  (errorAny?.message?.includes('403') ?? false);
+    
     return (
-      <div className="flex flex-col items-center justify-center h-72 gap-4">
-        <AlertCircle size={40} className="text-red-400" />
-        <p className="text-sm text-[#64748B]">{t('common.error')}</p>
-        <button
-          onClick={() => refetchDash()}
-          className="px-4 py-2 bg-[#0B1D3A] text-white rounded-xl text-sm font-bold hover:bg-[#1A3A6B] transition-colors cursor-pointer"
-        >
-          {t('common.retry')}
-        </button>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-6">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center bg-amber-100">
+          <AlertTriangle size={28} className={is403 ? "text-amber-600" : "text-red-500"} />
+        </div>
+        <h3 className="text-lg font-bold text-slate-800">
+          {is403 ? 'Accès limité' : 'Erreur de chargement'}
+        </h3>
+        <p className="text-sm text-slate-500 text-center max-w-md">
+          {is403 
+            ? 'Votre rôle actuel ne dispose pas des permissions nécessaires pour consulter ce tableau de bord.' 
+            : 'Impossible de charger les données. Veuillez réessayer.'}
+        </p>
+        {!is403 && (
+          <button onClick={() => refetchDash()} className="btn-gold mt-2">Rafraîchir</button>
+        )}
       </div>
     );
   }
 
-  const { system_health, recent_audit } = dash;
+  const dashboardData = dash || ({} as DashboardData);
+  const { system_health, recent_audit } = dashboardData;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -418,34 +437,32 @@ const AdminDashboard: React.FC = () => {
 
       {/* ── SECTION 1 — Header ── */}
       <div
-        className="rounded-2xl shadow-lg p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="rounded-2xl shadow-lg p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-l-4 border-[#CFA030] bg-white bg-opacity-80 backdrop-blur-md"
         style={{
-          background: 'linear-gradient(135deg, #0B1D3A 0%, #1A3A6B 100%)',
           animation: 'fadeSlideUp 400ms ease both',
         }}
       >
         <div>
-          <div className="flex items-center gap-3 mb-1.5">
-            <h1 className="text-2xl font-black text-white">{t('admin.dashboard.title')}</h1>
+          <div className="flex items-center gap-3 mb-1.5 text-[#0D1F3C]">
+            <h1 className="text-2xl font-black">{t('admin.dashboard.title')}</h1>
             <span
-              className="text-xs font-bold px-2.5 py-0.5 rounded-full"
-              style={{ background: '#CFA030', color: '#0B1D3A' }}
+              className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#FFFBEB] text-[#CFA030] border border-[#CFA030]"
             >
               Admin
             </span>
           </div>
-          <p className="text-sm text-blue-200 font-mono">
+          <p className="text-sm text-[#64748B] font-mono">
             {now.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             {' — '}
             {now.toLocaleTimeString('fr-FR')}
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 self-start sm:self-auto">
+        <div className="flex items-center gap-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 py-2.5 self-start sm:self-auto shadow-sm">
           <span
             className="w-2.5 h-2.5 rounded-full bg-emerald-400 flex-shrink-0"
             style={{ animation: 'pulseDot 2s ease-in-out infinite' }}
           />
-          <span className="text-sm font-semibold text-emerald-300">{t('admin.dashboard.system_online')}</span>
+          <span className="text-sm font-semibold text-[#10B981]">{t('admin.dashboard.system_online')}</span>
         </div>
       </div>
 
@@ -455,7 +472,7 @@ const AdminDashboard: React.FC = () => {
           label={t('admin.dashboard.total_users')}
           target={system_health.total_users}
           icon={Users}
-          accent="#CFA030"
+          accent="#1E40AF"
           delay={0}
         />
         <KpiCard
@@ -523,7 +540,7 @@ const AdminDashboard: React.FC = () => {
         {/* PieChart — Répartition des rôles */}
         <SectionCard className="lg:col-span-2" delay={150}>
           <CardHeader
-            icon={<span className="flex items-center justify-center w-8 h-8 bg-[#FFF8E7] rounded-lg"><Users size={16} className="text-[#CFA030]" /></span>}
+            icon={<span className="flex items-center justify-center w-8 h-8 bg-[#EFF6FF] rounded-lg"><Users size={16} className="text-[#1E40AF]" /></span>}
             title={t('admin.dashboard.role_distribution')}
           />
           <div className="p-4">
@@ -588,7 +605,7 @@ const AdminDashboard: React.FC = () => {
               <button
                 onClick={() => syncMut.mutate()}
                 disabled={syncMut.isPending}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0B1D3A] hover:bg-[#1A3A6B] text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                className="btn-gold h-8 text-[11px]"
               >
                 <RefreshCw size={12} className={syncMut.isPending ? 'animate-spin' : ''} />
                 {t('admin.dashboard.refresh')}
@@ -614,7 +631,7 @@ const AdminDashboard: React.FC = () => {
                   }}
                   className={`group flex items-center justify-between p-3 rounded-xl border transition-all duration-150 ${
                     isEditing
-                      ? 'bg-white border-[#CFA030] shadow-sm cursor-default'
+                      ? 'bg-white border-[#F59E0B] shadow-sm cursor-default'
                       : 'bg-[#F8FAFC] border-[#E2E8F0] hover:border-[#BFDBFE] hover:bg-[#F0F7FF] cursor-pointer'
                   }`}
                 >
@@ -644,7 +661,7 @@ const AdminDashboard: React.FC = () => {
                           if (e.key === 'Enter')  confirmEdit(code);
                           if (e.key === 'Escape') setEditingCode(null);
                         }}
-                        className="w-28 text-right font-mono text-sm font-bold border-2 border-[#CFA030] rounded-lg px-2 py-1 bg-white text-[#1A2332] focus:outline-none"
+                        className="w-28 text-right font-mono text-sm font-bold border-2 border-[#F59E0B] rounded-lg px-2 py-1 bg-white text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#1E40AF]/30"
                       />
                       <button
                         onClick={() => confirmEdit(code)}
@@ -736,7 +753,7 @@ const AdminDashboard: React.FC = () => {
                 { label: t('admin.dashboard.departments'),   value: deptCount                 },
               ].map(({ label, value }) => (
                 <div key={label} className="text-center p-2 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
-                  <p className="text-xl font-black text-[#0B1D3A]">{value}</p>
+                  <p className="text-xl font-black text-[#1E40AF]">{value}</p>
                   <p className="text-[10px] font-semibold text-[#64748B] leading-tight mt-0.5">{label}</p>
                 </div>
               ))}
@@ -759,12 +776,14 @@ const AdminDashboard: React.FC = () => {
                 : undefined
             }
             action={
-              <button
-                onClick={() => navigate('/admin/registrations')}
-                className="text-xs font-bold text-[#3B82F6] hover:underline cursor-pointer"
-              >
-                {t('admin.dashboard.see_all')}
-              </button>
+              hasPermission('registrations.manage') ? (
+                <button
+                  onClick={() => navigate('/admin/registrations')}
+                  className="text-xs font-bold text-[#3B82F6] hover:underline cursor-pointer"
+                >
+                  {t('admin.dashboard.see_all')}
+                </button>
+              ) : undefined
             }
           />
           <div className="p-4">
@@ -819,12 +838,14 @@ const AdminDashboard: React.FC = () => {
             icon={<span className="flex items-center justify-center w-8 h-8 bg-[#F5F3FF] rounded-lg"><Shield size={16} className="text-[#8B5CF6]" /></span>}
             title={t('admin.dashboard.recent_activity')}
             action={
-              <button
-                onClick={() => navigate('/admin/audit')}
-                className="text-xs font-bold text-[#3B82F6] hover:underline cursor-pointer"
-              >
-                {t('admin.dashboard.full_log')}
-              </button>
+              hasPermission('audit.view') ? (
+                <button
+                  onClick={() => navigate('/admin/audit')}
+                  className="text-xs font-bold text-[#3B82F6] hover:underline cursor-pointer"
+                >
+                  {t('admin.dashboard.full_log')}
+                </button>
+              ) : undefined
             }
           />
           <div className="p-2 max-h-[300px] overflow-y-auto">

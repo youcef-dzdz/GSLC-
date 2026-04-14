@@ -26,6 +26,8 @@ import DepartmentsPage from './pages/admin/DepartmentsPage';
 import AuditPage from './pages/admin/AuditPage';
 import ConfigPage from './pages/admin/ConfigPage';
 import NotificationsPage from './pages/admin/NotificationsPage';
+import AdminRoles       from './pages/admin/AdminRoles';
+import AdminPermissions from './pages/admin/AdminPermissions';
 
 import CommercialDashboard from './pages/commercial/CommercialDashboard';
 import CommercialDemands from './pages/commercial/CommercialDemands';
@@ -75,17 +77,19 @@ const App = () => {
               <Route path="/staff/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 
-              {/* Admin routes */}
-              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+              {/* Routes admin — accès contrôlé par permissions granulaires */}
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'it_agent']} />}>
                 <Route element={<DashboardLayout />}>
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/audit" element={<AuditPage />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/registrations" element={<AdminRegistrations />} />
-                  <Route path="/admin/config" element={<ConfigPage />} />
-                  <Route path="/admin/departments" element={<DepartmentsPage />} />
-                  <Route path="/admin/positions"   element={<AdminPositions />} />
-                  <Route path="/admin/notifications" element={<NotificationsPage />} />
+                  <Route path="/admin/dashboard"      element={<AdminDashboard />} />
+                  <Route path="/admin/users"          element={<AdminUsers />} />
+                  <Route path="/admin/audit"          element={<AuditPage />} />
+                  <Route path="/admin/registrations"  element={<AdminRegistrations />} />
+                  <Route path="/admin/config"         element={<ConfigPage />} />
+                  <Route path="/admin/departments"    element={<DepartmentsPage />} />
+                  <Route path="/admin/positions"      element={<AdminPositions />} />
+                  <Route path="/admin/notifications"  element={<NotificationsPage />} />
+                  <Route path="/admin/roles"          element={<AdminRoles />} />
+                  <Route path="/admin/permissions"    element={<AdminPermissions />} />
                 </Route>
               </Route>
 

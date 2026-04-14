@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,24 +13,29 @@ class Role extends Model
         'label',
         'description',
         'niveau',
+        'is_system',
     ];
 
     protected function casts(): array
     {
         return [
-            'niveau' => 'integer',
+            'niveau'    => 'integer',
+            'is_system' => 'boolean',
         ];
     }
 
-    // Un role a plusieurs users
     public function users()
     {
         return $this->hasMany(User::class);
     }
 
-    // Un role a plusieurs permissions (table pivot permission_role)
     public function permissions()
     {
-        return $this->belongsToMany(Permission::class, 'permission_role');
+        return $this->belongsToMany(
+            Permission::class,
+            'role_permissions',
+            'role_id',
+            'permission_id'
+        );
     }
 }

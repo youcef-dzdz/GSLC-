@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/services/api';
 import { useToast } from '@/components/ui/Toast';
+import { usePermission } from '../../hooks/usePermission';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -241,7 +243,7 @@ const DeptModal: React.FC<ModalProps> = ({ open, editing, users, onClose, onSave
             type="submit"
             form="dept-form"
             disabled={mutation.isPending}
-            className="px-5 py-2 text-sm font-semibold bg-[#0D1F3C] text-white rounded-xl hover:bg-[#1a3360] disabled:opacity-50 transition flex items-center gap-2 cursor-pointer"
+            className="btn-gold disabled:opacity-50"
           >
             {mutation.isPending && <Loader2 size={14} className="animate-spin" />}
             {editing ? t('common.save') : t('common.create')}
@@ -315,6 +317,15 @@ const ConfirmDialog: React.FC<ConfirmProps> = ({ dept, loading, onConfirm, onCan
 const DepartmentsPage: React.FC = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { hasPermission, isAdmin } = usePermission();
+
+  useEffect(() => {
+    if (!isAdmin && !hasPermission('departments.view')) {
+      navigate('/admin/dashboard');
+    }
+  }, []);
+
   const queryClient = useQueryClient();
 
   const [modalOpen, setModalOpen]       = useState(false);
@@ -385,13 +396,15 @@ const DepartmentsPage: React.FC = () => {
           <h1 className="text-2xl font-black text-[#0D1F3C]">{t('admin.departments.title')}</h1>
           <p className="text-sm text-[#64748B] mt-0.5">{t('admin.departments.subtitle')}</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D1F3C] text-white text-sm font-bold hover:bg-[#1A3A6B] transition-colors shadow-md cursor-pointer"
-        >
-          <Plus size={16} />
-          {t('admin.departments.new')}
-        </button>
+        {(isAdmin || hasPermission('departments.manage')) && (
+          <button
+            onClick={openCreate}
+            className="btn-gold"
+          >
+            <Plus size={16} />
+            {t('admin.departments.new')}
+          </button>
+        )}
       </div>
 
       {/* KPI row */}
@@ -420,20 +433,22 @@ const DepartmentsPage: React.FC = () => {
       <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-md overflow-hidden">
 
         {/* Card toolbar */}
-        <div className="p-5 border-b border-[#F1F5F9] flex items-center justify-between gap-4 flex-wrap">
-          <h3 className="text-sm font-semibold text-[#0D1F3C] flex items-center gap-2 flex-shrink-0">
-            <Building2 size={15} className="text-[#CFA030]" />
-            {t('admin.departments.list_title')}
-          </h3>
-          <div className="relative flex-1 max-w-xs">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Rechercher..."
-              className="w-full pl-9 pr-3 py-2 text-xs bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] transition-all"
-            />
+        <div className="p-5 border-b border-[#F1F5F9]">
+          <div className="filter-bar">
+            <h3 className="text-sm font-semibold text-[#0D1F3C] flex items-center gap-2 flex-shrink-0">
+              <Building2 size={15} className="text-[#CFA030]" />
+              {t('admin.departments.list_title')}
+            </h3>
+            <div className="relative flex-1 max-w-xs">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Rechercher..."
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
 
@@ -467,15 +482,12 @@ const DepartmentsPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#F1F5F9]">
-                  {([t('admin.departments.col_department'), t('admin.departments.col_description'), t('admin.departments.col_responsable'), t('admin.departments.col_members'), t('admin.departments.col_actions')] as const).map((h, i) => (
-                    <th
-                      key={h}
-                      className={`px-5 py-3 text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider ${i === 3 ? 'text-center' : i === 4 ? 'text-right' : 'text-left'}`}
-                    >
-                      {h}
-                    </th>
-                  ))}
+                <tr>
+                  <th>{t('admin.departments.col_department')}</th>
+                  <th>{t('admin.departments.col_description')}</th>
+                  <th>{t('admin.departments.col_responsable')}</th>
+                  <th className="col-center">{t('admin.departments.col_members')}</th>
+                  <th className="col-actions">{t('admin.departments.col_actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F1F5F9]">
@@ -485,8 +497,8 @@ const DepartmentsPage: React.FC = () => {
                     <tr key={dept.id} className="hover:bg-[#F0F7FF] transition-all duration-150">
 
                       {/* Département */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
+                      <td>
+                        <div className="cell-content">
                           <span
                             className="text-xs font-black px-2.5 py-1 rounded-lg flex-shrink-0"
                             style={{ backgroundColor: c.bg, color: c.text, border: `1px solid ${c.border}` }}
@@ -498,7 +510,7 @@ const DepartmentsPage: React.FC = () => {
                       </td>
 
                       {/* Description */}
-                      <td className="px-5 py-4 max-w-[220px]">
+                      <td className="max-w-[220px]">
                         {dept.description
                           ? <p className="text-xs text-[#64748B] truncate">{dept.description}</p>
                           : <span className="text-xs text-[#CBD5E1] italic">—</span>
@@ -506,7 +518,7 @@ const DepartmentsPage: React.FC = () => {
                       </td>
 
                       {/* Responsable */}
-                      <td className="px-5 py-4">
+                      <td>
                         {dept.responsable ? (
                           <div>
                             <p className="text-xs font-semibold text-[#0D1F3C]">
@@ -520,7 +532,7 @@ const DepartmentsPage: React.FC = () => {
                       </td>
 
                       {/* Membres */}
-                      <td className="px-5 py-4 text-center">
+                      <td className="col-center">
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#1D4ED8]">
                           <Users size={11} />
                           {dept.membres_count}
@@ -528,25 +540,28 @@ const DepartmentsPage: React.FC = () => {
                       </td>
 
                       {/* Actions */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => openEdit(dept)}
-                            className="p-2 rounded-lg bg-[#EFF6FF] hover:bg-[#DBEAFE] text-[#2563EB] transition-colors cursor-pointer"
-                            title="Modifier"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                          <button
-                            onClick={() => setDeletingDept(dept)}
-                            className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 transition-colors cursor-pointer"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                      <td className="col-actions">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {(isAdmin || hasPermission('departments.manage')) && (
+                            <button
+                              onClick={() => openEdit(dept)}
+                              className="p-1.5 rounded-lg bg-[#EFF6FF] hover:bg-[#DBEAFE] text-[#2563EB] transition-colors cursor-pointer"
+                              title="Modifier"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                          {(isAdmin || hasPermission('departments.manage')) && (
+                            <button
+                              onClick={() => setDeletingDept(dept)}
+                              className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 transition-colors cursor-pointer"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
-
                     </tr>
                   );
                 })}

@@ -38,8 +38,19 @@ class CheckRole
         // 3. Is the user's role in the allowed list?
         // $roles comes from the route definition e.g. 'role:admin,directeur'
         if (! in_array($user->role->label, $roles)) {
+            // Règle spéciale : tout rôle niveau 1 peut accéder
+            // aux routes admin — ses permissions individuelles
+            // contrôlent ce qu'il peut faire (RBAC granulaire)
+            $routePrefix = $request->route()?->getPrefix() ?? '';
+            $userNiveau  = $user->role->niveau ?? 99;
+
+            if (str_starts_with($routePrefix, 'admin')
+                && $userNiveau === 1) {
+                return $next($request);
+            }
+
             return response()->json([
-                'message' => 'Accès refusé. Vous n\'avez pas les permissions nécessaires.',
+                'message'      => 'Accès refusé. Vous n\'avez pas les permissions nécessaires.',
                 'votre_role'   => $user->role->label,
                 'roles_requis' => $roles,
             ], 403);

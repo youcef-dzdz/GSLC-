@@ -2,9 +2,10 @@ import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Search, Plus, Edit2, Trash2, Lock, Unlock, Key, X, Building2, Briefcase, Loader2, ChevronDown, Check, AlertCircle, Copy } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Lock, Unlock, Key, X, Building2, Briefcase, Loader2, ChevronDown, Check, AlertCircle, Copy, Eye, EyeOff } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
 import { apiClient } from '../../services/api';
+import { usePermission } from '../../hooks/usePermission';
 
 interface Department { id: number; code: string; name: string; }
 interface Role { id: number; nom_role: string; label: string; niveau: number; }
@@ -125,6 +126,7 @@ export default function AdminUsers() {
   const isRTL = lang === 'ar';
   const qc = useQueryClient();
 
+
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
   const [posteFilter, setPosteFilter] = useState('');
@@ -144,6 +146,8 @@ export default function AdminUsers() {
   const [resetPwd, setResetPwd] = useState('');
   const [generatedPwd, setGeneratedPwd] = useState<string|null>(null);
   const [copied, setCopied] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { hasPermission } = usePermission();
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
     setToast({ message, type });
@@ -159,10 +163,13 @@ export default function AdminUsers() {
 
   /* ── Data helpers ── */
   const safeArray = (res: any): any[] => {
-    const d = res?.data;
+    // res is likely an axios response, so res.data is the payload
+    const d = res?.data ?? res; 
     if (Array.isArray(d)) return d;
     if (Array.isArray(d?.data)) return d.data;
+    if (Array.isArray(d?.positions)) return d.positions;
     if (Array.isArray(d?.departments)) return d.departments;
+    if (Array.isArray(d?.roles)) return d.roles;
     return [];
   };
 
@@ -171,18 +178,11 @@ export default function AdminUsers() {
     queryFn: async () => safeArray(await adminService.getUsers()),
   });
 
-  const { data: departments = [] } = useQuery({
+  const { data: rawDepartments } = useQuery<Department[]>({
     queryKey: ['admin-departments'],
-    queryFn: () => adminService.getDepartments(),
-    select: (data: unknown): Department[] => {
-      if (Array.isArray(data)) return data;
-      if (Array.isArray((data as { departments?: Department[] })?.departments))
-        return (data as { departments: Department[] }).departments;
-      if (Array.isArray((data as { data?: Department[] })?.data))
-        return (data as { data: Department[] }).data;
-      return [];
-    },
+    queryFn: async () => safeArray(await adminService.getDepartments()),
   });
+  const departments: Department[] = Array.isArray(rawDepartments) ? rawDepartments : [];
 
   const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ['admin-roles'],
@@ -191,15 +191,7 @@ export default function AdminUsers() {
 
   const { data: allPositions = [] } = useQuery<PositionOption[]>({
     queryKey: ['admin-positions'],
-    queryFn: async () => {
-      const res = await adminService.getPositions();
-      const d = res?.data;
-      if (Array.isArray(d?.positions)) return d.positions;
-      if (Array.isArray(d)) return d;
-      return [];
-    },
-    select: (data: any) => Array.isArray(data) ? data : [],
-    initialData: [],
+    queryFn: async () => safeArray(await adminService.getPositions()),
   });
 
   /* ── Derived ── */
@@ -212,7 +204,7 @@ export default function AdminUsers() {
   }, [allPositions, departments, form.department_code]);
 
   // Keep roles dropdown for system access level — exclude client role from staff modal
-  const availableRolesForModal = roles.filter(r => r.niveau !== 6);
+  const availableRolesForModal = roles.filter(r => r.label !== 'client');
 
   const filtered = useMemo(() => {
     let list = [...allUsers];
@@ -428,7 +420,7 @@ export default function AdminUsers() {
       <p className="text-red-600 font-medium">{tlx('error_load')}</p>
       <button
         onClick={() => qc.invalidateQueries({ queryKey: ['admin-users'] })}
-        className="px-4 py-2 bg-[#0D1F3C] text-white rounded-lg text-sm hover:bg-[#1a3360] transition"
+        className="btn-gold"
       >
         {tlx('retry')}
       </button>
@@ -460,18 +452,20 @@ export default function AdminUsers() {
             {filtered.length} / {allUsers.length} {t('admin.users.members_count')}
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#0D1F3C] text-white rounded-xl text-sm font-semibold hover:bg-[#1a3360] transition shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          {tlx('new_title')}
-        </button>
+        {hasPermission('users.create') && (
+          <button
+            onClick={openCreate}
+            className="btn-gold shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            {tlx('new_title')}
+          </button>
+        )}
       </div>
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div className="flex flex-wrap gap-3">
+        <div className="filter-bar">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
             <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
@@ -479,7 +473,7 @@ export default function AdminUsers() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={t('admin.users.search_placeholder')}
-              className={`w-full py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'}`}
+              className="w-full"
             />
           </div>
 
@@ -489,10 +483,10 @@ export default function AdminUsers() {
             <select
               value={deptFilter}
               onChange={e => { setDeptFilter(e.target.value); setPosteFilter(''); }}
-              className={`w-full appearance-none py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'pr-9 pl-8' : 'pl-9 pr-8'}`}
+              className="w-full appearance-none"
             >
               <option value="">{t('admin.users.all_services')}</option>
-              {departments.map(d => (
+              {(Array.isArray(departments) ? departments : []).map(d => (
                 <option key={d.id} value={d.code}>{translateDept(d.name)}</option>
               ))}
             </select>
@@ -507,7 +501,7 @@ export default function AdminUsers() {
               onFocus={() => setPosteOpen(true)}
               onBlur={() => setTimeout(() => setPosteOpen(false), 150)}
               placeholder={tl(FILTER_LABELS.all_positions)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C] bg-white min-w-[150px]"
+              className="min-w-[150px]"
             />
             {posteOpen && (
               <div style={{
@@ -547,7 +541,7 @@ export default function AdminUsers() {
             <select
               value={statFilter}
               onChange={e => setStatFilter(e.target.value)}
-              className={`w-full appearance-none py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'pr-3 pl-8' : 'pl-3 pr-8'}`}
+              className="w-full appearance-none"
             >
               <option value="">{t('admin.users.all_statuses')}</option>
               <option value="ACTIF">{translateStatus('ACTIF')}</option>
@@ -560,7 +554,7 @@ export default function AdminUsers() {
           {/* Reset filters */}
           <button
             onClick={resetFilters}
-            className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition text-gray-600 cursor-pointer whitespace-nowrap"
+            className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-xl hover:bg-gray-50 transition text-gray-600 cursor-pointer admin-users-reset-btn"
           >
             {t('admin.users.reset_filters')}
           </button>
@@ -573,12 +567,12 @@ export default function AdminUsers() {
           <table className="w-full text-sm" dir={isRTL ? 'rtl' : 'ltr'}>
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_user')}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_service')}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_position')}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_status')}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_created')}</th>
-                <th className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('admin.users.col_actions')}</th>
+                <th>{t('admin.users.col_user')}</th>
+                <th>{t('admin.users.col_service')}</th>
+                <th>{t('admin.users.col_position')}</th>
+                <th className="col-status">{t('admin.users.col_status')}</th>
+                <th className="col-date">{t('admin.users.col_created')}</th>
+                <th className="col-actions">{t('admin.users.col_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -601,12 +595,12 @@ export default function AdminUsers() {
                 return (
                   <tr key={user.id} className="hover:bg-gray-50/60 transition-colors">
                     {/* Utilisateur — avatar + name + email */}
-                    <td className={`px-3 py-3`}>
-                      <div className="flex items-center gap-2.5">
+                    <td>
+                      <div className="cell-content">
                         <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm`}>
                           {initials(user)}
                         </div>
-                        <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        <div className="min-w-0 flex-1">
                           <p className="font-semibold text-gray-800 text-xs leading-tight truncate">{user.nom} {user.prenom}</p>
                           <p className="text-[11px] text-gray-400 font-mono leading-tight mt-0.5 truncate" dir="ltr">{user.email}</p>
                         </div>
@@ -614,14 +608,14 @@ export default function AdminUsers() {
                     </td>
 
                     {/* Service */}
-                    <td className={`px-3 py-3 truncate ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <td>
                       <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${badge}`}>
                         {translateDept(user.department?.name ?? null)}
                       </span>
                     </td>
 
                     {/* Poste */}
-                    <td className={`px-3 py-3 truncate ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <td>
                       <p className="font-medium text-gray-800 text-xs leading-tight truncate">
                         {user.position ?? user.role?.nom_role ?? '—'}
                       </p>
@@ -631,7 +625,7 @@ export default function AdminUsers() {
                     </td>
 
                     {/* Statut */}
-                    <td className={`px-3 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <td className="col-status">
                       {sm ? (
                         <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ring-1 ${sm.bg} ${sm.text} ${sm.ring}`}>
                           <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sm.dot}`} />
@@ -643,52 +637,63 @@ export default function AdminUsers() {
                     </td>
 
                     {/* Créé le */}
-                    <td className={`px-3 py-3 text-xs text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <td className="col-date">
                       {user.created_at ? new Date(user.created_at).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : lang) : '—'}
                     </td>
 
                     {/* Actions */}
-                    <td className={`px-3 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                    <td className="col-actions">
+                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         {/* Edit */}
-                        <button
-                          onClick={() => openEdit(user)}
-                          title={t('admin.users.edit')}
-                          className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
+                        {hasPermission('users.edit') && (
+                          <button
+                            onClick={() => openEdit(user)}
+                            title={t('admin.users.edit')}
+                            className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
 
                         {/* Reset password */}
-                        <button
-                          onClick={() => openResetModal(user)}
-                          disabled={resettingId === user.id}
-                          title={tlx('reset_title')}
-                          className="p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-400 hover:text-indigo-700 transition disabled:opacity-40"
-                        >
-                          {resettingId === user.id
-                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            : <Key className="w-3.5 h-3.5" />
-                          }
-                        </button>
+                        {hasPermission('users.reset_password') && (
+                          <button
+                            onClick={() => openResetModal(user)}
+                            disabled={resettingId === user.id}
+                            title={tlx('reset_title')}
+                            className="p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-400 hover:text-indigo-700 transition disabled:opacity-40"
+                          >
+                            {resettingId === user.id
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              : <Key className="w-3.5 h-3.5" />
+                            }
+                          </button>
+                        )}
 
                         {/* Block / unblock */}
-                        <button
-                          onClick={() => blockMut.mutate(user.id)}
-                          disabled={blockingId === user.id}
-                          className={`text-xs px-2 py-1 rounded transition font-medium whitespace-nowrap
-                            ${user.statut === 'ACTIF'
-                              ? 'bg-red-50 hover:bg-red-100 text-red-600'
-                              : 'bg-green-50 hover:bg-green-100 text-green-600'
-                            }`}
-                        >
-                          {blockingId === user.id
-                            ? '...'
-                            : user.statut === 'ACTIF' ? t('admin.users.block') : t('admin.users.unblock')}
-                        </button>
+                        {hasPermission('users.block') && (
+                          <button
+                            onClick={() => blockMut.mutate(user.id)}
+                            disabled={blockingId === user.id}
+                            title={user.statut === 'ACTIF' ? t('admin.users.block') : t('admin.users.unblock')}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition font-semibold text-[11px] uppercase tracking-wider
+                              ${user.statut === 'ACTIF'
+                                ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
+                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200'
+                              }`}
+                          >
+                            {blockingId === user.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : user.statut === 'ACTIF' ? (
+                              <><Lock size={13} />{t('admin.users.block')}</>
+                            ) : (
+                              <><Unlock size={13} />{t('admin.users.unblock')}</>
+                            )}
+                          </button>
+                        )}
 
                         {/* Delete */}
-                        {user.role?.nom_role !== 'Administrateur Système' && (
+                        {user.role?.nom_role !== 'Administrateur Système' && hasPermission('users.delete') && (
                           <button
                             onClick={() => setUserToDelete(user)}
                             disabled={deletingId === user.id}
@@ -909,14 +914,24 @@ export default function AdminUsers() {
                   <label className="block text-xs font-semibold text-gray-600 mb-1">
                     {tlx('pass')} {editingUser ? <span className="font-normal text-gray-400">{tlx('pass_hint')}</span> : '*'}
                   </label>
-                  <input
-                    type="password"
-                    required={!editingUser}
-                    value={form.password}
-                    onChange={e => setForm(f => ({...f, password: e.target.value}))}
-                    placeholder={editingUser ? '••••••••' : ''}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required={!editingUser}
+                      value={form.password}
+                      onChange={e => setForm(f => ({...f, password: e.target.value}))}
+                      placeholder={editingUser ? '••••••••' : ''}
+                      className={`w-full border border-gray-200 rounded-lg py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-10' : 'px-3 pr-10'}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className={`absolute top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 transition ${isRTL ? 'left-1' : 'right-1'}`}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Service + Poste (staff only) */}
@@ -932,7 +947,7 @@ export default function AdminUsers() {
                           className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
                         >
                           <option value="">{tlx('sel_service')}</option>
-                          {departments.map(d => (
+                          {(Array.isArray(departments) ? departments : []).map(d => (
                             <option key={d.id} value={d.code}>{translateDept(d.name)}</option>
                           ))}
                         </select>
@@ -1014,7 +1029,7 @@ export default function AdminUsers() {
                 type="submit"
                 form="user-form"
                 disabled={isSubmitting}
-                className="px-5 py-2 text-sm font-semibold bg-[#0D1F3C] text-white rounded-xl hover:bg-[#1a3360] disabled:opacity-50 transition flex items-center gap-2"
+                className="btn-gold disabled:opacity-50"
               >
                 {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 {editingUser ? tlx('save') : tlx('create')}

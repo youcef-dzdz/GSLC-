@@ -45,10 +45,10 @@ export default function ForcePasswordChange() {
         password,
         password_confirmation: confirmation,
       });
-      // Refresh user state so must_change_password is now false
+      // Capture role BEFORE checkAuth resets state (React state update is async)
+      const role = user?.role?.label ?? '';
       await checkAuth();
-      const role  = user?.role?.label ?? '';
-      navigate(DASHBOARD_ROUTE[role] ?? '/');
+      navigate(DASHBOARD_ROUTE[role] ?? '/admin/dashboard');
     } catch (err: any) {
       setError(
         err?.response?.data?.message ??

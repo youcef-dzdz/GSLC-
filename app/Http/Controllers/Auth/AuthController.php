@@ -30,7 +30,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::with('role')->where('email', $request->email)->first();
+        $user = User::with(['role.permissions:id,name,module'])->where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             if ($user) {
@@ -73,7 +73,8 @@ class AuthController extends Controller
             'logistique' => '/logistics/dashboard',
             'financier'  => '/finance/dashboard',
             'client'     => '/client/dashboard',
-            default      => '/dashboard',
+            'it_agent'   => '/admin/dashboard',
+            default      => '/admin/dashboard',
         };
 
         return response()->json([
@@ -87,9 +88,10 @@ class AuthController extends Controller
                 'statut'               => $user->statut,
                 'must_change_password' => (bool) $user->must_change_password,
                 'role'                 => [
-                    'id'    => $user->role->id,
-                    'label' => $user->role->label,
-                    'nom'   => $user->role->nom_role,
+                    'id'          => $user->role->id,
+                    'label'       => $user->role->label,
+                    'nom'         => $user->role->nom_role,
+                    'permissions' => $user->role->permissions->pluck('name')->toArray(),
                 ],
             ],
             'redirect_to' => $redirectTo,
@@ -118,7 +120,7 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user()->load('role');
+        $user = $request->user()->load(['role.permissions:id,name,module']);
 
         $clientProfile = null;
         if ($user->role->label === 'client') {
@@ -134,9 +136,10 @@ class AuthController extends Controller
                 'statut'             => $user->statut,
                 'derniere_connexion' => $user->derniere_connexion,
                 'role'               => [
-                    'id'    => $user->role->id,
-                    'label' => $user->role->label,
-                    'nom'   => $user->role->nom_role,
+                    'id'          => $user->role->id,
+                    'label'       => $user->role->label,
+                    'nom'         => $user->role->nom_role,
+                    'permissions' => $user->role->permissions->pluck('name')->toArray(),
                 ],
                 'client_profile'     => $clientProfile,
             ],

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/services/api';
 import { useToast } from '@/components/ui/Toast';
+import { usePermission } from '../../hooks/usePermission';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -242,7 +243,7 @@ const PositionModal: React.FC<ModalProps> = ({ open, editing, departments, lang,
             type="submit"
             form="pos-form"
             disabled={mutation.isPending}
-            className="px-5 py-2 text-sm font-semibold bg-[#0D1F3C] text-white rounded-xl hover:bg-[#1a3360] disabled:opacity-50 transition flex items-center gap-2 cursor-pointer"
+            className="btn-gold disabled:opacity-50"
           >
             {mutation.isPending && <Loader2 size={14} className="animate-spin" />}
             {editing ? tl(TX.save, lang) : tl(TX.create_btn, lang)}
@@ -274,7 +275,7 @@ const ConfirmDelete: React.FC<ConfirmDeleteProps> = ({ position, loading, errorM
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
         <div className="p-6 text-center">
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-            <Trash2 size={22} className="text-red-500" />
+            {(isAdmin || hasPermission('positions.manage')) && <Trash2 size={22} className="text-red-500" />}
           </div>
           <h3 className="text-base font-black text-[#0D1F3C] mb-2">{tl(TX.del_title, lang)}</h3>
           <p className="text-sm text-[#64748B]">
@@ -315,6 +316,7 @@ const ConfirmDelete: React.FC<ConfirmDeleteProps> = ({ position, loading, errorM
 
 export default function AdminPositions() {
   const { i18n } = useTranslation();
+  const { hasPermission, isAdmin } = usePermission();
   const lang = (i18n.language?.split('-')[0]?.split('_')[0] ?? 'fr') as Lang;
   const isRTL = lang === 'ar';
   const qc = useQueryClient();
@@ -401,36 +403,38 @@ export default function AdminPositions() {
             <p className="text-xs text-[#64748B]">{tl(TX.subtitle, lang)}</p>
           </div>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-bold bg-[#0D1F3C] text-white rounded-xl hover:bg-[#1a3360] transition cursor-pointer"
-        >
-          <Plus size={15} />
-          {tl(TX.add, lang)}
-        </button>
+        {(isAdmin || hasPermission('positions.manage')) && (
+          <button
+            onClick={openCreate}
+            className="btn-gold"
+          >
+            <Plus size={15} />
+            {tl(TX.add, lang)}
+          </button>
+        )}
       </div>
 
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-3 mb-5">
+      <div className="filter-bar mb-5">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Search size={14} className={`absolute top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={tl(TX.search_ph, lang)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] transition"
+            className="w-full"
           />
         </div>
 
         {/* Dept filter */}
         <div className="relative">
-          <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Building2 size={14} className={`absolute top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
           <select
             value={deptFilter}
             onChange={e => setDeptFilter(e.target.value)}
-            className="pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] appearance-none cursor-pointer transition"
+            className="appearance-none"
           >
             <option value="">{tl(TX.all_depts, lang)}</option>
             <option value="__none__">{tl(TX.no_dept, lang)}</option>
@@ -438,7 +442,7 @@ export default function AdminPositions() {
               <option key={d.id} value={d.id}>{d.code} — {d.name}</option>
             ))}
           </select>
-          <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <ChevronDown size={13} className={`absolute top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
         </div>
       </div>
 
@@ -461,19 +465,11 @@ export default function AdminPositions() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/60">
-                <th className="text-left px-5 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wide">
-                  {tl(TX.col_title, lang)}
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wide">
-                  {tl(TX.col_dept, lang)}
-                </th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wide hidden md:table-cell">
-                  {tl(TX.col_desc, lang)}
-                </th>
-                <th className="px-5 py-3 text-xs font-bold text-[#64748B] uppercase tracking-wide text-right">
-                  {tl(TX.col_actions, lang)}
-                </th>
+              <tr>
+                <th>{tl(TX.col_title, lang)}</th>
+                <th>{tl(TX.col_dept, lang)}</th>
+                <th className="hidden md:table-cell">{tl(TX.col_desc, lang)}</th>
+                <th className="col-actions">{tl(TX.col_actions, lang)}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -482,11 +478,10 @@ export default function AdminPositions() {
                 return (
                   <tr
                     key={p.id}
-                    className="hover:bg-gray-50/60 transition-colors"
                   >
                     {/* Title */}
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2.5">
+                    <td>
+                      <div className="cell-content">
                         <div className="w-7 h-7 rounded-lg bg-[#0D1F3C]/5 flex items-center justify-center shrink-0">
                           <Briefcase size={13} className="text-[#0D1F3C]" />
                         </div>
@@ -495,7 +490,7 @@ export default function AdminPositions() {
                     </td>
 
                     {/* Dept badge */}
-                    <td className="px-5 py-3.5">
+                    <td>
                       {p.department && color ? (
                         <span
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border"
@@ -510,7 +505,7 @@ export default function AdminPositions() {
                     </td>
 
                     {/* Description */}
-                    <td className="px-5 py-3.5 hidden md:table-cell">
+                    <td className="hidden md:table-cell">
                       {p.description ? (
                         <span className="text-xs text-[#64748B] line-clamp-2">{p.description}</span>
                       ) : (
@@ -519,22 +514,26 @@ export default function AdminPositions() {
                     </td>
 
                     {/* Actions */}
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => openEdit(p)}
-                          className="p-1.5 rounded-lg hover:bg-blue-50 text-[#64748B] hover:text-blue-600 transition cursor-pointer"
-                          title={tl(TX.edit_title, lang)}
-                        >
-                          <Edit2 size={14} />
-                        </button>
-                        <button
-                          onClick={() => openDelete(p)}
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-[#64748B] hover:text-red-500 transition cursor-pointer"
-                          title={tl(TX.del_title, lang)}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                    <td className="col-actions">
+                      <div className="flex items-center justify-center gap-1.5">
+                        {(isAdmin || hasPermission('positions.manage')) && (
+                          <button
+                            onClick={() => openEdit(p)}
+                            className="p-1.5 rounded-lg hover:bg-blue-50 text-[#64748B] hover:text-blue-600 transition cursor-pointer"
+                            title={tl(TX.edit_title, lang)}
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                        )}
+                        {(isAdmin || hasPermission('positions.manage')) && (
+                          <button
+                            onClick={() => openDelete(p)}
+                            className="p-1.5 rounded-lg hover:bg-red-50 text-[#64748B] hover:text-red-500 transition cursor-pointer"
+                            title={tl(TX.del_title, lang)}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

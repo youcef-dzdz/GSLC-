@@ -126,8 +126,9 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
     <nav
       dir="ltr"
       style={{
-        background: '#0D1F3C',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        background: '#FFFFFF',
+        borderBottom: '1px solid #E2E8F0',
+        boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
         position: 'fixed', top: 0, left: 0, right: 0,
         zIndex: 200, height: 64,
       }}
@@ -154,10 +155,10 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
               aria-label={t('common.menu')}
               className="lg:hidden"
               style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(67,102,187,0.08)',
+                border: '1px solid rgba(67,102,187,0.2)',
                 borderRadius: 7, padding: 7,
-                cursor: 'pointer', color: '#fff', display: 'flex',
+                cursor: 'pointer', color: '#4366BB', display: 'flex',
               }}
             >
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
@@ -183,11 +184,11 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
                   fontSize: 13, fontWeight: 600,
-                  color: 'rgba(255,255,255,0.75)',
+                  color: '#334155',
                   transition: 'color .18s', fontFamily: 'inherit',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.color = '#CFA030'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#334155'; }}
               >
                 {label}
               </button>
@@ -210,7 +211,7 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
               >
                 {unread > 0
                   ? <BellRing size={20} className="text-[#CFA030]" />
-                  : <Bell size={20} style={{ color: 'rgba(255,255,255,0.70)' }} />
+                  : <Bell size={20} style={{ color: '#4366BB' }} />
                 }
                 {unread > 0 && (
                   <span style={{
@@ -411,7 +412,7 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
           {/* Language pill switcher */}
           <div style={{
             display: 'flex',
-            border: '1.5px solid rgba(255,255,255,0.2)',
+            border: '1.5px solid rgba(67,102,187,0.25)',
             borderRadius: 24, overflow: 'hidden',
             fontSize: 11, fontWeight: 700,
           }}>
@@ -423,19 +424,19 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
                 style={{
                   padding: '5px 13px',
                   border: 'none',
-                  borderLeft: idx > 0 ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                  borderLeft: idx > 0 ? '1px solid rgba(67,102,187,0.2)' : 'none',
                   cursor: 'pointer',
-                  background: activeLang === l.code ? '#CFA030' : 'transparent',
-                  color:      activeLang === l.code ? '#0D1F3C' : 'rgba(255,255,255,0.75)',
+                  background: activeLang === l.code ? '#4366BB' : 'transparent',
+                  color:      activeLang === l.code ? '#fff' : '#334155',
                   fontFamily: 'inherit',
                   fontWeight: 700,
                   transition: 'all .18s',
                 }}
                 onMouseEnter={e => {
-                  if (activeLang !== l.code) e.currentTarget.style.color = '#fff';
+                  if (activeLang !== l.code) e.currentTarget.style.color = '#4366BB';
                 }}
                 onMouseLeave={e => {
-                  if (activeLang !== l.code) e.currentTarget.style.color = 'rgba(255,255,255,0.75)';
+                  if (activeLang !== l.code) e.currentTarget.style.color = '#334155';
                 }}
               >
                 {l.label}
@@ -447,14 +448,14 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
           {user && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              borderLeft: '1px solid rgba(255,255,255,0.12)',
+              borderLeft: '1px solid #E2E8F0',
               paddingLeft: 10,
             }}>
               <div className="hidden sm:block" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', margin: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', margin: 0 }}>
                   {user.prenom} {user.nom}
                 </p>
-                <p style={{ fontSize: 11, color: '#CFA030', margin: 0 }}>
+                <p style={{ fontSize: 11, color: '#64748B', margin: 0 }}>
                   {t(`roles.${user.role.label}`)}
                 </p>
               </div>
@@ -487,19 +488,19 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
           {!user && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              borderLeft: '1px solid rgba(255,255,255,0.12)',
+              borderLeft: '1px solid #E2E8F0',
               paddingLeft: 10,
             }}>
               <Link
                 to="/login"
                 style={{
                   padding: '7px 16px', fontSize: 13, fontWeight: 700,
-                  color: '#fff',
-                  border: '1.5px solid rgba(255,255,255,0.3)',
+                  color: '#334155',
+                  border: '1.5px solid #E2E8F0',
                   borderRadius: 7, background: 'transparent',
                   textDecoration: 'none', transition: 'all .18s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(67,102,187,0.06)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
               >
                 {t('auth.login')}
@@ -508,7 +509,7 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
                 to="/register"
                 style={{
                   padding: '7px 16px', fontSize: 13, fontWeight: 800,
-                  color: '#0D1F3C', background: '#CFA030',
+                  color: '#3A5BAD', background: '#CFA030',
                   borderRadius: 7, textDecoration: 'none',
                   boxShadow: '0 2px 8px rgba(207,160,48,.35)',
                   transition: 'all .18s',

@@ -5,13 +5,15 @@ import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../ui/Logo';
 import type { RoleLabel } from '../../types/auth';
 
-const ROLE_HOME: Record<RoleLabel, string> = {
+const ROLE_HOME: Record<string, string> = {
   admin:      '/admin/dashboard',
   directeur:  '/director/dashboard',
   commercial: '/commercial/dashboard',
   logistique: '/logistics/dashboard',
   financier:  '/finance/dashboard',
   client:     '/client/dashboard',
+  it_agent:   '/admin/dashboard',
+  it_backup:  '/admin/dashboard',
 };
 
 const STAFF_PREFIXES = ['/admin', '/director', '/commercial', '/logistics', '/finance'];
@@ -85,8 +87,12 @@ export const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
 
   // ── Wrong role — bounce to own dashboard ──────────────────────────────────
   if (allowedRoles && allowedRoles.length > 0) {
-    if (!allowedRoles.includes(user.role.label as RoleLabel)) {
-      const bouncePath = ROLE_HOME[user.role.label as RoleLabel] ?? '/';
+    const userRole = user.role.label as RoleLabel;
+    const isKnownRole = userRole in ROLE_HOME;
+    const isAdminLike = !isKnownRole && allowedRoles.includes('admin' as RoleLabel);
+    
+    if (!allowedRoles.includes(userRole) && !isAdminLike) {
+      const bouncePath = ROLE_HOME[userRole] ?? '/admin/dashboard';
       return <Navigate to={bouncePath} replace />;
     }
   }

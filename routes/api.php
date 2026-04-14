@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\DeviseController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\ConfigController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\PermissionController;
 
 // Client Portal
 use App\Http\Controllers\Client\ClientController;
@@ -71,48 +73,82 @@ Route::middleware('auth:sanctum')->group(function () {
     )->name('pays.index');
 
     // =========================================================================
-    // STANDALONE CRUD — Testing routes (no role middleware)
-    // Move each to the appropriate role group after validation
     // =========================================================================
-    Route::apiResource('clients', \App\Http\Controllers\Client\ClientController::class);
+    // STANDALONE CRUD — Testing routes (now secured)
+    // =========================================================================
+    Route::middleware('role:commercial,admin')->group(function () {
+        Route::apiResource('clients', \App\Http\Controllers\Client\ClientController::class);
+    });
 
     // =========================================================================
     // ADMIN
     // =========================================================================
-    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('role:admin,it_agent')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard',                   [AdminController::class, 'dashboard'])->name('dashboard');
-        Route::get('/users',                        [UserController::class, 'index'])->name('users.index');
-        Route::post('/users',                       [UserController::class, 'store'])->name('users.store');
-        Route::put('/users/{id}',                   [UserController::class, 'update'])->name('users.update');
-        Route::delete('/users/{id}',                [UserController::class, 'destroy'])->name('users.destroy');
-        Route::post('/users/{id}/block',            [UserController::class, 'block'])->name('users.block');
-        Route::post('/users/{id}/reset-password',   [UserController::class, 'resetPassword'])->name('users.reset-password');
-        Route::get('/roles',                        [UserController::class, 'roles'])->name('roles.index');
-        Route::post('/roles',                       [UserController::class, 'storeRole'])->name('roles.store');
-        Route::get('/departments',                  [DepartmentController::class, 'index'])->name('departments.index');
-        Route::post('/departments',                 [DepartmentController::class, 'store'])->name('departments.store');
-        Route::put('/departments/{id}',             [DepartmentController::class, 'update'])->name('departments.update');
-        Route::delete('/departments/{id}',          [DepartmentController::class, 'destroy'])->name('departments.destroy');
-        Route::get('/positions',                    [PositionController::class, 'index'])->name('positions.index');
-        Route::post('/positions',                   [PositionController::class, 'store'])->name('positions.store');
-        Route::put('/positions/{id}',               [PositionController::class, 'update'])->name('positions.update');
-        Route::delete('/positions/{id}',            [PositionController::class, 'destroy'])->name('positions.destroy');
-        Route::get('/registrations',               [AdminController::class, 'registrations'])->name('registrations.index');
-        Route::post('/registrations/{id}/approve', [AdminController::class, 'approveRegistration'])->name('registrations.approve');
-        Route::post('/registrations/{id}/reject',  [AdminController::class, 'rejectRegistration'])->name('registrations.reject');
-        Route::delete('/registrations/{id}',       [AdminController::class, 'destroyRegistration'])->name('registrations.destroy');
-        Route::get('/audit',                       [AdminController::class, 'auditLog'])->name('audit');
-        Route::get('/audit-logs/export',            [AuditController::class, 'export'])->name('audit-logs.export');
-        Route::get('/audit-logs',                  [AuditController::class, 'index'])->name('audit-logs.index');
-        Route::get('/config',                      [AdminController::class, 'config'])->name('config.index');
-        Route::post('/config',                     [AdminController::class, 'updateConfig'])->name('config.update');
-        Route::get('/system-config',               [ConfigController::class, 'index'])->name('system-config.index');
-        Route::post('/system-config/{section}',    [ConfigController::class, 'update'])->name('system-config.update');
+        Route::get('/users',                        [UserController::class, 'index'])->name('users.index')->middleware('permission:users.view');
+        Route::post('/users',                       [UserController::class, 'store'])->name('users.store')->middleware('permission:users.create');
+        Route::put('/users/{id}',                   [UserController::class, 'update'])->name('users.update')->middleware('permission:users.edit');
+        Route::delete('/users/{id}',                [UserController::class, 'destroy'])->name('users.destroy')->middleware('permission:users.delete');
+        Route::post('/users/{id}/block',            [UserController::class, 'block'])->name('users.block')->middleware('permission:users.block');
+        Route::post('/users/{id}/reset-password',   [UserController::class, 'resetPassword'])->name('users.reset-password')->middleware('permission:users.reset_password');
+        Route::apiResource('roles', RoleController::class)->middleware([
+            'index'   => 'permission:roles.view',
+            'store'   => 'permission:roles.manage',
+            'show'    => 'permission:roles.view',
+            'update'  => 'permission:roles.manage',
+            'destroy' => 'permission:roles.manage',
+        ]);
+        Route::put('roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('roles.permissions.sync')->middleware('permission:roles.manage');
+        Route::get('permissions/grouped', [PermissionController::class, 'grouped'])->name('permissions.grouped')->middleware('permission:permissions.view');
+        Route::apiResource('permissions', PermissionController::class)->only(['index', 'show'])->middleware('permission:permissions.view');
+        Route::post('/permissions',
+            [PermissionController::class, 'store'])
+            ->name('permissions.store')
+            ->middleware('permission:permissions.manage');
+        Route::put('/permissions/{permission}',
+            [PermissionController::class, 'update'])
+            ->name('permissions.update')
+            ->middleware('permission:permissions.manage');
+        Route::delete('/permissions/{permission}',
+            [PermissionController::class, 'destroy'])
+            ->name('permissions.destroy')
+            ->middleware('permission:permissions.manage');
+        Route::get('/user-permissions/{userId}',
+            [PermissionController::class, 'userPermissions'])
+            ->name('user.permissions.show')
+            ->middleware('permission:permissions.view');
+        Route::post('/user-permissions/{userId}',
+            [PermissionController::class, 'setUserPermission'])
+            ->name('user.permissions.set')
+            ->middleware('permission:permissions.manage');
+        Route::delete('/user-permissions/{userId}/{permissionId}',
+            [PermissionController::class, 'removeUserPermission'])
+            ->name('user.permissions.remove')
+            ->middleware('permission:permissions.manage');
+        Route::get('/departments',                  [DepartmentController::class, 'index'])->name('departments.index')->middleware('permission:departments.view');
+        Route::post('/departments',                 [DepartmentController::class, 'store'])->name('departments.store')->middleware('permission:departments.manage');
+        Route::put('/departments/{id}',             [DepartmentController::class, 'update'])->name('departments.update')->middleware('permission:departments.manage');
+        Route::delete('/departments/{id}',          [DepartmentController::class, 'destroy'])->name('departments.destroy')->middleware('permission:departments.manage');
+        Route::get('/positions',                    [PositionController::class, 'index'])->name('positions.index')->middleware('permission:positions.view');
+        Route::post('/positions',                   [PositionController::class, 'store'])->name('positions.store')->middleware('permission:positions.manage');
+        Route::put('/positions/{id}',               [PositionController::class, 'update'])->name('positions.update')->middleware('permission:positions.manage');
+        Route::delete('/positions/{id}',            [PositionController::class, 'destroy'])->name('positions.destroy')->middleware('permission:positions.manage');
+        Route::get('/registrations',               [AdminController::class, 'registrations'])->name('registrations.index')->middleware('permission:registrations.view');
+        Route::post('/registrations/{id}/approve', [AdminController::class, 'approveRegistration'])->name('registrations.approve')->middleware('permission:registrations.approve');
+        Route::post('/registrations/{id}/reject',  [AdminController::class, 'rejectRegistration'])->name('registrations.reject')->middleware('permission:registrations.reject');
+        Route::delete('/registrations/{id}',       [AdminController::class, 'destroyRegistration'])->name('registrations.destroy')->middleware('permission:registrations.delete');
+        Route::get('/audit',                       [AdminController::class, 'auditLog'])->name('audit')->middleware('permission:audit.view');
+        Route::get('/audit-logs/export',            [AuditController::class, 'export'])->name('audit-logs.export')->middleware('permission:audit.export');
+        Route::get('/audit-logs',                  [AuditController::class, 'index'])->name('audit-logs.index')->middleware('permission:audit.view');
+        Route::get('/config',                      [AdminController::class, 'config'])->name('config.index')->middleware('permission:config.view');
+        Route::post('/config',                     [AdminController::class, 'updateConfig'])->name('config.update')->middleware('permission:config.manage');
+        Route::get('/system-config',               [ConfigController::class, 'index'])->name('system-config.index')->middleware('permission:config.view');
+        Route::post('/system-config/{section}',    [ConfigController::class, 'update'])->name('system-config.update')->middleware('permission:config.manage');
 
         // Currency rates
-        Route::get('/currencies',                  [DeviseController::class, 'index'])->name('currencies.index');
-        Route::post('/currencies/sync',            [DeviseController::class, 'sync'])->name('currencies.sync');
-        Route::post('/currencies/{code}/update',   [DeviseController::class, 'updateRate'])->name('currencies.update');
+        Route::get('/currencies',                  [DeviseController::class, 'index'])->name('currencies.index')->middleware('permission:rates.view');
+        Route::post('/currencies/sync',            [DeviseController::class, 'sync'])->name('currencies.sync')->middleware('permission:rates.manage');
+        Route::post('/currencies/{code}/update',   [DeviseController::class, 'updateRate'])->name('currencies.update')->middleware('permission:rates.manage');
 
         // Admin notifications
         Route::get('/notifications',               [AdminNotificationController::class, 'index'])->name('notifications.index');

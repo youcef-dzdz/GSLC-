@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('── Layer 1 : Données de référence ──');
 
         $this->call(RoleSeeder::class);       // 1. roles (no dependencies)
+        $this->call(PermissionSeeder::class); // 1b. permissions + role_permissions
         $this->call(PaysSeeder::class);       // 2. pays (no dependencies)
         $this->call(BanqueSeeder::class);     // 3. banques (no dependencies)
         $this->call(DeviseSeeder::class);     // 4. devises (no dependencies)

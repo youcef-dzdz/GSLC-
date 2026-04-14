@@ -31,6 +31,73 @@ export const adminService = {
   createRole: (data: { nom_role: string; label: string; niveau: number }) =>
     apiClient.post('/api/admin/roles', data),
 
+  // ─── Roles — permissions ─────────────────────────────────────────────────
+
+  getRoleDetail: (id: number) =>
+    apiClient.get(`/api/admin/roles/${id}`),
+
+  updateRole: (id: number, data: {
+    nom_role?: string;
+    label?: string;
+    niveau?: number;
+    description?: string;
+  }) =>
+    apiClient.put(`/api/admin/roles/${id}`, data)
+      .then(r => r.data),
+
+  deleteRole: (id: number) =>
+    apiClient.delete(`/api/admin/roles/${id}`),
+
+  syncRolePermissions: (roleId: number, permissionIds: number[]) =>
+    apiClient.put(`/api/admin/roles/${roleId}/permissions`,
+      { permission_ids: permissionIds })
+      .then(r => r.data),
+
+  // ─── Permissions ─────────────────────────────────────────────────────────
+
+  getPermissions: () =>
+    apiClient.get('/api/admin/permissions'),
+
+  getPermissionsGrouped: () =>
+    apiClient.get('/api/admin/permissions/grouped'),
+
+  createPermission: (data: {
+    name: string;
+    label: string;
+    module: string;
+    description?: string;
+  }) =>
+    apiClient.post('/api/admin/permissions', data)
+      .then(r => r.data),
+
+  updatePermission: (id: number, data: {
+    label?: string;
+    module?: string;
+    description?: string;
+  }) =>
+    apiClient.put(`/api/admin/permissions/${id}`, data)
+      .then(r => r.data),
+
+  deletePermission: (id: number) =>
+    apiClient.delete(`/api/admin/permissions/${id}`)
+      .then(r => r.data),
+
+  getUserPermissions: (userId: number) =>
+    apiClient.get(`/api/admin/user-permissions/${userId}`)
+      .then(r => r.data),
+
+  setUserPermission: (userId: number, data: {
+    permission_id: number;
+    granted: boolean;
+  }) =>
+    apiClient.post(`/api/admin/user-permissions/${userId}`, data)
+      .then(r => r.data),
+
+  removeUserPermission: (userId: number, permissionId: number) =>
+    apiClient.delete(
+      `/api/admin/user-permissions/${userId}/${permissionId}`)
+      .then(r => r.data),
+
   getDepartments: () =>
     apiClient.get('/api/admin/departments'),
 

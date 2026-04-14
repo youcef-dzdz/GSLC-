@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Bell, BellOff, CheckCheck, Trash2, X } from 'lucide-react';
 import { apiClient } from '../../services/api';
+import { usePermission } from '../../hooks/usePermission';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,13 @@ const formatDate = (iso: string): string => {
 export default function NotificationsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { hasPermission, isAdmin } = usePermission();
+
+  useEffect(() => {
+    if (!isAdmin && !hasPermission('notifications.view')) {
+      navigate('/admin/dashboard');
+    }
+  }, []);
 
   const [notifs,     setNotifs]     = useState<Notif[]>([]);
   const [unread,     setUnread]     = useState(0);

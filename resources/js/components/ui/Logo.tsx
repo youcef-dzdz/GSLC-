@@ -26,7 +26,7 @@ function LogoInner({ size = 'md', iconOnly = false, textClassName }: Omit<LogoPr
 
   return (
     <div className={`flex items-center ${s.gap} ${isRTL ? 'flex-row-reverse' : ''}`}>
-      <div className={`bg-white rounded-lg ${s.pad} flex items-center justify-center flex-shrink-0`}>
+      <div className={`flex items-center justify-center flex-shrink-0`}>
         <img
           src={LOGO_URL}
           alt="NASHCO GSLC"

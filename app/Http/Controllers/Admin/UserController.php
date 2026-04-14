@@ -275,35 +275,4 @@ class UserController extends Controller
         ]);
     }
 
-
-    // =========================================================================
-    // GET ALL ROLES — GET /api/admin/roles
-    // Used to populate the role dropdown in the create/edit form
-    // =========================================================================
-
-    public function roles(): JsonResponse
-    {
-        $roles = Role::orderBy('niveau')->get(['id', 'nom_role', 'label', 'niveau']);
-        return response()->json($roles);
-    }
-
-    // =========================================================================
-    // CREATE ROLE — POST /api/admin/roles
-    // Allows admin to dynamically create new positions in departments
-    // =========================================================================
-
-    public function storeRole(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'nom_role' => 'required|string|max:100|unique:roles,nom_role',
-            'label'    => 'required|string|max:50',
-            'niveau'   => 'required|integer|min:1|max:5',
-        ]);
-
-        $role = Role::create($data);
-
-        $this->audit('CREATE', 'roles', $role->id, null, $role->toArray());
-
-        return response()->json($role, 201);
-    }
 }

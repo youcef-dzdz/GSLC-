@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Navbar } from '../components/layout/Navbar';
@@ -14,8 +14,14 @@ export const DashboardLayout = () => {
   const { i18n } = useTranslation();
   const isRTL = i18n.language.startsWith('ar');
 
+  // Apply premium theme globally to the body
+  useEffect(() => {
+    document.body.classList.add('gslc-premium-theme-active');
+    return () => document.body.classList.remove('gslc-premium-theme-active');
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#F0F4F8] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F0F4F8] flex flex-col font-sans gslc-premium-theme">
       <Navbar onMenuClick={() => setSidebarOpen(prev => !prev)} sidebarOpen={sidebarOpen} />
 
       <div className="flex flex-1 pt-16">

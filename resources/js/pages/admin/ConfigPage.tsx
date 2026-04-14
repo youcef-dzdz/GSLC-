@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Settings, Mail, Bell, AlertTriangle, Eye, EyeOff, Save, Loader2 } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import { useToast } from '../../components/ui/Toast';
+import { usePermission } from '../../hooks/usePermission';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -87,7 +89,7 @@ function SectionCard({
         <button
           onClick={onSave}
           disabled={saving}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#0D1F3C] text-white text-sm font-bold rounded-xl hover:bg-[#1A3A6B] transition-colors shadow-md cursor-pointer disabled:opacity-60"
+          className="btn-gold disabled:opacity-60"
         >
           {saving ? (
             <>
@@ -248,8 +250,16 @@ function PasswordField({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ConfigPage() {
+  const { isAdmin, hasPermission } = usePermission();
   const { t } = useTranslation();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAdmin && !hasPermission('config.view') && !hasPermission('config.manage')) {
+      navigate('/admin/dashboard');
+    }
+  }, []);
 
   const [config, setConfig]   = useState<Config>({});
   const [saving, setSaving]   = useState<Record<string, boolean>>({});
@@ -333,14 +343,13 @@ export default function ConfigPage() {
 
       {/* ── Page Header ── */}
       <div
-        style={{ background: 'linear-gradient(135deg,#EFF6FF,#FFFBEB)', borderLeft: '4px solid #CFA030' }}
-        className="rounded-2xl shadow-md p-5 mb-6 flex items-center justify-between"
+        className="rounded-2xl shadow-md p-5 mb-6 flex items-center justify-between border-l-4 border-[#CFA030] bg-white bg-opacity-80 backdrop-blur-md"
       >
         <div>
           <h1 className="text-2xl font-black text-[#0D1F3C]">{t('admin.config.title')}</h1>
           <p className="text-sm text-[#64748B] mt-0.5">{t('admin.config.subtitle')}</p>
         </div>
-        <div className="hidden sm:flex items-center justify-center w-12 h-12 bg-white/70 rounded-2xl shadow-sm">
+        <div className="hidden sm:flex items-center justify-center w-12 h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl shadow-sm">
           <Settings size={22} className="text-[#CFA030]" />
         </div>
       </div>

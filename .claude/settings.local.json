@@ -13,7 +13,9 @@
       "Bash(node -e \"require\\('./resources/js/i18n/locales/en.json'\\); console.log\\('en OK'\\)\")",
       "Bash(node -e \"require\\('./resources/js/i18n/locales/ar.json'\\); console.log\\('ar OK'\\)\")",
       "Bash(php c:/xampp/htdocs/GSLC/artisan route:list --path=api/admin/notifications)",
-      "Bash(php c:/xampp/htdocs/GSLC/artisan tinker '--execute=:*)"
+      "Bash(php c:/xampp/htdocs/GSLC/artisan tinker '--execute=:*)",
+      "Bash(python3 \"C:\\\\Users\\\\Pc-27\\\\.claude\\\\skills\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"logistics maritime SaaS admin dashboard professional analytics KPI\" --design-system -p \"NASHCO GSLC\" -f markdown)",
+      "Bash(awk '{print $1, $2}')"
     ]
   }
 }

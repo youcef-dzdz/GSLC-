@@ -7,9 +7,10 @@ import {
   ChevronDown, Loader2, AlertCircle, Eye, CheckCircle, XCircle,
   FileText, Calendar, MapPin, Briefcase, Trash2
 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/admin.service';
 import { apiClient } from '../../services/api';
+import { usePermission } from '../../hooks/usePermission';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -98,6 +99,15 @@ export default function AdminRegistrations() {
   const qc = useQueryClient();
 
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { hasPermission, isAdmin } = usePermission();
+
+  useEffect(() => {
+    if (!isAdmin && !hasPermission('registrations.manage') && !hasPermission('registrations.view')) {
+      navigate('/admin/dashboard');
+    }
+  }, []);
+
   const highlightId = Number(searchParams.get('highlight')) || null;
 
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
@@ -283,7 +293,7 @@ export default function AdminRegistrations() {
       </div>
 
       {/* Filters */}
-      <div className={`flex flex-wrap gap-3 items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className="filter-bar">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
           <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
@@ -292,7 +302,7 @@ export default function AdminRegistrations() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={tlx('search')}
-            className={`w-full py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'}`}
+            className="w-full"
           />
         </div>
         {/* Status filter */}
@@ -300,7 +310,7 @@ export default function AdminRegistrations() {
           <select
             value={statutFilter}
             onChange={e => setStatutFilter(e.target.value)}
-            className={`w-full appearance-none py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'pr-3 pl-8' : 'pl-3 pr-8'}`}
+            className="w-full appearance-none"
           >
             <option value="">{tlx('all_statuses')}</option>
             <option value="EN_ATTENTE_VALIDATION">{tlx('pending')}</option>
@@ -338,15 +348,14 @@ export default function AdminRegistrations() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/70">
-                  {TABLE_HEADERS[lang].map(h => (
-                    <th
-                      key={h}
-                      className={`px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}
-                    >
-                      {h}
-                    </th>
-                  ))}
+                <tr>
+                  <th>{t('admin.registrations.col_company')}</th>
+                  <th>{t('admin.registrations.col_contact')}</th>
+                  <th>{t('admin.registrations.col_email')}</th>
+                  <th>{t('admin.registrations.col_city')}</th>
+                  <th className="col-date">{t('admin.registrations.col_submitted')}</th>
+                  <th className="col-status">{t('admin.registrations.col_status')}</th>
+                  <th className="col-actions">{t('admin.registrations.col_actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -356,47 +365,47 @@ export default function AdminRegistrations() {
                     <tr
                       key={reg.id}
                       id={`reg-row-${reg.id}`}
-                      className="transition-all duration-700 hover:bg-gray-50/50"
+                      className="transition-all duration-700"
                       style={highlightedId === reg.id ? {
                         backgroundColor: '#FFFBEB',
                         boxShadow: 'inset 0 0 0 2px #CFA030',
                       } : {}}
                     >
                       {/* Company */}
-                      <td className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div className="flex items-center gap-2.5">
+                      <td>
+                        <div className="cell-content">
                           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0D1F3C] to-[#1a3360] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                             {initials(reg)}
                           </div>
-                          <div>
-                            <p className="font-semibold text-gray-900 text-xs leading-tight">{reg.raison_sociale ?? '—'}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-900 text-xs leading-tight truncate">{reg.raison_sociale ?? '—'}</p>
                             {reg.type_client && (
-                              <p className="text-[11px] text-gray-400 mt-0.5">{reg.type_client}</p>
+                              <p className="text-[11px] text-gray-400 mt-0.5 truncate">{reg.type_client}</p>
                             )}
                           </div>
                         </div>
                       </td>
                       {/* Contact */}
-                      <td className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <td>
                         <p className="font-medium text-gray-800 text-xs">{reg.contact_nom} {reg.contact_prenom}</p>
                         {reg.contact_fonction && (
                           <p className="text-[11px] text-gray-400 mt-0.5">{reg.contact_fonction}</p>
                         )}
                       </td>
                       {/* Email */}
-                      <td className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <td>
                         <p className="text-xs text-gray-600 font-mono">{reg.user?.email ?? '—'}</p>
                       </td>
                       {/* Ville */}
-                      <td className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <td>
                         <p className="text-xs text-gray-600">{reg.ville ?? '—'}</p>
                       </td>
                       {/* Date */}
-                      <td className={`px-4 py-3 text-xs text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <td className="col-date">
                         {formatDate(reg.created_at)}
                       </td>
                       {/* Status */}
-                      <td className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <td className="col-status">
                         {sm ? (
                           <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ring-1 ${sm.bg} ${sm.text} ${sm.ring}`}>
                             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sm.dot}`} />
@@ -407,8 +416,8 @@ export default function AdminRegistrations() {
                         )}
                       </td>
                       {/* Actions */}
-                      <td className={`px-4 py-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div className="flex items-center gap-1.5 whitespace-nowrap">
+                      <td className="col-actions">
+                        <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                           {/* View detail */}
                           <button
                             onClick={() => setDetailTarget(reg)}

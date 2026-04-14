@@ -1,9 +1,10 @@
-export type RoleLabel = 'admin' | 'directeur' | 'commercial' | 'logistique' | 'financier' | 'client';
+export type RoleLabel = 'admin' | 'it_agent' | 'directeur' | 'commercial' | 'logistique' | 'financier' | 'client' | string;
 
 export interface UserRole {
   id: number;
   label: RoleLabel;
   nom: string;
+  permissions: string[];
 }
 
 export interface User {

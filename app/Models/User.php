@@ -24,6 +24,7 @@ class User extends Authenticatable
         'statut',
         'tentatives_echouees',
         'derniere_connexion',
+        'must_change_password',
     ];
 
     protected $hidden = [
@@ -74,7 +75,7 @@ class User extends Authenticatable
 
     public function permissions()
     {
-        return $this->role->permissions ?? collect();
+        return $this->role ? $this->role->permissions : collect();
     }
 
 
@@ -108,29 +109,40 @@ class User extends Authenticatable
         return $this->hasMany(UserPermission::class);
     }
 
-    public function hasPermission(string $permission): bool
+    /**
+     * Checks if the user's role has the given permission slug.
+     * Uses relationship caching to avoid N+1 queries.
+     */
+    public function hasPermission(string $slug): bool
     {
-        if ($this->role->label === 'admin') {
+        // Ensure role and permissions are loaded and cached
+        if (!$this->relationLoaded('role')) {
+            $this->load('role.permissions');
+        }
+
+        $role = $this->role;
+        if (!$role) return false;
+
+        $permissions = $role->permissions;
+
+        // Superadmin fallback: niveau 1 and NO permissions assigned to the role
+        // This allows bootstraping the initial admin account.
+        if ($role->niveau === 1 && $permissions->isEmpty()) {
             return true;
         }
 
-        if ($this->isResponsable()) {
-            return true;
-        }
-
-        $perm = $this->userPermissions()
-                     ->where('permission', $permission)
-                     ->first();
-
-        return $perm ? (bool) $perm->valeur : false;
+        // Check if the permission slug exists in the role's permissions
+        return $permissions->contains('name', $slug);
     }
 
     public function syncPermissions(array $permissions): void
     {
-        foreach ($permissions as $permission => $valeur) {
+        foreach ($permissions as $permissionName => $granted) {
+            $perm = Permission::where('name', $permissionName)->first();
+            if (!$perm) continue;
             UserPermission::updateOrCreate(
-                ['user_id' => $this->id, 'permission' => $permission],
-                ['valeur' => (bool) $valeur]
+                ['user_id' => $this->id, 'permission_id' => $perm->id],
+                ['granted' => (bool) $granted]
             );
         }
     }

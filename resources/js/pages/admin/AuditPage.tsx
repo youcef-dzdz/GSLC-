@@ -3,6 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiClient } from '../../services/api';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { usePermission } from '../../hooks/usePermission';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -65,6 +68,15 @@ const TABLE_LABELS: Record<string, string> = {
 
 export default function AuditPage() {
   const { t } = useTranslation();
+  const { hasPermission, isAdmin } = usePermission();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAdmin && !hasPermission('audit.view')) {
+      navigate('/admin/dashboard');
+    }
+  }, []);
+
   const [userSearch, setUserSearch] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const [dateDebut, setDateDebut] = useState('');
@@ -184,9 +196,7 @@ export default function AuditPage() {
             onClick={exportCsv}
             disabled={isExporting}
             title="Exporter le journal en CSV"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
-                       border border-[#CFA030] text-[#0D1F3C] bg-[#FFFBEB] hover:bg-[#FEF3C7]
-                       disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
+            className="btn-gold disabled:opacity-50"
           >
             <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
             {isExporting ? t('admin.audit.exporting') : t('admin.audit.export_csv')}
@@ -196,7 +206,7 @@ export default function AuditPage() {
 
       {/* ── Filters ────────────────────────────────────────────────────────── */}
       <div className="rounded-2xl shadow-md border border-[#E2E8F0] bg-white p-4">
-        <div className="flex flex-wrap gap-3 items-end">
+        <div className="filter-bar">
 
           {/* Search user */}
           <div className="flex-1 min-w-[180px]">
@@ -211,8 +221,7 @@ export default function AuditPage() {
                 onChange={e => setUserSearch(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && applyFilters()}
                 placeholder="Rechercher..."
-                className="w-full pl-9 pr-3 py-2 text-sm border border-[#E2E8F0] rounded-xl
-                           focus:outline-none focus:ring-2 focus:ring-[#CFA030]/40 focus:border-[#CFA030]"
+                className="w-full"
               />
             </div>
           </div>
@@ -222,18 +231,18 @@ export default function AuditPage() {
             <label className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-1">
               {t('admin.audit.label_action')}
             </label>
-            <select
-              value={actionFilter}
-              onChange={e => setActionFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-[#E2E8F0] rounded-xl
-                         focus:outline-none focus:ring-2 focus:ring-[#CFA030]/40 focus:border-[#CFA030]
-                         bg-white cursor-pointer"
-            >
-              <option value="">{t('admin.audit.all_actions')}</option>
-              {ACTION_OPTIONS.map(a => (
-                <option key={a} value={a}>{actionLabel(a)}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={actionFilter}
+                onChange={e => setActionFilter(e.target.value)}
+                className="w-full appearance-none"
+              >
+                <option value="">{t('admin.audit.all_actions')}</option>
+                {ACTION_OPTIONS.map(a => (
+                  <option key={a} value={a}>{actionLabel(a)}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Date début */}
@@ -245,8 +254,7 @@ export default function AuditPage() {
               type="date"
               value={dateDebut}
               onChange={e => setDateDebut(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-[#E2E8F0] rounded-xl
-                         focus:outline-none focus:ring-2 focus:ring-[#CFA030]/40 focus:border-[#CFA030]"
+              className="w-full"
             />
           </div>
 
@@ -259,18 +267,15 @@ export default function AuditPage() {
               type="date"
               value={dateFin}
               onChange={e => setDateFin(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-[#E2E8F0] rounded-xl
-                         focus:outline-none focus:ring-2 focus:ring-[#CFA030]/40 focus:border-[#CFA030]"
+              className="w-full"
             />
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 self-end">
             <button
               onClick={applyFilters}
-              className="px-4 py-2 text-sm font-semibold rounded-xl text-white cursor-pointer
-                         transition-all duration-150"
-              style={{ background: 'linear-gradient(135deg, #0D1F3C, #1E3A5F)' }}
+              className="btn-gold"
             >
               {t('admin.audit.filter')}
             </button>
@@ -304,15 +309,13 @@ export default function AuditPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                  {[t('admin.audit.col_user'), t('admin.audit.col_action'), t('admin.audit.col_table'), t('admin.audit.col_description'), t('admin.audit.col_ip'), t('admin.audit.col_date')].map(h => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider whitespace-nowrap"
-                    >
-                      {h}
-                    </th>
-                  ))}
+                <tr>
+                  <th>{t('admin.audit.col_user')}</th>
+                  <th className="col-status">{t('admin.audit.col_action')}</th>
+                  <th>{t('admin.audit.col_table')}</th>
+                  <th>{t('admin.audit.col_description')}</th>
+                  <th>{t('admin.audit.col_ip')}</th>
+                  <th className="col-date">{t('admin.audit.col_date')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F1F5F9]">
@@ -325,41 +328,42 @@ export default function AuditPage() {
                 ) : rows.map(row => (
                   <tr
                     key={row.id}
-                    className="hover:bg-[#F0F7FF] transition-all duration-150"
                   >
                     {/* Utilisateur */}
-                    <td className="px-4 py-3 text-sm font-medium text-[#0D1F3C] whitespace-nowrap">
-                      {row.utilisateur}
+                    <td>
+                      <span className="font-medium">{row.utilisateur}</span>
                     </td>
 
                     {/* Action badge */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="col-status">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${actionBadge(row.action)}`}>
                         {actionLabel(row.action)}
                       </span>
                     </td>
 
                     {/* Table cible */}
-                    <td className="px-4 py-3 text-sm text-[#475569] whitespace-nowrap">
+                    <td>
                       <span className="font-mono text-[12px] bg-[#F8FAFC] border border-[#E2E8F0] rounded px-1.5 py-0.5">
                         {tableLabel(row.table_cible)}
                       </span>
                     </td>
 
                     {/* Description */}
-                    <td className="px-4 py-3 text-sm text-[#475569] max-w-[280px]">
+                    <td className="max-w-[280px]">
                       <span className="line-clamp-2" title={row.description}>
                         {row.description}
                       </span>
                     </td>
 
                     {/* IP */}
-                    <td className="px-4 py-3 text-[12px] font-mono text-[#94A3B8] whitespace-nowrap">
-                      {row.adresse_ip ?? '—'}
+                    <td>
+                      <span className="font-mono text-[12px] text-[#94A3B8]">
+                        {row.adresse_ip ?? '—'}
+                      </span>
                     </td>
 
                     {/* Date */}
-                    <td className="px-4 py-3 text-sm text-[#475569] whitespace-nowrap">
+                    <td className="col-date">
                       {formatDate(row.date_action)}
                     </td>
                   </tr>
@@ -398,12 +402,11 @@ export default function AuditPage() {
                 <button
                   key={p}
                   onClick={() => setPage(p as number)}
-                  className={`w-9 h-9 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer
+                  className={`w-9 h-9 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer flex items-center justify-center
                     ${p === page
-                      ? 'text-white shadow-sm'
+                      ? 'btn-gold shadow-sm'
                       : 'border border-[#E2E8F0] text-[#475569] hover:bg-[#F0F7FF]'
                     }`}
-                  style={p === page ? { background: 'linear-gradient(135deg, #0D1F3C, #1E3A5F)' } : {}}
                 >
                   {p}
                 </button>
