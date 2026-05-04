@@ -7,8 +7,7 @@ import { portsService, Port, PortForm } from '../../../services/portsService';
 import { C, Skel, StatutBadge, TYPE_PORT, Modal, ConfirmModal } from './PortShared';
 
 export const PortsTab = ({ canEdit }: { canEdit: boolean }) => {
-  const { i18n, t } = useTranslation();
-  const isRTL = i18n.language?.startsWith('ar');
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -61,13 +60,13 @@ export const PortsTab = ({ canEdit }: { canEdit: boolean }) => {
   if (isLoading) return <Skel />;
 
   return (
-    <div className="bg-white rounded-2xl border border-[#C5D8F5] overflow-hidden shadow-sm" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="bg-white rounded-2xl border border-[#C5D8F5] overflow-hidden shadow-sm">
       {/* Toolbar */}
       <div className="p-4 border-b border-[#F0F7FF] bg-[#F9FBFF]">
         <div className="flex flex-wrap gap-2 items-center">
           <div className="relative flex-1 min-w-[200px] sm:max-w-xs">
-            <Search className={`absolute top-1/2 -translate-y-1/2 text-[#3A5A8A] ${isRTL ? 'right-3' : 'left-3'}`} size={16} />
-            <input type="text" className={`${C.fi} ${isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'}`} placeholder={t('admin.ports.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3A5A8A]" size={16} />
+            <input type="text" className={C.fi} placeholder={t('admin.ports.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <select className={C.fi} value={filterType} onChange={e => setFilterType(e.target.value)}>
             <option value="">{t('admin.ports.all_types')}</option>
@@ -76,7 +75,7 @@ export const PortsTab = ({ canEdit }: { canEdit: boolean }) => {
             <option value="TERRESTRE">{t('admin.ports.type_terrestre')}</option>
           </select>
           <button onClick={() => { setSearch(''); setFilterType(''); }} className={C.reset}>{t('common.reset_filters')}</button>
-          {canEdit && <button onClick={openNew} className={`${isRTL ? 'mr-auto' : 'ml-auto'} flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#C8960A] text-white rounded-xl hover:bg-[#A87A08] transition-all`}><Plus size={14} />{t('admin.ports.new')}</button>}
+          {canEdit && <button onClick={openNew} className="ml-auto flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#C8960A] text-white rounded-xl hover:bg-[#A87A08] transition-all"><Plus size={14} />{t('admin.ports.new')}</button>}
         </div>
       </div>
 

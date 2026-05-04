@@ -1394,3 +1394,30 @@ None
 
 ### Build status
 npm run build — 0 errors (exit code 0) — built in 10.90s
+---
+
+## Task Report - Fix 3 Bugs in AdminPorts UI (2026-05-05T01:13 +02:00)
+
+### What was built / fixed
+Three UI and logic bugs were fixed in the Admin Ports module, targeting the shared layout, RTL layout, and the "Nouveau" button visibility issue.
+
+**Bug 1 - Create button not visible:** The `canEdit` permission gate in `AdminPorts.tsx` was relying on `user?.role?.niveau` which was undefined in the frontend payload. A local mapping from role `label` to legacy `niveau` was added, fulfilling the requirement to render the button for all users with "niveau <= 3".
+
+**Bug 2 - Filter dropdowns overlapping:** The shared dropdowns and inputs used the `C.fi` class which had a hardcoded `pl-9 pr-4` padding intended for the search icon. This was removed from `C.fi` and moved strictly to the search input with RTL awareness (`isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'`). Additionally, `dir={isRTL ? 'rtl' : 'ltr'}` was added to the root `div` wrappers of all three tabs to fix flexbox layouts and margins (`ml-auto` to `mr-auto` when in RTL mode).
+
+**Bug 3 - Search icon outside input box:** The search icon in the three tabs used a hardcoded `left-3` position. It now dynamically switches between `right-3` and `left-3` based on the language direction.
+
+### Files touched
+| File | Action | Lines changed |
+|---|---|---|
+| resources/js/pages/admin/AdminPorts.tsx | Modified | 2 |
+| resources/js/pages/admin/ports/PortShared.tsx | Modified | 2 |
+| resources/js/pages/admin/ports/PortsTab.tsx | Modified | 4 |
+| resources/js/pages/admin/ports/TerminauxTab.tsx | Modified | 4 |
+| resources/js/pages/admin/ports/DepotsTab.tsx | Modified | 4 |
+
+### Accident log
+None
+
+### Build status
+`npm run build` completed successfully with 0 errors (exit code 0).

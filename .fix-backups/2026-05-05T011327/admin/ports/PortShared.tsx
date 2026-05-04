@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 
 export const C = {
-  th: 'px-4 py-3 text-start text-[11px] font-bold text-[#0D2A5E] uppercase tracking-wider border-b border-[#C5D8F5]',
+  th: 'px-4 py-3 text-left text-[11px] font-bold text-[#0D2A5E] uppercase tracking-wider border-b border-[#C5D8F5]',
   td: 'px-4 py-3 text-sm text-[#0D2A5E] border-b border-[#F0F7FF] whitespace-nowrap',
-  fi: 'px-4 py-2 text-sm border border-[#C5D8F5] rounded-xl focus:ring-2 focus:ring-[#C8960A] focus:border-transparent outline-none transition-all w-full sm:w-64 bg-white text-[#0D2A5E]',
+  fi: 'pl-9 pr-4 py-2 text-sm border border-[#C5D8F5] rounded-xl focus:ring-2 focus:ring-[#C8960A] focus:border-transparent outline-none transition-all w-full sm:w-64 bg-white text-[#0D2A5E]',
   reset: 'border border-[#C5D8F5] text-[#3A5A8A] text-sm px-3 py-2 rounded-lg hover:bg-[#EDF4FF] transition-colors',
 };
 

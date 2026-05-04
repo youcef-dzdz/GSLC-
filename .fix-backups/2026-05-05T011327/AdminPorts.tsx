@@ -11,8 +11,7 @@ const AdminPorts: React.FC = () => {
   const { user } = useAuth();
   const [tab, setTab] = useState<'ports' | 'terminaux' | 'depots'>('ports');
 
-  const niveau = { admin: 1, it_agent: 1, directeur: 2, commercial: 3, logistique: 3, financier: 3, client: 4 }[user?.role?.label as string] ?? 99;
-  const canEdit = niveau <= 3;
+  const canEdit = (user?.role?.niveau ?? 99) <= 3;
 
   const tabs = [
     { key: 'ports',     label: t('admin.ports.tab_ports') },
