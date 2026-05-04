@@ -41,8 +41,20 @@ class ContactMessageReceived extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
+        // Recipients are managed by admin via system_config table
+        // Keys: contact_email_admin, contact_email_commercial
+        $adminEmail      = \App\Models\SystemConfig::where('key', 'contact_email_admin')->value('value');
+        $commercialEmail = \App\Models\SystemConfig::where('key', 'contact_email_commercial')->value('value');
+
+        $recipients = array_filter([$adminEmail, $commercialEmail]);
+
+        // Fallback if both are empty — use mail.php default
+        if (empty($recipients)) {
+            $recipients = [config('mail.contact_receiver', 'contact@nashco.com.dz')];
+        }
+
         return new Envelope(
-            to: config('mail.contact_receiver', 'contact@nashco-dz.com'),
+            to: $recipients,
             subject: "[GSLC] Nouvelle demande — {$this->objetLabel} — {$this->contactMessage->nom_complet}",
         );
     }

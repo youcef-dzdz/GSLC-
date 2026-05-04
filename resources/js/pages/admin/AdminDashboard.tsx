@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 import { adminService } from '@/services/admin.service';
+import { apiClient } from '@/services/api';
 import { useToast } from '@/components/ui/Toast';
 import { usePermission } from '../../hooks/usePermission';
 
@@ -79,14 +80,6 @@ const FLAG: Record<string, string> = {
   EUR: '🇪🇺', USD: '🇺🇸', GBP: '🇬🇧', CNY: '🇨🇳',
 };
 
-const MONTHLY_DATA = [
-  { mois: 'Nov', approuvees: 45, rejetees: 12 },
-  { mois: 'Déc', approuvees: 52, rejetees: 8  },
-  { mois: 'Jan', approuvees: 38, rejetees: 15 },
-  { mois: 'Fév', approuvees: 61, rejetees: 6  },
-  { mois: 'Mar', approuvees: 55, rejetees: 10 },
-  { mois: 'Avr', approuvees: 70, rejetees: 4  },
-];
 
 const AUDIT_ICON: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
   LOGIN:  { icon: LogIn,   color: '#3B82F6', bg: '#EFF6FF' },
@@ -305,6 +298,17 @@ const AdminDashboard: React.FC = () => {
     staleTime: 300_000,
   });
 
+  // ── Monthly registrations ──────────────────────────────────────────────────
+
+  const [monthlyData, setMonthlyData] = useState<{ mois: string; approuvees: number; rejetees: number }[]>([]);
+  const [monthlyLoading, setMonthlyLoading] = useState(true);
+  useEffect(() => {
+    apiClient.get('/api/admin/stats/monthly-registrations')
+      .then(r => setMonthlyData(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setMonthlyData([]))
+      .finally(() => setMonthlyLoading(false));
+  }, []);
+
   // ── Sync mutation ──────────────────────────────────────────────────────────
 
   const syncMut = useMutation({
@@ -472,21 +476,21 @@ const AdminDashboard: React.FC = () => {
           label={t('admin.dashboard.total_users')}
           target={system_health.total_users}
           icon={Users}
-          accent="#1E40AF"
+          accent="#C8960A"
           delay={0}
         />
         <KpiCard
           label={t('admin.dashboard.pending')}
           target={dash.pending_registrations}
           icon={Clock}
-          accent="#F59E0B"
+          accent="#C5D8F5"
           delay={80}
         />
         <KpiCard
           label={t('admin.dashboard.active_departments')}
           target={deptCount}
           icon={Building2}
-          accent="#10B981"
+          accent="#C5D8F5"
           delay={160}
         />
         <KpiCard
@@ -494,7 +498,7 @@ const AdminDashboard: React.FC = () => {
           target={Math.round(usdRate)}
           suffix="DZD"
           icon={TrendingUp}
-          accent="#3B82F6"
+          accent="#C8960A"
           delay={240}
         />
       </div>
@@ -509,8 +513,11 @@ const AdminDashboard: React.FC = () => {
             title={t('admin.dashboard.registrations_per_month')}
           />
           <div className="p-5">
+            {monthlyLoading ? (
+              <div className="flex items-center justify-center h-[220px]"><Spinner /></div>
+            ) : monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={MONTHLY_DATA} margin={{ top: 4, right: 16, left: -12, bottom: 0 }}>
+              <LineChart data={monthlyData} margin={{ top: 4, right: 16, left: -12, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="4 4" stroke="#E2E8F0" vertical={false} />
                 <XAxis
                   dataKey="mois"
@@ -534,6 +541,9 @@ const AdminDashboard: React.FC = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[220px] text-slate-400 text-sm">Données indisponibles</div>
+            )}
           </div>
         </SectionCard>
 
@@ -544,6 +554,7 @@ const AdminDashboard: React.FC = () => {
             title={t('admin.dashboard.role_distribution')}
           />
           <div className="p-4">
+            {pieData.length > 0 ? (
             <ResponsiveContainer width="100%" height={160}>
               <PieChart>
                 <Pie
@@ -564,6 +575,9 @@ const AdminDashboard: React.FC = () => {
                 />
               </PieChart>
             </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[160px] text-slate-400 text-sm">Données indisponibles</div>
+            )}
 
             {/* Custom legend */}
             <div className="mt-1 space-y-1.5">

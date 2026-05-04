@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
         $this->call(DeviseSeeder::class);     // 4. devises (no dependencies)
         $this->call(ConfigSeeder::class);     // 5. configuration_systeme (no dependencies)
         $this->call(TypeConteneurSeeder::class); // 6. types_conteneur (no dependencies)
-        $this->call(PortSeeder::class);       // 7. ports (needs pays)
+        $this->call(PortSeeder::class);           // 7. ports (needs pays)
+        $this->call(AlgerianPortsSeeder::class);  // 7b. Algerian ports + terminals + depots
         $this->call(FranchiseSeeder::class);  // 8. franchises (no dependencies)
         $this->call(PenaliteSeeder::class);   // 9. penalites (needs types_conteneur, devises)
         $this->call(WorkflowSeeder::class);   // 10. workflows + etapes (no dependencies)

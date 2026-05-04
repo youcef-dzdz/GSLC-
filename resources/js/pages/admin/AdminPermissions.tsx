@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Info, Plus, Pencil, Trash2, X, Save } from 'lucide-react';
@@ -21,11 +22,11 @@ type GroupedPermissions = Record<string, Permission[]>;
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const MODULE_META: Record<string, { label: string; bg: string; text: string; border: string; headerBg: string }> = {
-  admin:      { label: 'Administration', bg: '#EFF6FF', text: '#1E40AF', border: '#BFDBFE', headerBg: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)' },
-  commercial: { label: 'Commercial',     bg: '#F0FDF4', text: '#166534', border: '#BBF7D0', headerBg: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)' },
-  logistique: { label: 'Logistique',     bg: '#FFF7ED', text: '#9A3412', border: '#FED7AA', headerBg: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)' },
-  finance:    { label: 'Finance',        bg: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE', headerBg: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)' },
-  direction:  { label: 'Direction',      bg: '#FDF2F8', text: '#9D174D', border: '#FBCFE8', headerBg: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)' },
+  admin:      { label: 'Administration', bg: '#EFF6FF', text: '#1E40AF', border: '#BFDBFE', headerBg: '#3A5A8A' },
+  commercial: { label: 'Commercial',     bg: '#F0FDF4', text: '#166534', border: '#BBF7D0', headerBg: '#2A8A5A' },
+  logistique: { label: 'Logistique',     bg: '#FFF7ED', text: '#9A3412', border: '#FED7AA', headerBg: '#C8960A' },
+  finance:    { label: 'Finance',        bg: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE', headerBg: '#5A80BB' },
+  direction:  { label: 'Direction',      bg: '#FDF2F8', text: '#9D174D', border: '#FBCFE8', headerBg: '#8A2020' },
 };
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ const SkeletonCard = () => (
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 const AdminPermissions: React.FC = () => {
+  const { t } = useTranslation();
   const { isAdmin } = usePermission();
   const navigate = useNavigate();
 
@@ -118,7 +120,7 @@ const AdminPermissions: React.FC = () => {
               <Lock size={20} color="#0D1F3C" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#0D1F3C]">Permissions système</h1>
+              <h1 className="text-2xl font-bold text-[#0D1F3C]">{t('permissions.title')}</h1>
               <p className="text-sm text-[#6B7280] mt-0.5">
                 {isLoading ? '...' : `${totalCount} permissions · ${modules.length} module${modules.length !== 1 ? 's' : ''}`}
               </p>
@@ -135,7 +137,7 @@ const AdminPermissions: React.FC = () => {
             }}
           >
             <Plus size={15} />
-            Nouvelle permission
+            {t('permissions.new')}
           </button>
         </div>
 
@@ -143,12 +145,12 @@ const AdminPermissions: React.FC = () => {
         <div className="flex items-start gap-3 p-3 bg-[#EFF6FF] border border-[#BFDBFE] rounded-lg">
           <Info size={15} color="#3B82F6" className="flex-shrink-0 mt-0.5" />
           <p className="text-sm text-[#1E40AF]">
-            Les permissions sont en lecture seule. Pour modifier les accès d'un rôle, rendez-vous dans{' '}
+            {t('permissions.readonly_info')}{' '}
             <button
               onClick={() => navigate('/admin/roles')}
               className="font-semibold underline cursor-pointer hover:text-[#0D1F3C] transition-colors"
             >
-              Rôles & Permissions
+              {t('permissions.roles_link')}
             </button>.
           </p>
         </div>
@@ -166,7 +168,7 @@ const AdminPermissions: React.FC = () => {
                   : 'bg-white border border-[#E2E8F0] text-[#6B7280] hover:bg-[#F8FAFC]'
               }`}
             >
-              Tous ({totalCount})
+              {t('permissions.all')} ({totalCount})
             </button>
             {modules.map(m => {
               const meta = MODULE_META[m];
@@ -203,7 +205,7 @@ const AdminPermissions: React.FC = () => {
         ) : visibleModules.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-[#9CA3AF]">
             <Lock size={40} className="mb-3 opacity-30" />
-            <p className="font-medium">Aucune permission trouvée</p>
+            <p className="font-medium">{t('permissions.not_found')}</p>
           </div>
         ) : (
           visibleModules.map(module => {
@@ -219,18 +221,18 @@ const AdminPermissions: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border"
-                      style={{ backgroundColor: meta?.bg ?? '#F8FAFC', color: meta?.text ?? '#475569', borderColor: meta?.border ?? '#E2E8F0' }}
+                      className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
                     >
                       {module}
                     </span>
-                    <span className="text-sm font-bold uppercase tracking-wide" style={{ color: meta?.text ?? '#475569' }}>
+                    <span className="text-sm font-bold uppercase tracking-wide" style={{ color: 'white' }}>
                       {meta?.label ?? module}
                     </span>
                   </div>
                   <span
                     className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                    style={{ backgroundColor: meta?.border ?? '#E2E8F0', color: meta?.text ?? '#475569' }}
+                    style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
                   >
                     {perms.length} permission{perms.length !== 1 ? 's' : ''}
                   </span>
@@ -240,17 +242,17 @@ const AdminPermissions: React.FC = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-[#F8FAFC] border-b border-[#F1F5F9]">
-                      <th className="text-left px-5 py-2.5 text-xs font-semibold text-[#6B7280] uppercase tracking-wider w-[40%]">
-                        Identifiant
+                      <th className="text-left px-5 py-2.5 text-xs font-bold text-[#0D2A5E] uppercase tracking-wider w-[40%]">
+                        {t('permissions.col_id')}
                       </th>
-                      <th className="text-left px-5 py-2.5 text-xs font-semibold text-[#6B7280] uppercase tracking-wider w-[35%]">
-                        Libellé
+                      <th className="text-left px-5 py-2.5 text-xs font-bold text-[#0D2A5E] uppercase tracking-wider w-[35%]">
+                        {t('permissions.col_label')}
                       </th>
-                      <th className="text-left px-5 py-2.5 text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell w-[25%]">
-                        Description
+                      <th className="text-left px-5 py-2.5 text-xs font-bold text-[#0D2A5E] uppercase tracking-wider hidden md:table-cell w-[25%]">
+                        {t('permissions.col_description')}
                       </th>
-                      <th className="text-right px-5 py-2.5 text-xs font-semibold text-[#6B7280] uppercase tracking-wider">
-                        Actions
+                      <th className="text-right px-5 py-2.5 text-xs font-bold text-[#0D2A5E] uppercase tracking-wider">
+                        {t('common.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -280,9 +282,9 @@ const AdminPermissions: React.FC = () => {
                             <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                               {deleteConfirm === perm.id ? (
                                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                                  <span style={{ fontSize: 11, color: '#EF4444', fontWeight: 600 }}>Êtes-vous sûr ?</span>
-                                  <button onClick={() => deleteMut.mutate(perm.id)} style={{ padding: '4px 8px', background: '#EF4444', color: '#fff', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Oui</button>
-                                  <button onClick={() => setDeleteConfirm(null)} style={{ padding: '4px 8px', background: '#F1F5F9', color: '#64748B', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Non</button>
+                                  <span style={{ fontSize: 11, color: '#EF4444', fontWeight: 600 }}>{t('permissions.confirm_delete')}</span>
+                                  <button onClick={() => deleteMut.mutate(perm.id)} style={{ padding: '4px 8px', background: '#EF4444', color: '#fff', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>{t('common.yes')}</button>
+                                  <button onClick={() => setDeleteConfirm(null)} style={{ padding: '4px 8px', background: '#F1F5F9', color: '#64748B', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>{t('common.no')}</button>
                                 </div>
                               ) : (
                                 <>
@@ -329,14 +331,14 @@ const AdminPermissions: React.FC = () => {
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: 440, maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0F172A' }}>Nouvelle permission</h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0F172A' }}>{t('permissions.new')}</h3>
           <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}><X size={20} /></button>
         </div>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Identifiant (ex: contracts.approve)</label>
-        <input value={form.name} onChange={e => setForm(prev => ({...prev, name: e.target.value}))} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 16, boxSizing: 'border-box' }}/>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Libellé affiché</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{t('permissions.field_id_readonly')}</label>
+        <input value={form.name} onChange={e => setForm(prev => ({...prev, name: e.target.value}))} placeholder={t('permissions.field_id_placeholder')} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 16, boxSizing: 'border-box' }}/>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{t('permissions.field_label')}</label>
         <input value={form.label} onChange={e => setForm(prev => ({...prev, label: e.target.value}))} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 16, boxSizing: 'border-box' }}/>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Module</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{t('permissions.field_module')}</label>
         <select value={form.module} onChange={e => setForm(prev => ({...prev, module: e.target.value}))} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 16, boxSizing: 'border-box' }}>
           <option value="admin">Administration</option>
           <option value="commercial">Commercial</option>
@@ -344,11 +346,11 @@ const AdminPermissions: React.FC = () => {
           <option value="finance">Finance</option>
           <option value="direction">Direction</option>
         </select>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Description (optionnel)</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{t('permissions.field_description_opt')}</label>
         <textarea value={form.description} onChange={e => setForm(prev => ({...prev, description: e.target.value}))} rows={3} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 24, boxSizing: 'border-box', resize: 'vertical' }}/>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={() => setShowCreate(false)} style={{ padding: '9px 20px', borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151' }}>Annuler</button>
-          <button onClick={() => createMut.mutate()} disabled={createMut.isPending || !form.name.trim() || !form.label.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: '#4366BB', color: '#fff', opacity: createMut.isPending ? 0.7 : 1 }}>{createMut.isPending ? 'Enregistrement...' : 'Enregistrer'}</button>
+          <button onClick={() => setShowCreate(false)} style={{ padding: '9px 20px', borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151' }}>{t('common.cancel')}</button>
+          <button onClick={() => createMut.mutate()} disabled={createMut.isPending || !form.name.trim() || !form.label.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: '#4366BB', color: '#fff', opacity: createMut.isPending ? 0.7 : 1 }}>{createMut.isPending ? t('common.saving') : t('common.save')}</button>
         </div>
       </div>
     </div>
@@ -358,14 +360,14 @@ const AdminPermissions: React.FC = () => {
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: 440, maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0F172A' }}>Modifier la permission</h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0F172A' }}>{t('permissions.modal_edit_title')}</h3>
           <button onClick={() => setEditPerm(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}><X size={20} /></button>
         </div>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Identifiant (Lecture seule)</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{t('permissions.field_id_readonly')}</label>
         <input value={editPerm.name} disabled style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 16, boxSizing: 'border-box', backgroundColor: '#F1F5F9', color: '#9CA3AF' }}/>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Libellé affiché</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{t('permissions.field_label')}</label>
         <input value={editForm.label} onChange={e => setEditForm(prev => ({...prev, label: e.target.value}))} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 16, boxSizing: 'border-box' }}/>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Module</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{t('permissions.field_module')}</label>
         <select value={editForm.module} onChange={e => setEditForm(prev => ({...prev, module: e.target.value}))} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 16, boxSizing: 'border-box' }}>
           <option value="admin">Administration</option>
           <option value="commercial">Commercial</option>
@@ -373,11 +375,11 @@ const AdminPermissions: React.FC = () => {
           <option value="finance">Finance</option>
           <option value="direction">Direction</option>
         </select>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Description (optionnel)</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>{t('permissions.field_description_opt')}</label>
         <textarea value={editForm.description} onChange={e => setEditForm(prev => ({...prev, description: e.target.value}))} rows={3} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 24, boxSizing: 'border-box', resize: 'vertical' }}/>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={() => setEditPerm(null)} style={{ padding: '9px 20px', borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151' }}>Annuler</button>
-          <button onClick={() => updateMut.mutate()} disabled={updateMut.isPending || !editForm.label.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: '#4366BB', color: '#fff', opacity: updateMut.isPending ? 0.7 : 1 }}>{updateMut.isPending ? 'Enregistrement...' : 'Enregistrer'}</button>
+          <button onClick={() => setEditPerm(null)} style={{ padding: '9px 20px', borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151' }}>{t('common.cancel')}</button>
+          <button onClick={() => updateMut.mutate()} disabled={updateMut.isPending || !editForm.label.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: '#4366BB', color: '#fff', opacity: updateMut.isPending ? 0.7 : 1 }}>{updateMut.isPending ? t('common.saving') : t('common.save')}</button>
         </div>
       </div>
     </div>

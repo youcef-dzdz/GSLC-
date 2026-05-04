@@ -19,5 +19,6 @@
 </head>
 <body style="margin: 0; padding: 0; background: #0D1F3C;">
     <div id="app"></div>
+    <div id="portal-root"></div>
 </body>
 </html>

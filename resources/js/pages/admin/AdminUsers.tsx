@@ -45,9 +45,9 @@ const STATUS_META: Record<string,{fr:string;en:string;ar:string;ring:string;dot:
   APPROUVE:               { fr:'Approuvé',               en:'Approved',           ar:'معتمد',                  ring:'ring-teal-200',    dot:'bg-teal-500',    text:'text-teal-700',    bg:'bg-teal-50' },
 };
 const DEPT_GRADIENT: Record<string,string> = {
-  COM:'from-blue-500 to-blue-600',     FIN:'from-emerald-500 to-emerald-600',
-  LOG:'from-amber-500 to-amber-600',   ADMIN:'from-purple-500 to-purple-600',
-  DIR:'from-indigo-500 to-indigo-600', '':'from-gray-400 to-gray-500',
+  COM:'#0D2A5E', FIN:'#2A8A5A',
+  LOG:'#C8960A', ADMIN:'#5A80BB',
+  DIR:'#0D2A5E', '':'#88A8D0',
 };
 const DEPT_BADGE: Record<string,string> = {
   COM:'bg-blue-50 text-blue-700',     FIN:'bg-emerald-50 text-emerald-700',
@@ -262,7 +262,7 @@ export default function AdminUsers() {
     onMutate: (id) => setDeletingId(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
     onError: (error: any) => {
-      alert(error?.response?.data?.message ?? 'Impossible de supprimer cet utilisateur.');
+      showToast(error?.response?.data?.message ?? 'Impossible de supprimer cet utilisateur.', 'error');
     },
     onSettled: () => setDeletingId(null),
   });
@@ -565,14 +565,14 @@ export default function AdminUsers() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div>
           <table className="w-full text-sm" dir={isRTL ? 'rtl' : 'ltr'}>
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
               <tr>
-                <th>{t('admin.users.col_user')}</th>
-                <th>{t('admin.users.col_service')}</th>
-                <th>{t('admin.users.col_position')}</th>
-                <th className="col-status">{t('admin.users.col_status')}</th>
-                <th className="col-date">{t('admin.users.col_created')}</th>
-                <th className="col-actions">{t('admin.users.col_actions')}</th>
+                <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.users.col_user')}</th>
+                <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.users.col_service')}</th>
+                <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.users.col_position')}</th>
+                <th className="col-status text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.users.col_status')}</th>
+                <th className="col-date text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.users.col_created')}</th>
+                <th className="col-actions text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.users.col_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -597,7 +597,7 @@ export default function AdminUsers() {
                     {/* Utilisateur — avatar + name + email */}
                     <td>
                       <div className="cell-content">
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm`}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm" style={{ backgroundColor: gradient }}>
                           {initials(user)}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -748,7 +748,7 @@ export default function AdminUsers() {
             </div>
           </div>
         </div>
-      , document.body)}
+      , document.getElementById('portal-root') ?? document.body)}
 
       {/* ── Password Reset Modal ── */}
       {resetTarget && typeof document !== 'undefined' && createPortal(
@@ -784,7 +784,7 @@ export default function AdminUsers() {
                 </p>
                 <button
                   onClick={generatePassword}
-                  className="w-full px-4 py-2.5 text-sm font-semibold bg-[#0B1D3A] text-white rounded-xl hover:bg-[#1a3360] transition flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2.5 text-sm font-semibold bg-[#0D2A5E] text-white rounded-xl hover:bg-[#1a3360] transition flex items-center justify-center gap-2"
                 >
                   <Key className="w-4 h-4" />
                   {t('admin.users.generate_password')}
@@ -836,7 +836,7 @@ export default function AdminUsers() {
                 <button
                   onClick={handleResetSubmit}
                   disabled={resettingId === resetTarget.id}
-                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-[#0B1D3A] text-white rounded-xl hover:bg-[#1a3360] transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-[#0D2A5E] text-white rounded-xl hover:bg-[#1a3360] transition flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {resettingId === resetTarget.id && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {t('admin.users.confirm_send')}
@@ -846,7 +846,7 @@ export default function AdminUsers() {
           </div>
         </div>
       </div>,
-      document.body
+      document.getElementById('portal-root') ?? document.body
       )}
 
       {/* Modal User Form */}
@@ -1037,7 +1037,7 @@ export default function AdminUsers() {
             </div>
           </div>
         </div>,
-        document.body
+        document.getElementById('portal-root') ?? document.body
       )}
     </div>
   );

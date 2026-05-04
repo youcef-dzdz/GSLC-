@@ -301,94 +301,102 @@ export default function CommercialClients() {
         />
       </div>
 
-      {/* Cards grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-[#E2E8F0] h-40 animate-pulse" />
-          ))}
-        </div>
-      ) : isError ? (
-        <div className="flex items-center gap-3 text-red-500 bg-red-50 p-4 rounded-xl border border-red-100">
-          <AlertCircle size={18} />
-          <span className="text-sm">Erreur de chargement. <button onClick={() => refetch()} className="underline font-semibold">Réessayer</button></span>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center py-16 gap-3 text-[#CBD5E1]">
-          <Building2 size={36} />
-          <p className="text-sm">Aucun client trouvé</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((c) => {
-            const statut = STATUT_CFG[c.statut] ?? { label: c.statut, color: '#6B7280', bg: '#F3F4F6' };
-            return (
-              <div
-                key={c.id}
-                className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-5 hover:shadow-md transition-shadow"
-              >
-                {/* Top row */}
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center flex-shrink-0">
-                      <Building2 size={18} className="text-[#3B82F6]" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#0D1F3C] text-sm leading-tight">{c.raison_sociale}</p>
-                      <p className="text-xs text-[#94A3B8] mt-0.5">{c.type_client ?? '—'}</p>
-                    </div>
-                  </div>
-                  <span
-                    className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={{ background: statut.bg, color: statut.color }}
-                  >
-                    {statut.label}
-                  </span>
-                </div>
-
-                {/* Details */}
-                <div className="space-y-1.5 text-xs text-[#6B7280]">
-                  {c.email_contact && (
-                    <div className="flex items-center gap-2">
-                      <Mail size={11} className="text-[#CBD5E1] flex-shrink-0" />
-                      <span className="truncate">{c.email_contact}</span>
-                    </div>
-                  )}
-                  {c.telephone && (
-                    <div className="flex items-center gap-2">
-                      <Phone size={11} className="text-[#CBD5E1] flex-shrink-0" />
-                      <span>{c.telephone}</span>
-                    </div>
-                  )}
-                  {c.ville && (
-                    <div className="flex items-center gap-2">
-                      <MapPin size={11} className="text-[#CBD5E1] flex-shrink-0" />
-                      <span>{c.ville}{c.pays ? `, ${c.pays.nom_pays}` : ''}</span>
-                    </div>
-                  )}
-                  {c.nif && (
-                    <div className="flex items-center gap-2">
-                      <Globe size={11} className="text-[#CBD5E1] flex-shrink-0" />
-                      <span className="font-mono">NIF : {c.nif}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="mt-4 pt-3 border-t border-[#F1F5F9] flex justify-end">
-                  <button
-                    onClick={() => { setEditTarget(c); setShowModal(true); }}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-[#1A4A8C] hover:text-[#0D1F3C] transition-colors"
-                  >
-                    <Edit2 size={12} />
-                    Modifier
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="space-y-3 p-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-10 bg-[#F1F5F9] rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="flex items-center gap-3 text-red-500 p-6">
+            <AlertCircle size={18} />
+            <span className="text-sm">Erreur de chargement. <button onClick={() => refetch()} className="underline font-semibold">Réessayer</button></span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center py-16 gap-3 text-[#CBD5E1]">
+            <Building2 size={36} />
+            <p className="text-sm">Aucun client trouvé</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#F1F5F9] bg-[#F8FAFC]">
+                  {['Raison sociale', 'NIF', 'Type', 'Email', 'Téléphone', 'Ville / Pays', 'Statut', ''].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[#64748B] uppercase tracking-wide whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F1F5F9]">
+                {filtered.map((c) => {
+                  const statut = STATUT_CFG[c.statut] ?? { label: c.statut, color: '#6B7280', bg: '#F3F4F6' };
+                  return (
+                    <tr key={c.id} className="hover:bg-[#F8FAFC] transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] flex items-center justify-center flex-shrink-0">
+                            <Building2 size={13} className="text-[#3B82F6]" />
+                          </div>
+                          <span className="font-semibold text-[#0D1F3C]">{c.raison_sociale}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs font-mono text-[#475569]">{c.nif ?? '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className="text-xs font-mono bg-[#F1F5F9] px-2 py-0.5 rounded text-[#475569]">
+                          {c.type_client ?? '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {c.email_contact ? (
+                          <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+                            <Mail size={11} className="text-[#CBD5E1]" />
+                            <span className="truncate max-w-40">{c.email_contact}</span>
+                          </div>
+                        ) : <span className="text-[#CBD5E1]">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {c.telephone ? (
+                          <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+                            <Phone size={11} className="text-[#CBD5E1]" />
+                            <span>{c.telephone}</span>
+                          </div>
+                        ) : <span className="text-[#CBD5E1]">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {c.ville ? (
+                          <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+                            <MapPin size={11} className="text-[#CBD5E1]" />
+                            <span>{c.ville}{c.pays ? `, ${c.pays.nom_pays}` : ''}</span>
+                          </div>
+                        ) : <span className="text-[#CBD5E1]">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                          style={{ background: statut.bg, color: statut.color }}>
+                          {statut.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => { setEditTarget(c); setShowModal(true); }}
+                          className="p-1.5 rounded-lg hover:bg-[#EFF6FF] text-[#1A4A8C] transition-colors"
+                          title="Modifier"
+                        >
+                          <Edit2 size={15} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Modal */}
       {showModal && (

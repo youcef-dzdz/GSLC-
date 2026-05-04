@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasCorbeille;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasCorbeille;
 
     protected $fillable = [
         'role_id',
@@ -145,6 +146,50 @@ class User extends Authenticatable
                 ['granted' => (bool) $granted]
             );
         }
+    }
+
+    /**
+     * Check if this user owns the given resource.
+     *
+     * Staff roles (niveau <= 3) always pass — they can access any resource.
+     * Client-role users (niveau > 3) may only access resources where
+     * client_id matches their own client record.
+     *
+     * Usage:
+     *   if (!$user->ownsResource($document)) { abort(403); }
+     *
+     * @param  \Illuminate\Database\Eloquent\Model $resource  Must have a client_id column
+     * @return bool
+     */
+    public function ownsResource(\Illuminate\Database\Eloquent\Model $resource): bool
+    {
+        // Load role if not already loaded
+        if (!$this->relationLoaded('role')) {
+            $this->load('role');
+        }
+
+        // Staff (admin, directeur, commercial, logistique, financier, it_agent)
+        // niveau <= 3 means internal staff — they bypass ownership checks
+        if ($this->role && $this->role->niveau <= 3) {
+            return true;
+        }
+
+        // Client-role users: must own the resource via client_id
+        if (!isset($resource->client_id)) {
+            // Resource has no client_id column — deny by default for non-staff
+            return false;
+        }
+
+        // Load the user's client record if not already loaded
+        if (!$this->relationLoaded('client')) {
+            $this->load('client');
+        }
+
+        if (!$this->client) {
+            return false;
+        }
+
+        return (int) $resource->client_id === (int) $this->client->id;
     }
 
 }

@@ -133,9 +133,7 @@ export default function NotificationsPage() {
         <div key={i} style={{
           height: 88,
           borderRadius: 16,
-          background: 'linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%)',
-          backgroundSize: '200% 100%',
-          animation: 'shimmer 1.4s infinite',
+          background: '#EEF5FF',
         }} />
       ))}
     </div>
@@ -154,18 +152,19 @@ export default function NotificationsPage() {
       `}</style>
 
       {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div style={{
-        background: 'linear-gradient(135deg, #EFF6FF, #FFFBEB)',
-        borderLeft: '4px solid #CFA030',
-        borderRadius: '0 16px 16px 0',
-        padding: '20px 24px',
-        marginBottom: 24,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: 12,
-      }}>
+      <div
+        className="bg-[#EDF4FF] border-l-4 border-[#C8960A]"
+        style={{
+          borderRadius: '0 16px 16px 0',
+          padding: '20px 24px',
+          marginBottom: 24,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Bell size={22} color="#CFA030" />
           <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0B1D3A', margin: 0 }}>

@@ -252,7 +252,7 @@ const DeptModal: React.FC<ModalProps> = ({ open, editing, users, onClose, onSave
 
       </div>
     </div>,
-    document.body,
+    document.getElementById('portal-root') ?? document.body,
   );
 };
 
@@ -308,7 +308,7 @@ const ConfirmDialog: React.FC<ConfirmProps> = ({ dept, loading, onConfirm, onCan
         </div>
       </div>
     </div>,
-    document.body,
+    document.getElementById('portal-root') ?? document.body,
   );
 };
 

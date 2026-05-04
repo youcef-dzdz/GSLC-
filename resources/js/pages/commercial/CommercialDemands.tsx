@@ -2,9 +2,10 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  Search, Plus, Eye, ChevronDown, Loader2, AlertCircle,
-  ClipboardList, X, Check, Calendar, Building2,
+  Search, Eye, ChevronDown, Loader2, AlertCircle,
+  ClipboardList, X, Check, Calendar, Building2, FileText,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { commercialService } from '@/services/commercial.service';
 import { useToast } from '@/components/ui/Toast';
 
@@ -80,6 +81,7 @@ const DemandDrawer = ({
   const { toast } = useToast();
   const [newStatut, setNewStatut] = useState('');
   const [motif, setMotif] = useState('');
+  const navigate = useNavigate();
 
   const nextOptions = NEXT_STATUTS[demand.statut] ?? [];
 
@@ -154,6 +156,19 @@ const DemandDrawer = ({
               </p>
             </div>
           </div>
+
+          {demand.statut === 'EN_ETUDE' && (
+            <button
+              onClick={() => {
+                onClose();
+                navigate(`/commercial/quotes/new?demande_id=${demand.id}&dossier=${demand.numero_dossier}`);
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-[#10B981] text-[#10B981] hover:bg-[#ECFDF5] text-sm font-semibold transition-colors"
+            >
+              <FileText size={16} />
+              Générer un devis
+            </button>
+          )}
 
           {/* Transition section */}
           {nextOptions.length > 0 && (
@@ -251,13 +266,6 @@ export default function CommercialDemands() {
             {data?.total ?? 0} demande{(data?.total ?? 0) > 1 ? 's' : ''} au total
           </p>
         </div>
-        <a
-          href="/commercial/demands/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D1F3C] hover:bg-[#1A4A8C] text-white text-sm font-semibold transition-colors"
-        >
-          <Plus size={16} />
-          Nouvelle demande
-        </a>
       </div>
 
       {/* Filters */}

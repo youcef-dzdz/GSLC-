@@ -47,8 +47,8 @@ export default function ForcePasswordChange() {
       });
       // Capture role BEFORE checkAuth resets state (React state update is async)
       const role = user?.role?.label ?? '';
-      await checkAuth();
       navigate(DASHBOARD_ROUTE[role] ?? '/admin/dashboard');
+      await checkAuth();
     } catch (err: any) {
       setError(
         err?.response?.data?.message ??

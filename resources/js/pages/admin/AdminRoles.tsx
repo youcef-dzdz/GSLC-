@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  ShieldCheck, Plus, Trash2, X, Save, Lock,
-  AlertCircle, ChevronRight, Pencil,
+  ShieldCheck, Plus, Trash2, X, Lock,
+  ChevronRight, Pencil,
 } from 'lucide-react';
 import { adminService } from '@/services/admin.service';
 import { useToast } from '@/components/ui/Toast';
@@ -31,9 +31,6 @@ interface Role {
   permissions: Permission[];
 }
 
-type GroupedPermissions = Record<string, Permission[]>;
-type ActiveTab = 'roles' | 'permissions';
-
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const NIVEAU_BADGE: Record<number, { bg: string; text: string }> = {
@@ -45,11 +42,11 @@ const NIVEAU_BADGE: Record<number, { bg: string; text: string }> = {
 };
 
 const MODULE_COLORS: Record<string, { bg: string; text: string; border: string; headerBg: string }> = {
-  admin:      { bg: '#EFF6FF', text: '#1E40AF', border: '#BFDBFE', headerBg: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)' },
-  commercial: { bg: '#F0FDF4', text: '#166534', border: '#BBF7D0', headerBg: 'linear-gradient(135deg,#F0FDF4,#DCFCE7)' },
-  logistique: { bg: '#FFF7ED', text: '#9A3412', border: '#FED7AA', headerBg: 'linear-gradient(135deg,#FFF7ED,#FFEDD5)' },
-  finance:    { bg: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE', headerBg: 'linear-gradient(135deg,#F5F3FF,#EDE9FE)' },
-  direction:  { bg: '#FDF2F8', text: '#9D174D', border: '#FBCFE8', headerBg: 'linear-gradient(135deg,#FDF2F8,#FCE7F3)' },
+  admin:      { bg: '#EFF6FF', text: '#1E40AF', border: '#BFDBFE', headerBg: '#3A5A8A' },
+  commercial: { bg: '#F0FDF4', text: '#166534', border: '#BBF7D0', headerBg: '#2A8A5A' },
+  logistique: { bg: '#FFF7ED', text: '#9A3412', border: '#FED7AA', headerBg: '#C8960A' },
+  finance:    { bg: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE', headerBg: '#5A80BB' },
+  direction:  { bg: '#FDF2F8', text: '#9D174D', border: '#FBCFE8', headerBg: '#8A2020' },
 };
 
 const MODULE_LABELS_TR: Record<string, Record<'fr'|'en'|'ar', string>> = {
@@ -125,21 +122,6 @@ const SkeletonRow = () => (
   </tr>
 );
 
-const SkeletonCard = () => (
-  <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm mb-4 overflow-hidden">
-    <div className="h-14 bg-[#E2E8F0] animate-pulse" />
-    <div className="p-4 space-y-3">
-      {[0,1,2,3,4].map(i => (
-        <div key={i} className="flex gap-4">
-          <div className="h-4 bg-[#F1F5F9] rounded animate-pulse" style={{ width: 128 }} />
-          <div className="h-4 bg-[#F1F5F9] rounded animate-pulse" style={{ width: 192 }} />
-          <div className="h-4 bg-[#F1F5F9] rounded animate-pulse" style={{ width: 96 }} />
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 const AdminRoles: React.FC = () => {
@@ -159,12 +141,8 @@ const AdminRoles: React.FC = () => {
   const tlx = (key: string) => TEXTS[key]?.[lang] ?? key;
   const isRTL = lang === 'ar';
 
-  const [activeTab,     setActiveTab]     = useState<ActiveTab>('roles');
-  const [selectedRole,  setSelectedRole]  = useState<Role | null>(null);
-  const [checkedIds,    setCheckedIds]    = useState<Set<number>>(new Set());
   const [showCreate,    setShowCreate]    = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
-  const [catalogueModule, setCatalogueModule] = useState<string>('all');
   const [form, setForm] = useState({ nom_role: '', label: '', niveau: 3, description: '' });
   const [editRole, setEditRole] = useState<Role | null>(null);
   const [editForm, setEditForm] = useState({
@@ -178,10 +156,7 @@ const AdminRoles: React.FC = () => {
     queryFn:  () => adminService.getRoles().then(r => r.data),
   });
 
-  const { data: grouped = {}, isLoading: groupedLoading } = useQuery<GroupedPermissions>({
-    queryKey: ['admin-permissions-grouped'],
-    queryFn:  () => adminService.getPermissionsGrouped().then(r => r.data),
-  });
+
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -211,28 +186,11 @@ const AdminRoles: React.FC = () => {
     onError: () => toast('error', 'Erreur', 'Impossible de modifier ce rôle.'),
   });
 
-  const syncMut = useMutation({
-    mutationFn: ({ roleId, ids }: { roleId: number; ids: number[] }) =>
-      adminService.syncRolePermissions(roleId, ids),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-roles'] });
-      toast('success',
-        tlx('msg_sync'),
-        tlx('msg_sync_ok'));
-    },
-    onError: (error: unknown) => {
-      const msg = (error as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message ?? tlx('msg_sync_err');
-      toast('error', 'Erreur', msg);
-    },
-  });
-
   const deleteMut = useMutation({
     mutationFn: (id: number) => adminService.deleteRole(id),
-    onSuccess: (_, id) => {
+    onSuccess: () => {
       toast('success', tlx('msg_del'), tlx('msg_del_ok'));
       qc.invalidateQueries({ queryKey: ['admin-roles'] });
-      if (selectedRole?.id === id) setSelectedRole(null);
       setDeleteConfirm(null);
     },
     onError: (err: any) => {
@@ -241,38 +199,14 @@ const AdminRoles: React.FC = () => {
     },
   });
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
-
-  const openRole = (role: Role) => {
-    setSelectedRole(role);
-    setCheckedIds(new Set(role.permissions.map(p => p.id)));
-    setDeleteConfirm(null);
-  };
-
-  const togglePerm = (id: number) => {
-    setCheckedIds(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  // ── Derived ────────────────────────────────────────────────────────────────
-
-  const catalogueModules = Object.keys(grouped).sort();
-  const totalPermCount   = Object.values(grouped).reduce((acc, arr) => acc + arr.length, 0);
-  const visibleModules   = catalogueModule === 'all'
-    ? catalogueModules
-    : catalogueModules.filter(m => m === catalogueModule);
-
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col h-full bg-[#F8FAFC]" dir={isRTL ? 'rtl' : 'ltr'}>
 
       {/* ── Page header ── */}
-      <div className="bg-white border-b border-[#E2E8F0] px-6 pt-5 pb-0">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white border-b border-[#E2E8F0] px-6 py-5">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] flex items-center justify-center">
               <ShieldCheck size={20} color="#0D1F3C" />
@@ -280,60 +214,29 @@ const AdminRoles: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-[#0D1F3C]">{tlx('title')}</h1>
               <p className="text-sm text-[#6B7280] mt-0.5">
-                {isLoading ? '...' : `${roles.length} ${roles.length !== 1 ? tlx('subtitle_roles_p') : tlx('subtitle_roles')}`} · {totalPermCount} {totalPermCount !== 1 ? tlx('subtitle_perms_p') : tlx('subtitle_perms')} · {tlx('subtitle_desc')}
+                {isLoading ? '...' : `${roles.length} ${roles.length !== 1 ? tlx('subtitle_roles_p') : tlx('subtitle_roles')}`} · {tlx('subtitle_desc')}
               </p>
             </div>
           </div>
-          {activeTab === 'roles' && (
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#0D1F3C] hover:bg-[#1a3a6b] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
-            >
-              <Plus size={16} />
-              {tlx('new_role')}
-            </button>
-          )}
-        </div>
-
-        {/* ── Tabs ── */}
-        <div className="flex gap-1">
-          {([
-            { key: 'roles',       label: tlx('tab_roles'),                    count: roles.length },
-            { key: 'permissions', label: tlx('tab_perms'), count: totalPermCount },
-          ] as { key: ActiveTab; label: string; count: number }[]).map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-all cursor-pointer ${
-                activeTab === tab.key
-                  ? 'text-[#0D1F3C] border-[#0D1F3C] bg-white'
-                  : 'text-[#6B7280] border-transparent hover:text-[#0D1F3C] hover:bg-[#F8FAFC]'
-              }`}
-            >
-              {tab.label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                activeTab === tab.key ? 'bg-[#0D1F3C] text-white' : 'bg-[#F1F5F9] text-[#6B7280]'
-              }`}>
-                {tab.count}
-              </span>
-            </button>
-          ))}
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#0D1F3C] hover:bg-[#1a3a6b] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+          >
+            <Plus size={16} />
+            {tlx('new_role')}
+          </button>
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          TAB 1 — RÔLES
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'roles' && (
-        <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
 
-          {/* ── Table ── */}
-          <div className={`flex flex-col overflow-auto transition-all duration-300 ${selectedRole ? 'w-[55%]' : 'w-full'}`}>
+        {/* ── Table ── */}
+        <div className="flex flex-col overflow-auto w-full transition-all duration-300">
             <table className="w-full text-sm border-collapse">
               <thead className="sticky top-0 z-10">
-                <tr style={{ background: '#0D1F3C' }}>
+                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
                   {[tlx('col_name'), tlx('col_label'), tlx('col_level'), tlx('col_status'), tlx('col_perms'), tlx('col_actions')].map((h, i) => (
-                    <th key={i} className="text-left px-4 py-3 text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                    <th key={i} className="text-left px-4 py-3 text-xs font-bold text-[#0D2A5E] uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
                   ))}
@@ -359,20 +262,14 @@ const AdminRoles: React.FC = () => {
                   )
                   : roles.map(role => {
                     const nv = NIVEAU_BADGE[role.niveau] ?? NIVEAU_BADGE[5];
-                    const isSelected = selectedRole?.id === role.id;
                     return (
                       <tr
                         key={role.id}
-                        onClick={() => openRole(role)}
-                        className={`cursor-pointer border-b border-[#E2E8F0] transition-colors duration-100 ${
-                          isSelected
-                            ? 'bg-[#EFF6FF] border-l-4 border-l-[#0D1F3C]'
-                            : 'hover:bg-[#F8FAFC] border-l-4 border-l-transparent'
-                        }`}
+                        onClick={() => navigate(`/admin/roles/${role.id}`)}
+                        className="cursor-pointer border-b border-[#E2E8F0] transition-colors duration-100 hover:bg-[#F8FAFC] border-l-4 border-l-transparent"
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            {isSelected && <ChevronRight size={14} color="#0D1F3C" className="flex-shrink-0" />}
                             <div>
                               <p className="font-medium text-[#0D1F3C]">{role.nom_role}</p>
                               {role.description && (
@@ -428,6 +325,16 @@ const AdminRoles: React.FC = () => {
                               </div>
                             ) : (
                               <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/admin/roles/${role.id}`);
+                                  }}
+                                  className="p-1.5 rounded text-[#1A4A8C] hover:bg-[#EFF6FF] transition-all cursor-pointer"
+                                  title="Gérer les permissions"
+                                >
+                                  <ChevronRight size={15} />
+                                </button>
                                 {/* Edit button — hidden for system roles */}
                                 {!role.is_system && (
                                   <button
@@ -467,270 +374,7 @@ const AdminRoles: React.FC = () => {
               </tbody>
             </table>
           </div>
-
-          {/* ── Detail panel ── */}
-          {selectedRole && (
-            <div className="w-[45%] border-l border-[#E2E8F0] bg-white shadow-lg flex flex-col overflow-hidden">
-
-              {/* Panel header */}
-              <div
-                className="flex items-start justify-between px-5 py-4 flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #0D1F3C 0%, #1a3a6b 100%)' }}
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-base font-bold text-white truncate">{selectedRole.nom_role}</h2>
-                    <span className="font-mono text-xs bg-white/20 text-white px-2 py-0.5 rounded">
-                      {selectedRole.label}
-                    </span>
-                    {(() => {
-                      const nv = NIVEAU_BADGE[selectedRole.niveau] ?? NIVEAU_BADGE[5];
-                      return (
-                        <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: nv.bg, color: nv.text }}>
-                          N{selectedRole.niveau}
-                        </span>
-                      );
-                    })()}
-                    {selectedRole.is_system && (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded bg-white/20 text-white">
-                        <Lock size={9} />
-                        {tlx('system')}
-                      </span>
-                    )}
-                  </div>
-                  {selectedRole.description && (
-                    <p className="text-xs text-white/70 mt-1">{selectedRole.description}</p>
-                  )}
-                </div>
-                <button
-                  onClick={() => setSelectedRole(null)}
-                  className="text-white/60 hover:text-white cursor-pointer transition-colors ml-3 flex-shrink-0"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {/* System notice */}
-              {selectedRole.is_system && (
-                <div className="mx-4 mt-3 flex items-start gap-2 p-3 bg-[#FFF7ED] rounded-lg border border-[#FED7AA] flex-shrink-0">
-                  <AlertCircle size={14} color="#C2410C" className="flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-[#9A3412]">
-                    {tlx('sys_notice')}
-                  </p>
-                </div>
-              )}
-
-              {/* Permission section title */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-[#F1F5F9] flex-shrink-0">
-                <p className="text-sm font-semibold text-[#0D1F3C]">{tlx('assigned_perms')}</p>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#475569]">
-                  {checkedIds.size} {tlx('selected')}
-                </span>
-              </div>
-
-              {/* Permissions list */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-                {groupedLoading ? (
-                  [0,1,2].map(i => (
-                    <div key={i} className="space-y-2">
-                      <div className="h-5 bg-[#E2E8F0] rounded w-24 animate-pulse" />
-                      {[0,1,2].map(j => <div key={j} className="h-9 bg-[#F1F5F9] rounded-lg animate-pulse" />)}
-                    </div>
-                  ))
-                ) : (
-                  Object.entries(grouped).map(([module, perms]) => {
-                    const mc = MODULE_COLORS[module] ?? { bg: '#F8FAFC', text: '#475569', border: '#E2E8F0', headerBg: '#F8FAFC' };
-                    return (
-                      <div key={module}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span
-                            className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                            style={{ backgroundColor: mc.bg, color: mc.text, borderColor: mc.border }}
-                          >
-                            {module}
-                          </span>
-                          <div className="flex-1 h-px bg-[#F1F5F9]" />
-                        </div>
-                        <div className="space-y-1">
-                          {perms.map(perm => (
-                            <label
-                              key={perm.id}
-                              className={`flex items-center gap-3 px-3 py-2 rounded-lg border transition-all duration-100 ${
-                                selectedRole.is_system
-                                  ? 'opacity-60 cursor-not-allowed bg-[#F8FAFC] border-transparent'
-                                  : checkedIds.has(perm.id)
-                                  ? 'bg-[#EFF6FF] border-[#BFDBFE] cursor-pointer'
-                                  : 'bg-white border-transparent hover:bg-[#F8FAFC] hover:border-[#E2E8F0] cursor-pointer'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checkedIds.has(perm.id)}
-                                onChange={() => !selectedRole.is_system && togglePerm(perm.id)}
-                                disabled={selectedRole.is_system}
-                                className="w-3.5 h-3.5 rounded accent-[#0D1F3C] flex-shrink-0"
-                              />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-medium text-[#0D1F3C] truncate">{perm.label}</p>
-                                <p className="text-[10px] font-mono text-[#9CA3AF] truncate">{perm.name}</p>
-                              </div>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Save button */}
-              {!selectedRole.is_system && (
-                <div className="px-4 pb-4 pt-3 border-t border-[#F1F5F9] flex-shrink-0">
-                  <button
-                    onClick={() => syncMut.mutate({ roleId: selectedRole.id, ids: Array.from(checkedIds) })}
-                    disabled={syncMut.isPending}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-                    style={{ backgroundColor: '#C9A84C' }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#b8923e')}
-                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C9A84C')}
-                  >
-                    <Save size={15} />
-                    {syncMut.isPending ? tlx('saving') : tlx('save_perms')}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          TAB 2 — CATALOGUE DES PERMISSIONS
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'permissions' && (
-        <div className="flex flex-col flex-1 overflow-hidden">
-
-          {/* Module filter tabs */}
-          {!groupedLoading && catalogueModules.length > 0 && (
-            <div className="bg-white border-b border-[#E2E8F0] px-6 py-3 flex flex-wrap gap-2 flex-shrink-0">
-              <button
-                onClick={() => setCatalogueModule('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  catalogueModule === 'all'
-                    ? 'bg-[#0D1F3C] text-white'
-                    : 'bg-white border border-[#E2E8F0] text-[#6B7280] hover:bg-[#F8FAFC]'
-                }`}
-              >
-                {tlx('all')} ({totalPermCount})
-              </button>
-              {catalogueModules.map(m => {
-                const mc = MODULE_COLORS[m];
-                const count = grouped[m]?.length ?? 0;
-                return (
-                  <button
-                    key={m}
-                    onClick={() => setCatalogueModule(m)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
-                      catalogueModule === m ? 'text-white' : 'bg-white text-[#6B7280] hover:bg-[#F8FAFC]'
-                    }`}
-                    style={catalogueModule === m
-                      ? { backgroundColor: mc?.text ?? '#0D1F3C', borderColor: mc?.text ?? '#0D1F3C' }
-                      : { borderColor: '#E2E8F0' }
-                    }
-                  >
-                    {MODULE_LABELS_TR[m]?.[lang] ?? m} ({count})
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Cards */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {groupedLoading ? (
-              <>
-                <SkeletonCard />
-                <SkeletonCard />
-              </>
-            ) : visibleModules.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-[#9CA3AF]">
-                <Lock size={40} className="mb-3 opacity-30" />
-                <p className="font-medium">{tlx('no_perms')}</p>
-              </div>
-            ) : (
-              visibleModules.map(module => {
-                const perms = grouped[module] ?? [];
-                const mc = MODULE_COLORS[module];
-                return (
-                  <div key={module} className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm mb-4 overflow-hidden">
-
-                    {/* Card header — #0D1F3C fond, texte blanc */}
-                    <div
-                      className="flex items-center justify-between px-5 py-3"
-                      style={{ background: '#0D1F3C' }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border"
-                          style={mc
-                            ? { backgroundColor: mc.bg, color: mc.text, borderColor: mc.border }
-                            : { backgroundColor: '#F1F5F9', color: '#475569', borderColor: '#E2E8F0' }
-                          }
-                        >
-                          {module}
-                        </span>
-                        <span className="text-sm font-bold text-white uppercase tracking-wide">
-                          {MODULE_LABELS_TR[module]?.[lang] ?? module}
-                        </span>
-                      </div>
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 text-white">
-                        {perms.length} {perms.length !== 1 ? tlx('subtitle_perms_p') : tlx('subtitle_perms')}
-                      </span>
-                    </div>
-
-                    {/* Inner table */}
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-[#F8FAFC] border-b border-[#F1F5F9]">
-                          <th className="text-left px-5 py-2.5 text-xs font-semibold text-[#6B7280] uppercase tracking-wider w-[40%]">
-                            {tlx('col_id')}
-                          </th>
-                          <th className="text-left px-5 py-2.5 text-xs font-semibold text-[#6B7280] uppercase tracking-wider w-[35%]">
-                            {tlx('col_label')}
-                          </th>
-                          <th className="text-left px-5 py-2.5 text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell w-[25%]">
-                            {tlx('col_desc')}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#F1F5F9]">
-                        {perms.map((perm, idx) => (
-                          <tr
-                            key={perm.id}
-                            className={`transition-colors hover:bg-[#EFF6FF] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'}`}
-                          >
-                            <td className="px-5 py-3">
-                              <span className="font-mono text-xs bg-[#F1F5F9] px-2 py-0.5 rounded text-[#475569]">
-                                {perm.name}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3">
-                              <span className="font-medium text-[#0D1F3C] text-sm">{perm.label}</span>
-                            </td>
-                            <td className="px-5 py-3 hidden md:table-cell">
-                              <span className="text-sm text-[#9CA3AF] italic">{perm.description ?? '—'}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── Create modal ── */}
       {showCreate && (
@@ -740,12 +384,12 @@ const AdminRoles: React.FC = () => {
           onClick={e => e.target === e.currentTarget && setShowCreate(false)}
         >
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4" style={{ background: '#0D1F3C' }}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] bg-[#F8FAFC]">
               <div className="flex items-center gap-2">
-                <Plus size={16} color="white" />
-                <h2 className="text-sm font-bold text-white">{tlx('new_role')}</h2>
+                <Plus size={16} color="#0D1F3C" />
+                <h2 className="text-sm font-bold text-[#0D1F3C]">{tlx('new_role')}</h2>
               </div>
-              <button onClick={() => setShowCreate(false)} className="text-white/60 hover:text-white cursor-pointer transition-colors">
+              <button onClick={() => setShowCreate(false)} className="text-[#64748B] hover:text-[#0D1F3C] cursor-pointer transition-colors">
                 <X size={18} />
               </button>
             </div>

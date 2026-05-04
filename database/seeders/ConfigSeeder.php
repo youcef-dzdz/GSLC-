@@ -115,6 +115,22 @@ class ConfigSeeder extends Seeder
 
         DB::table('configuration_systeme')->insert($configs);
 
-        $this->command->info('✅ ' . count($configs) . ' paramètres de configuration créés.');
+        $smtpConfigs = [
+            ['key' => 'smtp_host',      'value' => 'smtp.gmail.com'],
+            ['key' => 'smtp_port',      'value' => '587'],
+            ['key' => 'smtp_username',  'value' => ''],
+            ['key' => 'smtp_password',  'value' => ''],
+            ['key' => 'smtp_from',      'value' => ''],
+            ['key' => 'smtp_from_name', 'value' => 'NASHCO GSLC'],
+        ];
+
+        foreach ($smtpConfigs as $smtp) {
+            \App\Models\SystemConfig::updateOrCreate(
+                ['key' => $smtp['key']],
+                ['value' => $smtp['value']]
+            );
+        }
+
+        $this->command->info('✅ ' . count($configs) . ' paramètres de configuration créés et ' . count($smtpConfigs) . ' paramètres SMTP seedés.');
     }
 }

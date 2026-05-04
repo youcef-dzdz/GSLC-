@@ -252,7 +252,7 @@ const PositionModal: React.FC<ModalProps> = ({ open, editing, departments, lang,
 
       </div>
     </div>,
-    document.body,
+    document.getElementById('portal-root') ?? document.body,
   );
 };
 
@@ -308,7 +308,7 @@ const ConfirmDelete: React.FC<ConfirmDeleteProps> = ({ position, loading, errorM
         </div>
       </div>
     </div>,
-    document.body,
+    document.getElementById('portal-root') ?? document.body,
   );
 };
 

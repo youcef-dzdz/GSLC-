@@ -262,7 +262,7 @@ export default function AdminRegistrations() {
             <X className="w-4 h-4" />
           </button>
         </div>,
-        document.body
+        document.getElementById('portal-root') ?? document.body
       )}
 
       {/* Header */}
@@ -347,7 +347,7 @@ export default function AdminRegistrations() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
                 <tr>
                   <th>{t('admin.registrations.col_company')}</th>
                   <th>{t('admin.registrations.col_contact')}</th>
@@ -374,7 +374,7 @@ export default function AdminRegistrations() {
                       {/* Company */}
                       <td>
                         <div className="cell-content">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0D1F3C] to-[#1a3360] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                          <div className="w-8 h-8 rounded-lg bg-[#0D2A5E] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                             {initials(reg)}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -478,7 +478,7 @@ export default function AdminRegistrations() {
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 shrink-0" dir={isRTL ? 'rtl' : 'ltr'}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0D1F3C] to-[#1a3360] flex items-center justify-center text-white font-bold">
+                <div className="w-10 h-10 rounded-xl bg-[#0D2A5E] flex items-center justify-center text-white font-bold">
                   {initials(detailTarget)}
                 </div>
                 <div>
@@ -569,7 +569,7 @@ export default function AdminRegistrations() {
             </div>
           </div>
         </div>,
-        document.body
+        document.getElementById('portal-root') ?? document.body
       )}
 
       {/* ── Approve Confirm Modal ── */}
@@ -605,7 +605,7 @@ export default function AdminRegistrations() {
             </div>
           </div>
         </div>,
-        document.body
+        document.getElementById('portal-root') ?? document.body
       )}
 
       {/* ── Reject Modal ── */}
@@ -675,7 +675,7 @@ export default function AdminRegistrations() {
             </div>
           </div>
         </div>,
-        document.body
+        document.getElementById('portal-root') ?? document.body
       )}
 
       {/* ── Delete Confirm Modal ── */}
@@ -710,7 +710,7 @@ export default function AdminRegistrations() {
             </div>
           </div>
         </div>,
-        document.body
+        document.getElementById('portal-root') ?? document.body
       )}
 
     </div>

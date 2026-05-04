@@ -67,4 +67,31 @@ class ConfigController extends Controller
 
         return response()->json(['message' => 'Sauvegardé avec succès.']);
     }
+
+    // =========================================================================
+    // POST /api/admin/system-config/test-email
+    // Sends a test email using current SMTP config from system_config
+    // =========================================================================
+    public function testEmail(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "Ceci est un email de test depuis NASHCO GSLC.\n\nSi vous recevez cet email, la configuration SMTP est correcte.",
+                function ($message) use ($request) {
+                    $message->to($request->email)
+                            ->subject('Test SMTP — NASHCO GSLC');
+                }
+            );
+
+            return response()->json(['message' => 'Email de test envoyé avec succès.']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Échec de l\'envoi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

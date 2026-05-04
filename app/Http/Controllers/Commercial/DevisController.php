@@ -203,7 +203,7 @@ class DevisController extends Controller
         $old   = $devis->toArray();
 
         $request->validate([
-            'statut'             => 'sometimes|in:ENVOYE,EXPIRE,ANNULE',
+            'statut'             => 'sometimes|in:ENVOYE,EN_NEGOCIATION,ACCEPTE,REFUSE,EXPIRE,ANNULE',
             'commentaire_nashco' => 'sometimes|nullable|string',
         ]);
 

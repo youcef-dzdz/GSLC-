@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { LogOut, Menu, X, Bell, BellRing, CheckCheck } from 'lucide-react';
+import { X, Bell, BellRing, CheckCheck } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { Logo } from '../ui/Logo';
 import { apiClient } from '../../services/api';
 
 interface Notif {
@@ -30,6 +29,52 @@ const LANGS = [
   { code: 'ar', label: 'AR' },
   { code: 'en', label: 'EN' },
 ];
+
+const ROUTE_LABELS: Record<string, { parent: string; pageKey: string }> = {
+  '/admin/dashboard':      { parent: 'Admin',       pageKey: 'nav.dashboard' },
+  '/admin/users':          { parent: 'Admin',       pageKey: 'nav.users' },
+  '/admin/roles':          { parent: 'Admin',       pageKey: 'nav.roles' },
+  '/admin/permissions':    { parent: 'Admin',       pageKey: 'nav.permissions' },
+  '/admin/departments':    { parent: 'Admin',       pageKey: 'nav.departments' },
+  '/admin/positions':      { parent: 'Admin',       pageKey: 'nav.positions' },
+  '/admin/registrations':  { parent: 'Admin',       pageKey: 'nav.registrations' },
+  '/admin/audit':          { parent: 'Admin',       pageKey: 'nav.audit' },
+  '/admin/config':         { parent: 'Admin',       pageKey: 'nav.config' },
+  '/admin/notifications':  { parent: 'Admin',       pageKey: 'nav.notifications.title' },
+  '/admin/corbeille':      { parent: 'Admin',       pageKey: 'nav.corbeille' },
+  '/commercial/dashboard': { parent: 'Commercial',  pageKey: 'nav.dashboard' },
+  '/commercial/demands':   { parent: 'Commercial',  pageKey: 'nav.demands' },
+  '/commercial/quotes':    { parent: 'Commercial',  pageKey: 'nav.quotes' },
+  '/commercial/contracts': { parent: 'Commercial',  pageKey: 'nav.contracts' },
+  '/commercial/clients':   { parent: 'Commercial',  pageKey: 'nav.clients' },
+  '/commercial/vessels':   { parent: 'Commercial',  pageKey: 'nav.vessels' },
+  '/client/dashboard':     { parent: 'Client',      pageKey: 'nav.dashboard' },
+  '/client/demands':       { parent: 'Client',      pageKey: 'nav.demands' },
+  '/client/quotes':        { parent: 'Client',      pageKey: 'nav.quotes' },
+  '/client/contracts':     { parent: 'Client',      pageKey: 'nav.contracts' },
+  '/client/invoices':      { parent: 'Client',      pageKey: 'nav.invoices' },
+  '/client/containers':    { parent: 'Client',      pageKey: 'nav.containers' },
+  '/logistics/dashboard':  { parent: 'Logistique',  pageKey: 'nav.dashboard' },
+  '/logistics/containers': { parent: 'Logistique',  pageKey: 'nav.containers' },
+  '/logistics/warehouse':  { parent: 'Logistique',  pageKey: 'nav.warehouse' },
+  '/logistics/vessels':    { parent: 'Logistique',  pageKey: 'nav.vessels' },
+  '/logistics/movements':  { parent: 'Logistique',  pageKey: 'nav.movements' },
+  '/finance/dashboard':    { parent: 'Finance',     pageKey: 'nav.dashboard' },
+  '/finance/invoices':     { parent: 'Finance',     pageKey: 'nav.invoices' },
+  '/finance/payments':     { parent: 'Finance',     pageKey: 'nav.payments' },
+  '/director/dashboard':   { parent: 'Directeur',   pageKey: 'nav.dashboard' },
+  '/director/contracts':   { parent: 'Directeur',   pageKey: 'nav.contracts_pending' },
+  '/director/reports':     { parent: 'Directeur',   pageKey: 'nav.reports' },
+  '/director/risk-map':    { parent: 'Directeur',   pageKey: 'nav.risk_map' },
+};
+
+const getBreadcrumb = (pathname: string): { parent: string; pageKey: string } | null => {
+  if (ROUTE_LABELS[pathname]) return ROUTE_LABELS[pathname];
+  const match = Object.keys(ROUTE_LABELS)
+    .sort((a, b) => b.length - a.length)
+    .find(r => pathname.startsWith(r + '/'));
+  return match ? ROUTE_LABELS[match] : null;
+};
 
 export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void; sidebarOpen?: boolean }) => {
   const { t, i18n } = useTranslation();
@@ -94,9 +139,10 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
 
   // ────────────────────────────────────────────────────────────────────────────
 
-  const isHome   = location.pathname === '/';
-  const isRTL    = i18n.language.startsWith('ar');
+  const isHome     = location.pathname === '/';
+  const isRTL      = i18n.language.startsWith('ar');
   const activeLang = i18n.language.substring(0, 2);
+  const breadcrumb = (!isHome && user) ? getBreadcrumb(location.pathname) : null;
 
   const handleLogoClick = () => {
     if (user) {
@@ -127,10 +173,9 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
       dir="ltr"
       style={{
         background: '#FFFFFF',
-        borderBottom: '1px solid #E2E8F0',
-        boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
+        borderBottom: '1px solid #C5D8F5',
         position: 'fixed', top: 0, left: 0, right: 0,
-        zIndex: 200, height: 64,
+        zIndex: 200, height: 52,
       }}
     >
       {/* Force tel/email/number inputs to stay LTR in RTL pages */}
@@ -143,35 +188,54 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
       `}</style>
 
       <div style={{
-        maxWidth: 1400, margin: '0 auto', padding: '0 1.5rem',
+        maxWidth: 1400, margin: '0 auto', padding: '0 20px',
         height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
 
-        {/* ── LEFT: hamburger + logo ─────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {onMenuClick && (
-            <button
-              onClick={onMenuClick}
-              aria-label={t('common.menu')}
-              className="lg:hidden"
-              style={{
-                background: 'rgba(67,102,187,0.08)',
-                border: '1px solid rgba(67,102,187,0.2)',
-                borderRadius: 7, padding: 7,
-                cursor: 'pointer', color: '#4366BB', display: 'flex',
-              }}
-            >
-              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          )}
+        {/* ── LEFT: brand + breadcrumb + badges ─────────────────────── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
 
+          {/* Brand mark */}
           <button
             onClick={handleLogoClick}
             aria-label="NASHCO GSLC — Accueil"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
-            <Logo size="md" textClassName="text-[#CFA030]" />
+            <img
+              src="/images/nashco_logo Company.jpg"
+              alt="NASHCO Logo"
+              style={{ width: 80, height: 36, borderRadius: 6, objectFit: 'contain', flexShrink: 0 }}
+            />
           </button>
+
+          {/* Breadcrumb + badges (dashboard only) */}
+          {user && !isHome && breadcrumb && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: '#88A8D0' }}>{breadcrumb.parent}</span>
+                <span style={{ color: '#C5D8F5', fontSize: 14, margin: '0 6px', lineHeight: 1 }}>›</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#0D2A5E' }}>{t(breadcrumb.pageKey)}</span>
+              </div>
+              {/* Role badge */}
+              <span style={{
+                fontSize: 10, fontWeight: 700,
+                padding: '2px 9px', borderRadius: 9999,
+                background: '#FFF3C0', color: '#7A5800',
+              }}>
+                {t(`roles.${user.role.label}`)}
+              </span>
+              {/* Système en ligne badge */}
+              <span style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                fontSize: 10, fontWeight: 600, color: '#2A8A5A',
+                padding: '2px 9px', borderRadius: 9999,
+                background: '#E6F7F0', border: '1px solid #A8DFC4',
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2A8A5A', display: 'block', flexShrink: 0 }} />
+                {t('admin.dashboard.system_online')}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ── CENTER: landing nav links (home page only) ─────────── */}
@@ -196,8 +260,15 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
           </div>
         )}
 
-        {/* ── RIGHT: language switcher + user ────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* ── RIGHT: date + notif + lang + avatar ─────────────────── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+
+          {/* Date (dashboard only) */}
+          {user && !isHome && (
+            <span style={{ fontSize: 10, color: '#88A8D0', whiteSpace: 'nowrap' }}>
+              {new Date().toLocaleDateString('fr-DZ', { day: '2-digit', month: 'long', year: 'numeric' })}
+            </span>
+          )}
 
           {/* ── Notification bell (admin only) ─────────────────────────── */}
           {user?.role?.label === 'admin' && (
@@ -444,42 +515,43 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
             ))}
           </div>
 
-          {/* Logged-in user info + logout */}
+          {/* Avatar pill */}
           {user && (
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              borderLeft: '1px solid #E2E8F0',
-              paddingLeft: 10,
+              display: 'flex', alignItems: 'center', gap: 7,
+              border: '1px solid #C5D8F5', borderRadius: 8,
+              padding: '4px 10px 4px 4px',
+              background: 'white',
             }}>
-              <div className="hidden sm:block" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', margin: 0 }}>
+              <span style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: '#C8960A', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700, flexShrink: 0,
+              }}>
+                {(user.prenom?.[0] ?? '').toUpperCase()}{(user.nom?.[0] ?? '').toUpperCase()}
+              </span>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: '#0D2A5E', margin: 0, whiteSpace: 'nowrap' }}>
                   {user.prenom} {user.nom}
                 </p>
-                <p style={{ fontSize: 11, color: '#64748B', margin: 0 }}>
+                <p style={{ fontSize: 9, color: '#5A80BB', margin: 0 }}>
                   {t(`roles.${user.role.label}`)}
                 </p>
               </div>
+              {/* Logout arrow — only this triggers logout */}
               <button
                 onClick={logout}
                 title={t('auth.logout')}
-                aria-label={t('auth.logout')}
                 style={{
-                  background: 'rgba(239,68,68,0.15)',
-                  border: '1px solid rgba(239,68,68,0.28)',
-                  borderRadius: 7, padding: 7,
-                  cursor: 'pointer', color: '#fca5a5',
-                  display: 'flex', transition: 'all .18s',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: '#88A8D0', fontSize: 14, padding: '0 0 0 4px',
+                  display: 'flex', alignItems: 'center', lineHeight: 1,
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = '#ef4444';
-                  e.currentTarget.style.color = '#fff';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(239,68,68,0.15)';
-                  e.currentTarget.style.color = '#fca5a5';
-                }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#0D2A5E'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#88A8D0'; }}
               >
-                <LogOut size={16} />
+                →
               </button>
             </div>
           )}

@@ -175,6 +175,7 @@ class UserController extends Controller
         if ($request->filled('password')) {
             $user->password = bcrypt($request->password);
             $user->save();
+            $user->tokens()->delete();
         }
 
         $this->audit('UPDATE', 'users', $user->id, $old, $user->fresh()->toArray());
@@ -189,7 +190,7 @@ class UserController extends Controller
     // DELETE — DELETE /api/admin/users/{id}
     // =========================================================================
 
-    public function destroy($id): JsonResponse
+    public function destroy(Request $request, $id): JsonResponse
     {
         // We use findOrFail to get the active user. 
         // We use forceDelete to permanently remove records and free up the email.
@@ -203,7 +204,7 @@ class UserController extends Controller
                 $user->client->forceDelete();
             }
 
-            $user->forceDelete();
+            $user->moveToCorbeille(auth()->id(), $request->ip());
 
             $this->audit('DELETE', 'users', $id, $userData, null);
 
@@ -250,6 +251,7 @@ class UserController extends Controller
         $user->password             = Hash::make($newPassword);
         $user->must_change_password = true;
         $user->save();
+        $user->tokens()->delete();
 
         $lang = $request->input('lang',
             $user->preferred_lang

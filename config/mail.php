@@ -122,6 +122,10 @@ return [
     |
     */
 
-    'contact_receiver' => env('NASHCO_CONTACT_EMAIL', 'contact@nashco.com.dz'),
+    'contact_receiver'   => env('NASHCO_CONTACT_EMAIL', 'contact@nashco.com.dz'),
+    // Fallback only — actual recipients are stored in system_config table
+    // Keys: contact_email_admin, contact_email_commercial
+
+    'admin_address'      => env('MAIL_ADMIN_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
 
 ];

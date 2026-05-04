@@ -9,11 +9,16 @@ use App\Models\Client;
 use App\Models\Role;
 use App\Http\Controllers\Traits\Auditable;
 use Illuminate\Http\Request;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -23,19 +28,24 @@ class AuthController extends Controller
     // LOGIN
     // =========================================================================
 
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string',
-        ]);
 
         $user = User::with(['role.permissions:id,name,module'])->where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             if ($user) {
                 $user->increment('tentatives_echouees');
+                if ($user->tentatives_echouees >= 5) {
+                    \Illuminate\Support\Facades\Mail::to(config('mail.admin_address', config('mail.from.address')))
+                        ->queue(new \App\Mail\SuspiciousLoginAlert(
+                            $request->ip(),
+                            $user->tentatives_echouees,
+                            $user->email
+                        ));
+                }
             }
+
             throw ValidationException::withMessages([
                 'email' => ['Email ou mot de passe incorrect.'],
             ]);
@@ -150,27 +160,8 @@ class AuthController extends Controller
     // REGISTER
     // =========================================================================
 
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $request->validate([
-            'nom'            => 'required|string|max:100',
-            'prenom'         => 'required|string|max:100',
-            'email'          => 'required|email|unique:users,email',
-            'password'       => 'required|string|min:8|confirmed',
-            'raison_sociale' => 'required|string|max:200',
-            'nif'            => 'required|string|max:20|unique:clients,nif',
-            'nis'            => 'required|string|max:20',
-            'rc'             => 'required|string|max:50',
-            'adresse_siege'  => 'required|string|max:255',
-            'ville'          => 'required|string|max:100',
-            'pays_id'        => 'required|exists:pays,id',
-            'type_client'    => 'required|in:ENTREPRISE,PARTICULIER,ADMINISTRATION',
-            'rep_nom'        => 'required|string|max:100',
-            'rep_prenom'     => 'required|string|max:100',
-            'rep_role'       => 'required|string|max:100',
-            'rep_tel'        => 'required|string|max:20',
-            'rep_email'      => 'required|email|max:150',
-        ]);
 
         $clientRole = Role::where('label', 'client')->firstOrFail();
 
@@ -229,21 +220,23 @@ class AuthController extends Controller
         // Always return 200 so we don't leak if an email exists
         if (! $user || $user->statut !== 'ACTIF') {
             return response()->json([
-                'message' => 'Si cet email correspond à un compte actif, un lien de réinitialisation a été envoyé.'
+                'message' => 'Si cet email correspond à un compte actif, un mot de passe temporaire a été envoyé.'
             ], 200);
         }
 
-        // Generate token manually
-        $token = Password::createToken($user);
+        $tempPassword = Str::random(10);
+        $user->password = Hash::make($tempPassword);
+        $user->must_change_password = true;
+        $user->save();
+        $user->tokens()->delete();
 
-        // Build React reset URL
-        $resetUrl = 'http://localhost:5173/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+        $lang = $request->input('lang') ?? $user->preferred_lang ?? app()->getLocale() ?? 'fr';
 
-        // Send email using Mail::raw()
-        \Mail::raw("Bonjour,\n\nCliquez sur ce lien pour réinitialiser votre mot de passe :\n\n" . $resetUrl . "\n\nCe lien expire dans 60 minutes.\n\nSi vous n'avez pas demandé cette réinitialisation, ignorez cet email.", function($message) use ($user) {
-            $message->to($user->email)
-                    ->subject('Réinitialisation de votre mot de passe - NASHCO/GSLC');
-        });
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\StaffNewPassword($user, $tempPassword, $lang));
+        } catch (\Exception $e) {
+            Log::error('StaffNewPassword email failed: ' . $e->getMessage());
+        }
 
         $this->audit('SYSTEM', 'users', $user->id, null, [
             'action' => 'reinitialisation_mot_de_passe_envoyee',
@@ -251,29 +244,31 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Un lien de réinitialisation a été envoyé à votre adresse e-mail.'
+            'message' => 'Si cet email correspond à un compte actif, un mot de passe temporaire a été envoyé.'
         ], 200);
     }
-    public function resetPassword(Request $request): JsonResponse
+
+    // =========================================================================
+    // REFRESH TOKEN
+    // POST /api/auth/refresh   middleware: auth:sanctum
+    // =========================================================================
+
+    public function refresh(Request $request): JsonResponse
     {
-        $request->validate([
-            'token'                 => 'required',
-            'email'                 => 'required|email',
-            'password'              => 'required|min:8|confirmed',
+        $user = $request->user();
+
+        // Revoke current token and issue a fresh one — extends the 480-min window
+        $user->currentAccessToken()->delete();
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        $this->audit('SYSTEM', 'users', $user->id, null, [
+            'action' => 'token_refreshed',
         ]);
 
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->forceFill(['password' => bcrypt($password)])->save();
-            }
-        );
-
-        if ($status === Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Mot de passe réinitialisé avec succès.'], 200);
-        }
-
-        return response()->json(['message' => 'Lien invalide ou expiré.'], 400);
+        return response()->json([
+            'message' => 'Session renouvelée.',
+            'token'   => $token,
+        ], 200);
     }
 
     // =========================================================================
@@ -281,11 +276,8 @@ class AuthController extends Controller
     // POST /api/staff/change-password   middleware: auth:sanctum
     // =========================================================================
 
-    public function changePassword(Request $request): JsonResponse
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
     {
-        $request->validate([
-            'password' => 'required|string|min:8|confirmed',
-        ]);
 
         $user = auth()->user();
 
@@ -293,6 +285,8 @@ class AuthController extends Controller
             'password'             => Hash::make($request->password),
             'must_change_password' => false,
         ]);
+        $user->tokens()->delete();
+        $newToken = $user->createToken('session')->plainTextToken;
 
         // Alerte sécurité à l'admin — le staff a changé son mot de passe
         try {
@@ -326,6 +320,9 @@ class AuthController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Mot de passe mis à jour.']);
+        return response()->json([
+            'message' => 'Mot de passe mis à jour.',
+            'token' => $newToken
+        ]);
     }
 }

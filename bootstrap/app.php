@@ -14,7 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
         $middleware->statefulApi();
+        $middleware->api(prepend: \Illuminate\Http\Middleware\HandleCors::class);
 
         $middleware->validateCsrfTokens(except: [
             'api/*'
@@ -23,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role'       => CheckRole::class,
             'permission' => CheckPermission::class,
+            'login.throttle' => \App\Http\Middleware\LoginRateLimiter::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -21,7 +21,10 @@ export default function ForgotPassword() {
     setError('');
     setLoading(true);
     try {
-      await apiClient.post('http://127.0.0.1:8000/api/forgot-password', { email });
+      await apiClient.post('http://127.0.0.1:8000/api/forgot-password', { 
+        email,
+        lang: i18n.language,
+      });
       setSent(true);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? t('forgot.error_generic'));

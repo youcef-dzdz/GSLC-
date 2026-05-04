@@ -14,7 +14,7 @@ type Config = Record<string, string>;
 
 const SECTION_KEYS = {
   general:       ['app_name', 'app_url', 'timezone', 'default_lang'],
-  email:         ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_from'],
+  email:         ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_from', 'contact_email_admin', 'contact_email_commercial'],
   notifications: ['notif_new_registration', 'notif_new_contract', 'notif_surestarie'],
   maintenance:   ['maintenance_mode'],
 };
@@ -70,12 +70,14 @@ function SectionCard({
   children,
   onSave,
   saving,
+  extraAction,
 }: {
   title: string;
   icon: React.ReactNode;
   children: React.ReactNode;
   onSave: () => void;
   saving: boolean;
+  extraAction?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   return (
@@ -85,7 +87,8 @@ function SectionCard({
         <h2 className="text-base font-black text-[#0D1F3C]">{title}</h2>
       </div>
       <div className="p-6 space-y-5">{children}</div>
-      <div className="px-6 py-4 bg-[#F8FAFC] border-t border-[#F1F5F9] flex justify-end">
+      <div className="px-6 py-4 bg-[#F8FAFC] border-t border-[#F1F5F9] flex items-center justify-end gap-3">
+        {extraAction}
         <button
           onClick={onSave}
           disabled={saving}
@@ -263,6 +266,25 @@ export default function ConfigPage() {
 
   const [config, setConfig]   = useState<Config>({});
   const [saving, setSaving]   = useState<Record<string, boolean>>({});
+  const [testingEmail, setTestingEmail] = useState(false);
+
+  const testEmail = async () => {
+    const emailTo = config.smtp_from;
+    if (!emailTo) {
+      toast('error', 'Erreur', 'Configurez d\'abord l\'adresse d\'expédition.');
+      return;
+    }
+    setTestingEmail(true);
+    try {
+      await apiClient.post('/api/admin/system-config/test-email', { email: emailTo });
+      toast('success', 'Email envoyé', `Email de test envoyé à ${emailTo}`);
+    } catch (e: any) {
+      toast('error', 'Échec', e?.response?.data?.message ?? 'Erreur SMTP');
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
   const [loading, setLoading] = useState(true);
   const [loadErr, setLoadErr] = useState(false);
   const [confirmMaint, setConfirmMaint] = useState(false);
@@ -412,6 +434,19 @@ export default function ConfigPage() {
         }
         onSave={() => save('email', SECTION_KEYS.email)}
         saving={!!saving.email}
+        extraAction={
+          <button
+            onClick={testEmail}
+            disabled={testingEmail}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#10B981] text-[#10B981] hover:bg-[#ECFDF5] text-sm font-semibold transition-colors disabled:opacity-50"
+          >
+            {testingEmail
+              ? <Loader2 size={15} className="animate-spin" />
+              : <Mail size={15} />
+            }
+            {testingEmail ? 'Envoi...' : 'Tester l\'email'}
+          </button>
+        }
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Field
@@ -446,6 +481,31 @@ export default function ConfigPage() {
               type="email"
               placeholder="no-reply@nashco.dz"
             />
+          </div>
+
+          {/* ── Contact form recipients ── */}
+          <div className="sm:col-span-2">
+            <div className="border-t border-[#F1F5F9] pt-5 mt-1">
+              <p className="text-[10px] font-bold text-[#1E40AF] uppercase tracking-wider mb-4">
+                {t('admin.config.contact_recipients_label')}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Field
+                  label={t('admin.config.field_contact_email_admin')}
+                  value={config.contact_email_admin ?? ''}
+                  onChange={(v) => update('contact_email_admin', v)}
+                  type="email"
+                  placeholder="admin@nashco.dz"
+                />
+                <Field
+                  label={t('admin.config.field_contact_email_commercial')}
+                  value={config.contact_email_commercial ?? ''}
+                  onChange={(v) => update('contact_email_commercial', v)}
+                  type="email"
+                  placeholder="commercial@nashco.dz"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </SectionCard>

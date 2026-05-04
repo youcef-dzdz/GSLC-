@@ -1,4 +1,4 @@
-import { apiClient, TOKEN_KEY } from './api';
+import { apiClient, setToken, clearToken, getToken } from './api';
 import { User, LoginCredentials, RegisterCredentials } from '../types/auth';
 
 export const authService = {
@@ -9,7 +9,7 @@ export const authService = {
 
     // Save token so every subsequent request includes it
     if (token) {
-      localStorage.setItem(TOKEN_KEY, token);
+      setToken(token);
     }
 
     return rest;
@@ -22,7 +22,7 @@ export const authService = {
 
   async logout(): Promise<void> {
     await apiClient.post('/api/logout');
-    localStorage.removeItem(TOKEN_KEY);
+    clearToken();
   },
 
   async getMe(): Promise<{ user: User }> {
@@ -31,6 +31,6 @@ export const authService = {
   },
 
   isTokenPresent(): boolean {
-    return !!localStorage.getItem(TOKEN_KEY);
+    return !!getToken();
   },
 };

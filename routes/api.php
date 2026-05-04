@@ -15,6 +15,11 @@ use App\Http\Controllers\Admin\ConfigController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\CorbeilleController;
+use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Admin\PortController;
+use App\Http\Controllers\Admin\TerminalController;
+use App\Http\Controllers\Admin\DepotController;
 
 // Client Portal
 use App\Http\Controllers\Client\ClientController;
@@ -48,20 +53,21 @@ use App\Http\Controllers\Shared\NotificationController;
 // PUBLIC — no authentication required
 // =============================================================================
 
-Route::post('/login',    [AuthController::class, 'login'])->name('api.login');
+Route::post('/login',    [AuthController::class, 'login'])->middleware('login.throttle')->name('api.login');
 Route::post('/register', [AuthController::class, 'register'])->name('api.register');
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('api.forgot-password');
-Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('api.reset-password');
+// Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('api.reset-password');
 Route::post('/contact',  [App\Http\Controllers\Public\ContactMessageController::class, 'store'])->middleware('throttle:5,1');
 
 // =============================================================================
 // PROTECTED — must be logged in
 // =============================================================================
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 
     // Shared — all authenticated users
     Route::get('/user',                            [AuthController::class, 'me'])->name('api.user');
+    Route::post('/auth/refresh',                   [AuthController::class, 'refresh'])->name('api.auth.refresh');
     Route::post('/logout',                         [AuthController::class, 'logout'])->name('api.logout');
     Route::post('/staff/change-password',          [AuthController::class, 'changePassword'])->name('staff.change-password');
     Route::get('/notifications',                   [NotificationController::class, 'index'])->name('notifications.index');
@@ -143,6 +149,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/config',                      [AdminController::class, 'config'])->name('config.index')->middleware('permission:config.view');
         Route::post('/config',                     [AdminController::class, 'updateConfig'])->name('config.update')->middleware('permission:config.manage');
         Route::get('/system-config',               [ConfigController::class, 'index'])->name('system-config.index')->middleware('permission:config.view');
+        Route::post('/system-config/test-email',   [ConfigController::class, 'testEmail']);
         Route::post('/system-config/{section}',    [ConfigController::class, 'update'])->name('system-config.update')->middleware('permission:config.manage');
 
         // Currency rates
@@ -157,6 +164,36 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/notifications/{id}/read',    [AdminNotificationController::class, 'markRead'])->name('notifications.mark-read');
         Route::delete('/notifications/read',       [AdminNotificationController::class, 'destroyRead'])->name('notifications.destroy-read');
         Route::delete('/notifications/{id}',       [AdminNotificationController::class, 'destroy'])->name('notifications.destroy');
+
+        // Documents
+        Route::prefix('documents')->group(function () {
+            Route::get('/',                  [DocumentController::class, 'index']);
+            Route::post('/',                 [DocumentController::class, 'store']);
+            Route::get('/{id}/download',     [DocumentController::class, 'download']);
+            Route::post('/{id}/valider',     [DocumentController::class, 'valider']);
+        });
+
+        // Ports + Terminaux + Dépôts
+        Route::get('/ports',              [PortController::class, 'index']);
+        Route::post('/ports',             [PortController::class, 'store']);
+        Route::put('/ports/{id}',         [PortController::class, 'update']);
+        Route::delete('/ports/{id}',      [PortController::class, 'destroy']);
+
+        Route::get('/terminaux',          [TerminalController::class, 'index']);
+        Route::post('/terminaux',         [TerminalController::class, 'store']);
+        Route::put('/terminaux/{id}',     [TerminalController::class, 'update']);
+        Route::delete('/terminaux/{id}',  [TerminalController::class, 'destroy']);
+
+        Route::get('/depots',             [DepotController::class, 'index']);
+        Route::post('/depots',            [DepotController::class, 'store']);
+        Route::put('/depots/{id}',        [DepotController::class, 'update']);
+        Route::delete('/depots/{id}',     [DepotController::class, 'destroy']);
+
+        Route::prefix('corbeille')->group(function () {
+            Route::get('/', [CorbeilleController::class, 'index']);
+            Route::post('/{id}/restore', [CorbeilleController::class, 'restore']);
+            Route::delete('/{id}', [CorbeilleController::class, 'forceDelete']);
+        });
     });
 
     // =========================================================================

@@ -5,26 +5,24 @@ import {
   LayoutDashboard, Users, FileText, Anchor, Truck,
   CreditCard, Box, Settings, ClipboardList, Briefcase,
   BarChart2, MapPin, Receipt, Package, Ship, Bell,
-  ShieldCheck, Building2, Tag, Lock,
+  ShieldCheck, Building2, Tag, Lock, Trash2,
 } from 'lucide-react';
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  bg:            '#1E3A8A',          // deep navy
-  bgFrom:        '#1E3A8A',
-  bgTo:          '#1E40AF',
-  border:        'rgba(255,255,255,0.08)',
-  groupLabel:    '#FFFFFF',
-  itemText:      'rgba(255,255,255,0.78)',
-  itemTextHover: '#FFFFFF',
-  activeText:    '#1E3A8A',
-  activeBg:      '#FFFFFF',
-  activeShadow:  '0 2px 10px rgba(0,0,0,0.15)',
-  hoverBg:       'rgba(255,255,255,0.10)',
-  iconColor:     'rgba(255,255,255,0.55)',
-  iconActive:    '#1E40AF',
-  accent:        '#F59E0B',
-  accentDim:     'rgba(245,158,11,0.18)',
+  bg:            '#EDF4FF',
+  border:        '#C5D8F5',
+  groupLabel:    '#88A8D0',
+  itemText:      '#3A5A8A',
+  itemTextHover: '#0D2A5E',
+  activeText:    '#FFFFFF',
+  activeBg:      '#C8960A',
+  activeShadow:  '0 2px 8px rgba(200,150,10,0.2)',
+  hoverBg:       '#D8ECFF',
+  iconColor:     '#5A80BB',
+  iconActive:    '#FFFFFF',
+  accent:        '#C8960A',
+  accentDim:     'rgba(200,150,10,0.12)',
 };
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -69,6 +67,7 @@ const getNavLinks = (role: string, permissions: string[] = []): NavDef[] => {
       const structureItems: NavItem[] = [
         (hasPerm('departments.manage') || hasPerm('departments.view')) ? { to: '/admin/departments', icon: Building2, labelKey: 'nav.departments' } : null,
         (hasPerm('positions.manage') || hasPerm('positions.view'))     ? { to: '/admin/positions',   icon: Tag,       labelKey: 'nav.positions'   } : null,
+        isAdmin ? { to: '/admin/ports', icon: Anchor, labelKey: 'nav.ports' } : null,
       ].filter(Boolean) as NavItem[];
 
       const operationsItems: NavItem[] = [
@@ -79,6 +78,7 @@ const getNavLinks = (role: string, permissions: string[] = []): NavDef[] => {
         (isAdmin || hasPerm('audit.view'))         ? { to: '/admin/audit',         icon: FileText, labelKey: 'nav.audit'                } : null,
         (isAdmin || hasPerm('config.view') || hasPerm('config.manage')) ? { to: '/admin/config',        icon: Settings, labelKey: 'nav.config'               } : null,
         (isAdmin || hasPerm('notifications.view')) ? { to: '/admin/notifications', icon: Bell,     labelKey: 'nav.notifications.title' } : null,
+        isAdmin                                    ? { to: '/admin/corbeille',     icon: Trash2,   labelKey: 'nav.corbeille'           } : null,
       ].filter(Boolean) as NavItem[];
 
       const groups = [
@@ -102,13 +102,12 @@ const getNavLinks = (role: string, permissions: string[] = []): NavDef[] => {
       ];
     case 'commercial': {
       const commercialItems: NavItem[] = [
-        hasPerm('demands.view')   ? { to: '/commercial/demands',   icon: ClipboardList, labelKey: 'nav.demands'   } : null,
-        hasPerm('quotes.manage')  ? { to: '/commercial/quotes',    icon: Receipt,       labelKey: 'nav.quotes'    } : null,
-        hasPerm('contracts.view') ? { to: '/commercial/contracts', icon: FileText,      labelKey: 'nav.contracts' } : null,
-        hasPerm('clients.manage') ? { to: '/commercial/clients',   icon: Users,         labelKey: 'nav.clients'   } : null,
-        hasPerm('vessels.view')   ? { to: '/commercial/vessels',   icon: Ship,          labelKey: 'nav.vessels'   } : null,
-        hasPerm('archive.view')   ? { to: '/commercial/archive',   icon: Package,       labelKey: 'nav.archive'   } : null,
-      ].filter(Boolean) as NavItem[];
+        { to: '/commercial/demands',   icon: ClipboardList, labelKey: 'nav.demands'   },
+        { to: '/commercial/quotes',    icon: Receipt,       labelKey: 'nav.quotes'    },
+        { to: '/commercial/contracts', icon: FileText,      labelKey: 'nav.contracts' },
+        { to: '/commercial/clients',   icon: Users,         labelKey: 'nav.clients'   },
+        { to: '/commercial/vessels',   icon: Ship,          labelKey: 'nav.vessels'   },
+      ];
       return [dashboard, ...commercialItems];
     }
     case 'logistique': {
@@ -170,7 +169,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
       ? { right: 0, left: 'auto' }
       : { left:  0, right: 'auto' }),
     width: 256,
-    background: `linear-gradient(160deg, ${C.bgFrom} 0%, ${C.bgTo} 100%)`,
+    background: C.bg,
     borderRight: isRTL ? 'none' : `1px solid ${C.border}`,
     borderLeft:  isRTL ? `1px solid ${C.border}` : 'none',
     boxShadow: isRTL
@@ -212,8 +211,8 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
     const el = e.currentTarget;
-    // Check if it's already white (active state) to avoid overriding it with hover background
-    const isSolidActive = el.style.background.includes('rgb(255, 255, 255)') || el.style.background.includes('#ffffff');
+    // Guard: do not override the gold active state (#C8960A = rgb(200,150,10))
+    const isSolidActive = el.style.background.includes('rgb(200, 150, 10)') || el.style.background.includes('#c8960a') || el.style.background.includes('#C8960A');
     if (!isSolidActive) {
       el.style.background = C.hoverBg;
       el.style.color      = C.itemTextHover;
@@ -222,7 +221,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
     const el = e.currentTarget;
-    const isSolidActive = el.style.background.includes('rgb(255, 255, 255)') || el.style.background.includes('#ffffff');
+    const isSolidActive = el.style.background.includes('rgb(200, 150, 10)') || el.style.background.includes('#c8960a') || el.style.background.includes('#C8960A');
     if (!isSolidActive) {
       el.style.background = 'transparent';
       el.style.color      = C.itemText;
@@ -358,16 +357,9 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           }
           /* Custom scrollbar for sidebar */
           aside::-webkit-scrollbar { width: 4px; }
-          aside::-webkit-scrollbar-track { background: transparent; }
-          aside::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-          aside::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
-
-          /* ================= GLOBAL BACKGROUND (Scoped) ================= */
-          body.gslc-premium-theme-active, 
-          body.gslc-premium-theme-active #root, 
-          body.gslc-premium-theme-active .min-h-screen {
-            background: linear-gradient(135deg, #EFF6FF, #FFFBEB) !important;
-          }
+          aside::-webkit-scrollbar-track { background: #D8ECFF; }
+          aside::-webkit-scrollbar-thumb { background: #C8960A; border-radius: 4px; }
+          aside::-webkit-scrollbar-thumb:hover { background: #A87A08; }
 
           /* ================= GOLD DESIGN SYSTEM ================= */
           
@@ -415,11 +407,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             direction: rtl !important;
           }
 
-          .gslc-premium-theme thead tr {
-            background-color: #C9A646 !important;
-          }
-
-          .gslc-premium-theme th, 
+          .gslc-premium-theme th,
           .gslc-premium-theme td {
             padding: 10px 14px !important;
             text-align: start !important;
@@ -430,7 +418,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           }
 
           .gslc-premium-theme th {
-            color: white !important;
+            color: #0D2A5E !important;
             font-weight: 800 !important;
             font-size: 11px !important;
             text-transform: uppercase !important;

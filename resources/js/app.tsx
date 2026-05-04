@@ -18,6 +18,7 @@ import ResetPassword from './pages/auth/ResetPassword';
 
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { SessionTimeoutModal } from './components/auth/SessionTimeoutModal';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminRegistrations from './pages/admin/AdminRegistrations';
@@ -27,11 +28,23 @@ import AuditPage from './pages/admin/AuditPage';
 import ConfigPage from './pages/admin/ConfigPage';
 import NotificationsPage from './pages/admin/NotificationsPage';
 import AdminRoles       from './pages/admin/AdminRoles';
+import RoleDetail from '@/pages/admin/RoleDetail';
 import AdminPermissions from './pages/admin/AdminPermissions';
+import AdminPorts from './pages/admin/AdminPorts';
+import CorbeilleManager from './pages/shared/CorbeilleManager';
 
 import CommercialDashboard from './pages/commercial/CommercialDashboard';
 import CommercialDemands from './pages/commercial/CommercialDemands';
 import CommercialClients from './pages/commercial/CommercialClients';
+import CommercialQuotes    from '@/pages/commercial/CommercialQuotes';
+import CommercialContracts from '@/pages/commercial/CommercialContracts';
+import CommercialVessels  from '@/pages/commercial/CommercialVessels';
+
+import ClientDashboard from '@/pages/client/ClientDashboard';
+import ClientDemands   from '@/pages/client/ClientDemands';
+import ClientQuotes    from '@/pages/client/ClientQuotes';
+import ClientContracts from '@/pages/client/ClientContracts';
+import ClientInvoices  from '@/pages/client/ClientInvoices';
 
 // ─── Error Boundary ──────────────────────────────────────────────────────────
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
@@ -66,6 +79,7 @@ const App = () => {
       <AuthProvider>
         <ToastProvider>
           <BrowserRouter>
+            <SessionTimeoutModal />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
@@ -89,7 +103,10 @@ const App = () => {
                   <Route path="/admin/positions"      element={<AdminPositions />} />
                   <Route path="/admin/notifications"  element={<NotificationsPage />} />
                   <Route path="/admin/roles"          element={<AdminRoles />} />
+                  <Route path="/admin/roles/:id" element={<RoleDetail />} />
                   <Route path="/admin/permissions"    element={<AdminPermissions />} />
+                  <Route path="/admin/ports"          element={<AdminPorts />} />
+                  <Route path="/admin/corbeille"      element={<CorbeilleManager />} />
                 </Route>
               </Route>
 
@@ -99,9 +116,24 @@ const App = () => {
                   <Route path="/commercial/dashboard" element={<CommercialDashboard />} />
                   <Route path="/commercial/demands"   element={<CommercialDemands />} />
                   <Route path="/commercial/clients"   element={<CommercialClients />} />
-                  <Route path="/commercial/quotes"    element={<div className="p-6"><h1 className="text-2xl font-bold text-[#0D1F3C]">Devis</h1><p className="text-[#6B7280] mt-2">Prochainement disponible.</p></div>} />
-                  <Route path="/commercial/contracts" element={<div className="p-6"><h1 className="text-2xl font-bold text-[#0D1F3C]">Contrats</h1><p className="text-[#6B7280] mt-2">Prochainement disponible.</p></div>} />
-                  <Route path="/commercial/vessels"   element={<div className="p-6"><h1 className="text-2xl font-bold text-[#0D1F3C]">Navires</h1><p className="text-[#6B7280] mt-2">Prochainement disponible.</p></div>} />
+                  <Route path="/commercial/quotes"     element={<CommercialQuotes />} />
+                  <Route path="/commercial/quotes/new" element={<CommercialQuotes />} />
+                  <Route path="/commercial/contracts"     element={<CommercialContracts />} />
+                  <Route path="/commercial/contracts/new" element={<CommercialContracts />} />
+                  <Route path="/commercial/vessels"     element={<CommercialVessels />} />
+                  <Route path="/commercial/vessels/new" element={<CommercialVessels />} />
+                </Route>
+              </Route>
+
+              {/* Client portal routes */}
+              <Route element={<ProtectedRoute allowedRoles={['client']} />}>
+                <Route element={<DashboardLayout />}>
+                  <Route path="/client/dashboard"   element={<ClientDashboard />} />
+                  <Route path="/client/demands"     element={<ClientDemands />} />
+                  <Route path="/client/demands/new" element={<ClientDemands />} />
+                  <Route path="/client/quotes"      element={<ClientQuotes />} />
+                  <Route path="/client/contracts"   element={<ClientContracts />} />
+                  <Route path="/client/invoices"    element={<ClientInvoices />} />
                 </Route>
               </Route>
 
