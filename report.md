@@ -1304,11 +1304,11 @@ No secondary errors found. Loop exited after 1 pass.
   api.ts
   portsService.ts
 ---
-## Fix Session � 2026-05-04T15-34-00
+## Fix Session � 2026-05-04T15-34-00
 ## Fix Report
 
 ### Summary
-The AdminPorts.tsx component has been refactored and enhanced. Search, filtering, and CRUD actions (Edit/Delete) were implemented for all three tabs (Ports, Terminaux, D�p�ts) while strictly adhering to the project's design system and coding standards. The component was split into multiple sub-files to comply with the 300-line limit rule, and all hardcoded strings were migrated to the translation system.
+The AdminPorts.tsx component has been refactored and enhanced. Search, filtering, and CRUD actions (Edit/Delete) were implemented for all three tabs (Ports, Terminaux, D�p�ts) while strictly adhering to the project's design system and coding standards. The component was split into multiple sub-files to comply with the 300-line limit rule, and all hardcoded strings were migrated to the translation system.
 
 ### Details
 - **Problem:** Duplicate entries in port filters, missing action buttons, and violations of project architectural rules.
@@ -1322,7 +1322,7 @@ The AdminPorts.tsx component has been refactored and enhanced. Search, filtering
 3. **Actions**: Implemented Edit/Delete with canEdit (niveau <= 3) guard and useToast feedback.
 4. **i18n**: Added missing keys to fr.json, en.json, ar.json for all new UI elements.
 ---
-## Fix Session � 2026-05-04T15-39-00
+## Fix Session � 2026-05-04T15-39-00
 ## Hotfix Report: React Crash
 
 ### Summary
@@ -1421,3 +1421,524 @@ None
 
 ### Build status
 `npm run build` completed successfully with 0 errors (exit code 0).
+
+---
+## Fix Session — 2026-05-05T02-56-17Z
+
+## Task Report — AdminTarifs: Full-Stack Build (TarifService CRUD)
+
+### What was built / fixed
+Built the complete TarifService module from scratch. The backend (controller + routes) did not exist despite the task stating otherwise — both were created. The frontend page follows the AdminUsers.tsx pattern exactly: TanStack Query, createPortal modals, inline trilingual TEXTS constant, same table/filter/toast structure. Delete is blocked with a 422 if the tarif is referenced by lignes_devis or lignes_facture.
+
+### Files touched
+| File | Action | Lines |
+|---|---|---|
+| `app/Http/Controllers/Admin/TarifServiceController.php` | Created | ~90 lines |
+| `routes/api.php` | Modified | +13 lines (import + 4 tarif routes + TypeConteneur closure) |
+| `resources/js/services/admin.service.ts` | Modified | +10 lines (5 service methods) |
+| `resources/js/pages/admin/AdminTarifs.tsx` | Created | ~330 lines |
+| `resources/js/app.tsx` | Modified | +2 lines (import + route) |
+| `resources/js/components/layout/Sidebar.tsx` | Modified | +1 line (nav item) |
+| `resources/js/components/layout/Navbar.tsx` | Modified | +1 line (breadcrumb entry) |
+| `resources/js/i18n/locales/fr.json` | Modified | +1 key (`nav.tarifs`) |
+| `resources/js/i18n/locales/en.json` | Modified | +1 key (`nav.tarifs`) |
+| `resources/js/i18n/locales/ar.json` | Modified | +1 key (`nav.tarifs`) |
+
+### Backend details
+- `TarifServiceController`: index (with typeConteneur eager-load), store, update, destroy
+- destroy blocks with 422 + French message if tarif is used in lignesDevis or lignesFacture
+- All actions logged to JournalAudit via Auditable trait
+- Routes inside `role:admin,it_agent` middleware group
+- TypeConteneur list endpoint added as inline closure (same pattern as /pays)
+
+### Frontend details
+- Table: Code (monospace badge), Service, Type conteneur (badge or "Tous types"), Montant/Unité, TVA badge, Validité range, Statut badge, Actions
+- Filters: search (code + libelle), type conteneur dropdown, actif/inactif status
+- Form: 9 fields — code_tarif (disabled on edit), libelle_service, type_conteneur_id (select), montant_unitaire, unite (select), tva_applicable (checkbox), date_debut, date_fin, actif (checkbox)
+- canEdit gated on `isAdmin` — edit/delete buttons hidden for non-admins
+- Gold active badge, blue code badge, green TVA badge — all uidesign.md compliant colors
+
+### Accident log
+None — 6 locale/nav files modified beyond the original 4 (locale keys and breadcrumb required for the nav item to work; authorized by the build requirement).
+
+### What to test (Gate 1)
+1. Navigate to `/admin/tarifs`
+2. Sidebar shows "Tarifs de service" under Structure group (admin role only)
+3. Topbar breadcrumb: Admin › Tarifs de service
+4. Page loads with skeleton then table (empty if no data)
+5. Click "+ Nouveau tarif" → modal opens with all 9 fields
+6. Create a tarif with type conteneur set → success toast, row appears with correct type badge
+7. Create a tarif with no type conteneur → "Tous types" shown in italic
+8. Edit a row → form pre-filled, code_tarif disabled, changes saved correctly
+9. Delete a tarif → confirm modal → deleted + success toast
+10. Attempt to delete a tarif linked to a devis → 422 French error message in toast
+
+### Build status
+npm run build — 0 errors ✅ (9.85s, 2768 modules)
+
+---
+## Fix Session — 2026-05-05T03-21-17Z
+
+## Task Report — AdminTypeConteneurs: Full-Stack Build
+
+### What was built / fixed
+Built the complete TypeConteneur admin CRUD page. The backend inline closure GET route was replaced with a proper controller supporting full CRUD. Delete is blocked with 422 if the type is referenced by conteneurs, tarifsService, or penalites. The AdminTarifs dropdown was patched to filter active-only types client-side after the endpoint now returns all types. 11 files were changed including controller, routes, service methods, page component, routing, sidebar, navbar, and 3 locale files.
+
+### Files touched
+| File | Action | Lines |
+|---|---|---|
+| `app/Http/Controllers/Admin/TypeConteneurController.php` | Created | ~90 lines |
+| `routes/api.php` | Modified | replace closure + 3 new routes + import |
+| `resources/js/services/admin.service.ts` | Modified | +6 lines (3 CRUD methods) |
+| `resources/js/pages/admin/AdminTypeConteneurs.tsx` | Created | ~340 lines |
+| `resources/js/app.tsx` | Modified | +2 lines (import + route) |
+| `resources/js/components/layout/Sidebar.tsx` | Modified | +1 line (nav item) |
+| `resources/js/components/layout/Navbar.tsx` | Modified | +1 line (breadcrumb) |
+| `resources/js/i18n/locales/fr.json` | Modified | +1 key |
+| `resources/js/i18n/locales/en.json` | Modified | +1 key |
+| `resources/js/i18n/locales/ar.json` | Modified | +1 key |
+| `resources/js/pages/admin/AdminTarifs.tsx` | Modified | +1 line (actif filter on dropdown) |
+
+### Backend details
+- `TypeConteneurController`: index (all types, all fields), store, update, destroy
+- destroy blocks 422 if referenced by conteneurs, tarifsService, or penalites — message names which
+- inline GET closure replaced by controller index; now returns all fields for all types (not just actif)
+- AdminTarifs dropdown compensates with client-side `select: data.filter(t => t.actif)`
+
+### Frontend details
+- Table: Code (monospace), Libellé, Taille (ft pill), Réfrigéré/Standard badge, Tarif/jour, Volume/Charge, Statut, Actions
+- Filters: search (code + libelle), réfrigéré/standard, actif/inactif
+- Form: 9 fields — code_type (disabled on edit, auto-uppercase), libelle, longueur_pieds (select 20/40/45), tarif_journalier_defaut, poids_tare, charge_utile, volume, est_frigo (checkbox), actif (checkbox)
+- canEdit gated on isAdmin
+
+### Accident log
+None — AdminTarifs.tsx touched only to add actif filter; required by endpoint change.
+
+### What to test (Gate 1)
+1. Navigate to `/admin/type-conteneurs` — sidebar shows "Types de conteneur" under Structure
+2. Topbar breadcrumb: Admin › Types de conteneur
+3. Create type 20GP Standard — code field auto-uppercased, success toast
+4. Create type 40HC Réfrigéré (est_frigo checked) — "Réfrigéré" badge in table
+5. Edit — code_type disabled, changes save correctly
+6. Delete unused type — success toast
+7. Attempt delete of a type linked to a tarif → 422 French error in toast
+8. Navigate to `/admin/tarifs` — type dropdown shows only actif types
+
+### Build status
+npm run build — 0 errors ✅ (9.48s, 2769 modules)
+
+---
+## Fix Session — 2026-05-05T03-45-08Z
+
+## Task Report — AdminBanques: Full-Stack Build
+
+### What was built / fixed
+Built the complete Banques admin CRUD page. 8 banques already existed from seeder; page loads them immediately. Backend controller created with delete protection against contrats and paiements. Frontend follows AdminTarifs/AdminTypeConteneurs pattern exactly. Landmark icon added to Sidebar lucide imports.
+
+### Files touched
+| File | Action | Lines |
+|---|---|---|
+| `app/Http/Controllers/Admin/BanqueController.php` | Created | ~80 lines |
+| `routes/api.php` | Modified | +5 lines (import + 4 routes) |
+| `resources/js/services/admin.service.ts` | Modified | +8 lines (4 methods) |
+| `resources/js/pages/admin/AdminBanques.tsx` | Created | ~300 lines |
+| `resources/js/app.tsx` | Modified | +2 lines (import + route) |
+| `resources/js/components/layout/Sidebar.tsx` | Modified | +2 lines (nav item + Landmark import) |
+| `resources/js/components/layout/Navbar.tsx` | Modified | +1 line (breadcrumb) |
+| `resources/js/i18n/locales/fr.json` | Modified | +1 key |
+| `resources/js/i18n/locales/en.json` | Modified | +1 key |
+| `resources/js/i18n/locales/ar.json` | Modified | +1 key |
+
+### Backend details
+- destroy blocks 422 if banque referenced by contrats or paiements
+- code_banque and nom both validated as unique (unique-ignore-self on update)
+- All actions logged via Auditable trait
+
+### Frontend details
+- Table: Code (monospace), Nom, SWIFT/BIC (monospace), Téléphone, Adresse (truncated), Statut, Actions
+- Filters: search (code + nom + swift), statut actif/inactif
+- Form: 6 fields — code_banque (uppercase, disabled on edit), nom, swift (uppercase, max 11), telephone, adresse, actif checkbox
+- 8 seeded rows appear immediately on first load
+
+### Accident log
+None — Landmark icon import addition was required by the nav item.
+
+### What to test (Gate 1)
+1. Navigate to `/admin/banques` — 8 seeded banques appear in table
+2. Sidebar shows "Banques" under Structure group
+3. Breadcrumb: Admin › Banques
+4. Create a new banque — code auto-uppercased, SWIFT auto-uppercased
+5. Edit existing — code field disabled, changes save
+6. Delete unused banque — success toast
+7. Try delete of BNA (likely referenced by paiements) → French 422 error
+8. Search "BNA" → filters correctly
+
+### Build status
+npm run build — 0 errors ✅ (12.09s, 2770 modules)
+
+---
+## Fix Session — 2026-05-06T13-09-07Z
+
+## Task Report — AdminConditionsGenerales: Full-Stack Build
+
+### What was built / fixed
+Built the complete Conditions Générales admin page. This page differs from the previous reference-data pages in two ways: (1) an Activate action that deactivates all other versions atomically in a DB transaction, and (2) a large textarea for the full document text. The active row has a highlighted background, delete and activate buttons are hidden on the active version, and the activate confirmation modal warns the user before switching.
+
+### Files touched
+| File | Action | Lines |
+|---|---|---|
+| `app/Http/Controllers/Admin/ConditionsGeneralesController.php` | Created | ~100 lines |
+| `routes/api.php` | Modified | +6 lines (import + 5 routes including activate) |
+| `resources/js/services/admin.service.ts` | Modified | +10 lines (5 methods) |
+| `resources/js/pages/admin/AdminConditionsGenerales.tsx` | Created | ~370 lines |
+| `resources/js/app.tsx` | Modified | +2 lines |
+| `resources/js/components/layout/Sidebar.tsx` | Modified | +1 line |
+| `resources/js/components/layout/Navbar.tsx` | Modified | +1 line |
+| `resources/js/i18n/locales/fr.json` | Modified | +1 key |
+| `resources/js/i18n/locales/en.json` | Modified | +1 key |
+| `resources/js/i18n/locales/ar.json` | Modified | +1 key |
+
+### Backend details
+- activate() wraps all updates in DB::transaction — deactivates all, then activates target
+- destroy() blocks on: (a) linked contrats, (b) active version
+- cree_par_user_id set automatically from auth()->id() on store
+- version field is immutable after creation (not sent on update)
+
+### Frontend details
+- Active row has gold-tinted background (bg-[#FFFDF0]) — visually distinct
+- Activate button (gold Zap icon) only shown on draft rows
+- Delete button hidden on active version (backend also blocks it)
+- Activate confirm modal warns about deactivating current version
+- Form modal is wider (max-w-2xl) to accommodate the tall textarea
+- version disabled on edit, date_application uses datetime-local input
+
+### Accident log
+None
+
+### What to test (Gate 1)
+1. Navigate to `/admin/conditions-generales`
+2. Create version v1.0 with full content → appears as Brouillon
+3. Create version v2.0 → also Brouillon
+4. Click "Activer" on v1.0 → confirmation modal → confirm → v1.0 shows "En vigueur", gold background
+5. Click "Activer" on v2.0 → v1.0 becomes Brouillon, v2.0 becomes "En vigueur"
+6. Edit v1.0 (Brouillon) — version field disabled, content editable
+7. Delete v1.0 → success
+8. Attempt to delete active v2.0 → 422 error in toast
+9. Attempt to delete version linked to a contract → 422 error
+
+### Build status
+npm run build — 0 errors ✅ (13.69s, 2771 modules)
+
+### Backup
+.backups/2026-05-06T13-09-07Z/
+  api.php, admin.service.ts, app.tsx, Sidebar.tsx, Navbar.tsx,
+  fr.json, en.json, ar.json
+
+### Backup
+.backups/2026-05-05T03-45-08Z/
+  api.php, admin.service.ts, app.tsx, Sidebar.tsx, Navbar.tsx,
+  fr.json, en.json, ar.json
+
+### Backup
+.backups/2026-05-05T03-21-17Z/
+  api.php, admin.service.ts, app.tsx, Sidebar.tsx, Navbar.tsx,
+  fr.json, en.json, ar.json, AdminTarifs.tsx
+
+---
+## Fix Session — 2026-05-05T03-11-51Z
+
+## Fix Report — TVA Calculation Bugs (3 fixes, 5 files)
+
+### Summary
+Three related TVA bugs were found during a TVA logic audit and fixed. (1) DevisController and FactureController were applying a flat 19% TVA to the entire montantHT, ignoring per-line `tva_applicable` flags — replaced with a per-line accumulation loop. (2) Three model `montantTva()` methods had `0.19` hardcoded instead of reading from `ConfigurationSysteme` — fixed to read the configured rate. (3) `LigneFacture.$fillable` was missing the `service` column, causing silent data loss on facture line creation.
+Build passes at 0 errors. Manual testing recommended: create a devis with a mix of TVA-applicable and TVA-exempt lines and verify the `tva` total only covers the eligible lines.
+
+---
+
+### Details
+
+**Problem:** TVA totals on devis and factures were incorrect for any document containing TVA-exempt service lines; model helper methods used a hardcoded rate that would drift if the admin changed `tva_rate` in the config; `LigneFacture.service` was silently dropped on create.
+**Root Cause:** The controller total loops summed all lines before applying TVA, discarding the per-line flag. The model methods were written before `ConfigurationSysteme` integration existed for TVA.
+**Scope:** 5 files modified, ~15 lines changed.
+
+---
+
+#### Fix 1a: DevisController — per-line TVA accumulation
+
+File:      app/Http/Controllers/Commercial/DevisController.php
+Location:  Line 109  |  store()
+
+**Before:**
+```php
+$montantHT = 0;
+foreach ($request->lignes as $ligne) {
+    $total = $ligne['quantite'] * $ligne['prix_unitaire'];
+    if ($ligne['type_ligne'] === 'REMISE') {
+        $montantHT -= $total;
+    } else {
+        $montantHT += $total;
+    }
+}
+$tva      = $montantHT * $tvaTaux;
+$totalTTC = $montantHT + $tva;
+```
+
+**After:**
+```php
+$montantHT = 0;
+$tva       = 0;
+foreach ($request->lignes as $ligne) {
+    $lineHT = $ligne['quantite'] * $ligne['prix_unitaire'];
+    if ($ligne['type_ligne'] === 'REMISE') {
+        $montantHT -= $lineHT;
+    } else {
+        $montantHT += $lineHT;
+        if ($ligne['tva_applicable']) {
+            $tva += $lineHT * $tvaTaux;
+        }
+    }
+}
+$tva      = round($tva, 2);
+$totalTTC = $montantHT + $tva;
+```
+
+**Why:** Per-line `tva_applicable` flag was stored but never honored in the total. Discounts (REMISE lines) are correctly excluded from TVA accumulation since they reduce HT but are not themselves taxable events.
+
+---
+
+#### Fix 1b: FactureController — per-line TVA accumulation
+
+File:      app/Http/Controllers/Finance/FactureController.php
+Location:  Line 117  |  store()
+
+**Before:**
+```php
+$montantHT = 0;
+foreach ($request->lignes as $ligne) {
+    $montantHT += $ligne['quantite'] * $ligne['prix_unitaire'];
+}
+$tva      = $montantHT * $tvaTaux;
+$totalTTC = $montantHT + $tva;
+```
+
+**After:**
+```php
+$montantHT = 0;
+$tva       = 0;
+foreach ($request->lignes as $ligne) {
+    $lineHT     = $ligne['quantite'] * $ligne['prix_unitaire'];
+    $montantHT += $lineHT;
+    if ($ligne['tva_applicable']) {
+        $tva += $lineHT * $tvaTaux;
+    }
+}
+$tva      = round($tva, 2);
+$totalTTC = $montantHT + $tva;
+```
+
+**Why:** Same flat-rate bug as DevisController. FactureController has no REMISE line type so the loop is simpler.
+
+---
+
+#### Fix 2a/b/c: LigneDevis, LigneFacture, LigneContrat — replace hardcoded TVA rate
+
+Files:
+- app/Models/LigneDevis.php — montantTva() line 55
+- app/Models/LigneFacture.php — montantTva() line 54
+- app/Models/LigneContrat.php — montantTva() line 63
+
+**Before (all three):**
+```php
+return round($this->total_ht * 0.19, 2);
+```
+
+**After (all three):**
+```php
+$taux = (float) \App\Models\ConfigurationSysteme::getValeur('tva_rate', 0.19);
+return round($this->total_ht * $taux, 2);
+```
+
+**Why:** If admin changes `tva_rate` in the system config, the controller pick it up but these model helper methods would still return 19%, producing inconsistent line-level vs. document-level TVA amounts.
+
+---
+
+#### Fix 3: LigneFacture — add 'service' to $fillable
+
+File:      app/Models/LigneFacture.php
+Location:  $fillable array
+
+**Before:** `'service'` absent from `$fillable`
+**After:** `'service'` added after `'type_ligne'`
+
+**Why:** `FactureController::store()` writes `'service' => $ligne['service']` to `LigneFacture::create()`. Without `service` in `$fillable`, Laravel's mass-assignment guard silently drops the value, storing NULL in the column.
+
+---
+
+### Unintended Changes
+None — every changed line was required by one of the three fixes.
+
+**Restore status:** ✅ No unintended changes to revert.
+
+---
+
+### Fix Loop
+No secondary errors found. Build passed on first run. Loop exited after 1 pass.
+
+---
+
+### Confidence
+✅ High — root causes identified precisely; diffs are minimal and isolated; build at 0 errors.
+
+---
+
+### Backup
+.backups/2026-05-05T03-11-51Z/
+  DevisController.php, FactureController.php,
+  LigneDevis.php, LigneFacture.php, LigneContrat.php
+
+### Backup
+.backups/2026-05-05T02-56-17Z/
+  api.php, admin.service.ts, app.tsx, Sidebar.tsx, Navbar.tsx, fr.json, en.json, ar.json
+
+---
+## Fix Session — 2026-05-05T02-48-40Z
+
+## Fix Report
+
+### Summary
+`NotificationsPage.tsx` was fetching data with `useEffect + apiClient.get()`, violating Rule 2 (no useEffect for data fetching — TanStack Query only).
+Replaced the manual fetch state and `useEffect` with `useQuery`; updated 4 mutation handlers to call `adminService` methods and write optimistic updates to the TanStack query cache via `setQueryData`.
+Build passes at 0 errors. Manual test recommended: navigate to `/admin/notifications` and verify load, mark-read, mark-all-read, delete single, and delete-all-read actions.
+
+---
+
+### Details
+
+**Problem:** `NotificationsPage.tsx` fetched its data using a `useEffect` that called `apiClient.get('/api/admin/notifications/all')` and stored results in `useState` — a direct Rule 2 violation.
+**Root Cause:** The page was written before the TanStack Query standard was enforced and never migrated.
+**Scope:** 2 files modified — `admin.service.ts` (+10 lines), `NotificationsPage.tsx` (-16 +21 lines).
+
+---
+
+#### Fix 1: Add 5 notification methods to adminService
+
+File:      resources/js/services/admin.service.ts
+Location:  End of adminService object, after `updateCurrencyRate`
+
+**Before:**
+```ts
+  updateCurrencyRate: (code: string, taux: number) =>
+    apiClient.post(`/api/admin/currencies/${code}/update`, { taux }),
+};
+```
+
+**After:**
+```ts
+  updateCurrencyRate: (code: string, taux: number) =>
+    apiClient.post(`/api/admin/currencies/${code}/update`, { taux }),
+
+  // ─── Admin Notifications ─────────────────────────────────────────────────────
+
+  getAdminNotificationsAll: () =>
+    apiClient.get('/api/admin/notifications/all').then(r => r.data),
+
+  markAdminNotificationRead: (id: number) =>
+    apiClient.post(`/api/admin/notifications/${id}/read`),
+
+  markAllAdminNotificationsRead: () =>
+    apiClient.post('/api/admin/notifications/read-all'),
+
+  deleteAdminNotification: (id: number) =>
+    apiClient.delete(`/api/admin/notifications/${id}`),
+
+  deleteAllReadAdminNotifications: () =>
+    apiClient.delete('/api/admin/notifications/read'),
+};
+```
+
+**Why:** Moves API calls out of the component into the service layer (Rule 9), making them available as a typed `queryFn`.
+
+---
+
+#### Fix 2: Replace manual fetch state + useEffect with useQuery
+
+File:      resources/js/pages/admin/NotificationsPage.tsx
+Location:  Lines 1–63 (imports + state declarations + fetchNotifs + fetch useEffect)
+
+**Before:**
+```tsx
+import { useState, useEffect } from 'react';
+import { apiClient } from '../../services/api';
+// ...
+const [notifs, setNotifs] = useState<Notif[]>([]);
+const [unread, setUnread] = useState(0);
+const [loading, setLoading] = useState(true);
+// ...
+const fetchNotifs = async () => {
+  setLoading(true);
+  try {
+    const res = await apiClient.get('/api/admin/notifications/all');
+    setNotifs(res.data.notifications ?? []);
+    setUnread(res.data.unread_count ?? 0);
+  } catch { /* silencieux */ }
+  finally { setLoading(false); }
+};
+useEffect(() => { fetchNotifs(); }, []);
+```
+
+**After:**
+```tsx
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { adminService } from '../../services/admin.service';
+// ...
+const queryClient = useQueryClient();
+const { data, isLoading: loading } = useQuery({
+  queryKey: ['admin-notifications-all'],
+  queryFn: adminService.getAdminNotificationsAll,
+});
+const notifs: Notif[] = data?.notifications ?? [];
+const unread: number  = data?.unread_count ?? 0;
+```
+
+**Why:** Eliminates the Rule 2 violation. `notifs`, `unread`, and `loading` are derived from the query result — same variable names, zero JSX changes.
+
+---
+
+#### Fix 3: Update 4 mutation handlers to use adminService + cache writes
+
+File:      resources/js/pages/admin/NotificationsPage.tsx
+Location:  Lines 67–97 (markRead, markAllRead, deleteNotif, deleteAllRead)
+
+All 4 functions: replaced `apiClient.post/delete` calls with `adminService.*` equivalents; replaced `setNotifs/setUnread` optimistic updates with `queryClient.setQueryData(['admin-notifications-all'], ...)` using identical logic.
+
+**Why:** `setNotifs`/`setUnread` were removed in Fix 2. Query cache writes via `setQueryData` preserve the same instant optimistic-update behavior without a refetch.
+
+---
+
+### Unintended Changes
+
+None — JSX (lines 150–381), permission-gate useEffect (lines 39–43), `filter`/`marking`/`hoveredId` state, `formatDate`, `canalBadge`, `Skeleton`, and `filtered` are all untouched.
+
+**Restore status:**
+✅ All unintended changes: None to revert.
+
+---
+
+### Fix Loop
+
+No secondary errors found. Build passed on first run after applying all changes. Loop exited after 1 pass.
+
+---
+
+### Confidence
+
+**This fix:** ✅ High — Root cause eliminated at the source; all JSX variable names preserved; build at 0 errors; optimistic update behavior preserved via `setQueryData`.
+
+---
+
+### Backup
+
+.backups/2026-05-05T02-48-40Z/
+  admin.service.ts
+  NotificationsPage.tsx

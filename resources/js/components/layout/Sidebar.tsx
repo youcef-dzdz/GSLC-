@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, FileText, Anchor, Truck,
   CreditCard, Box, Settings, ClipboardList, Briefcase,
-  BarChart2, MapPin, Receipt, Package, Ship, Bell,
+  BarChart2, MapPin, Receipt, Package, Ship, Bell, Landmark,
   ShieldCheck, Building2, Tag, Lock, Trash2,
 } from 'lucide-react';
 
@@ -67,7 +67,11 @@ const getNavLinks = (role: string, permissions: string[] = []): NavDef[] => {
       const structureItems: NavItem[] = [
         (hasPerm('departments.manage') || hasPerm('departments.view')) ? { to: '/admin/departments', icon: Building2, labelKey: 'nav.departments' } : null,
         (hasPerm('positions.manage') || hasPerm('positions.view'))     ? { to: '/admin/positions',   icon: Tag,       labelKey: 'nav.positions'   } : null,
-        isAdmin ? { to: '/admin/ports', icon: Anchor, labelKey: 'nav.ports' } : null,
+        isAdmin ? { to: '/admin/ports',   icon: Anchor,  labelKey: 'nav.ports'   } : null,
+        isAdmin ? { to: '/admin/tarifs',           icon: Receipt, labelKey: 'nav.tarifs'          } : null,
+        isAdmin ? { to: '/admin/type-conteneurs', icon: Package,  labelKey: 'nav.type_conteneurs' } : null,
+        isAdmin ? { to: '/admin/banques',               icon: Landmark, labelKey: 'nav.banques'               } : null,
+        isAdmin ? { to: '/admin/conditions-generales', icon: FileText, labelKey: 'nav.conditions_generales' } : null,
       ].filter(Boolean) as NavItem[];
 
       const operationsItems: NavItem[] = [

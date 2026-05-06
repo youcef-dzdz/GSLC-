@@ -151,4 +151,98 @@ export const adminService = {
 
   updateCurrencyRate: (code: string, taux: number) =>
     apiClient.post(`/api/admin/currencies/${code}/update`, { taux }),
+
+  // ─── Franchises ──────────────────────────────────────────────────────────────
+
+  getFranchises: () =>
+    apiClient.get('/api/admin/franchises').then(r => r.data),
+
+  createFranchise: (data: Record<string, any>) =>
+    apiClient.post('/api/admin/franchises', data).then(r => r.data),
+
+  updateFranchise: (id: number, data: Record<string, any>) =>
+    apiClient.put(`/api/admin/franchises/${id}`, data).then(r => r.data),
+
+  deleteFranchise: (id: number) =>
+    apiClient.delete(`/api/admin/franchises/${id}`).then(r => r.data),
+
+  getPortsList: () =>
+    apiClient.get('/api/admin/ports').then(r => r.data),
+
+  getClientsList: () =>
+    apiClient.get('/api/clients').then(r => r.data),
+
+  // ─── Conditions Générales ────────────────────────────────────────────────────
+
+  getConditions: () =>
+    apiClient.get('/api/admin/conditions').then(r => r.data),
+
+  createCondition: (data: Record<string, any>) =>
+    apiClient.post('/api/admin/conditions', data).then(r => r.data),
+
+  updateCondition: (id: number, data: Record<string, any>) =>
+    apiClient.put(`/api/admin/conditions/${id}`, data).then(r => r.data),
+
+  activateCondition: (id: number) =>
+    apiClient.post(`/api/admin/conditions/${id}/activate`).then(r => r.data),
+
+  deleteCondition: (id: number) =>
+    apiClient.delete(`/api/admin/conditions/${id}`).then(r => r.data),
+
+  // ─── Banques ─────────────────────────────────────────────────────────────────
+
+  getBanques: () =>
+    apiClient.get('/api/admin/banques').then(r => r.data),
+
+  createBanque: (data: Record<string, any>) =>
+    apiClient.post('/api/admin/banques', data).then(r => r.data),
+
+  updateBanque: (id: number, data: Record<string, any>) =>
+    apiClient.put(`/api/admin/banques/${id}`, data).then(r => r.data),
+
+  deleteBanque: (id: number) =>
+    apiClient.delete(`/api/admin/banques/${id}`).then(r => r.data),
+
+  // ─── TarifService ────────────────────────────────────────────────────────────
+
+  getTarifs: () =>
+    apiClient.get('/api/admin/tarifs').then(r => r.data),
+
+  getTypeConteneurs: () =>
+    apiClient.get('/api/admin/type-conteneurs').then(r => r.data),
+
+  createTypeConteneur: (data: Record<string, any>) =>
+    apiClient.post('/api/admin/type-conteneurs', data).then(r => r.data),
+
+  updateTypeConteneur: (id: number, data: Record<string, any>) =>
+    apiClient.put(`/api/admin/type-conteneurs/${id}`, data).then(r => r.data),
+
+  deleteTypeConteneur: (id: number) =>
+    apiClient.delete(`/api/admin/type-conteneurs/${id}`).then(r => r.data),
+
+  createTarif: (data: Record<string, any>) =>
+    apiClient.post('/api/admin/tarifs', data).then(r => r.data),
+
+  updateTarif: (id: number, data: Record<string, any>) =>
+    apiClient.put(`/api/admin/tarifs/${id}`, data).then(r => r.data),
+
+  deleteTarif: (id: number) =>
+    apiClient.delete(`/api/admin/tarifs/${id}`).then(r => r.data),
+
+  // ─── Admin Notifications ─────────────────────────────────────────────────────
+
+  getAdminNotificationsAll: () =>
+    apiClient.get('/api/admin/notifications/all').then(r => r.data),
+
+  markAdminNotificationRead: (id: number) =>
+    apiClient.post(`/api/admin/notifications/${id}/read`),
+
+  markAllAdminNotificationsRead: () =>
+    apiClient.post('/api/admin/notifications/read-all'),
+
+  deleteAdminNotification: (id: number) =>
+    apiClient.delete(`/api/admin/notifications/${id}`),
+
+  deleteAllReadAdminNotifications: () =>
+    apiClient.delete('/api/admin/notifications/read'),
 };

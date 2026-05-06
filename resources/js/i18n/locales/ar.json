@@ -231,6 +231,10 @@
     "group_operations": "العمليات",
     "group_system":     "النظام",
     "ports": "الموانئ والبنية التحتية",
+    "tarifs": "تعريفات الخدمة",
+    "type_conteneurs": "أنواع الحاويات",
+    "banques": "البنوك",
+    "conditions_generales": "الشروط العامة",
     "corbeille": "سلة المحذوفات",
     "notifications": {
       "title": "الإشعارات",

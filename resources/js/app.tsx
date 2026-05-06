@@ -31,6 +31,10 @@ import AdminRoles       from './pages/admin/AdminRoles';
 import RoleDetail from '@/pages/admin/RoleDetail';
 import AdminPermissions from './pages/admin/AdminPermissions';
 import AdminPorts from './pages/admin/AdminPorts';
+import AdminTarifs from './pages/admin/AdminTarifs';
+import AdminTypeConteneurs from './pages/admin/AdminTypeConteneurs';
+import AdminBanques from './pages/admin/AdminBanques';
+import AdminConditionsGenerales from './pages/admin/AdminConditionsGenerales';
 import CorbeilleManager from './pages/shared/CorbeilleManager';
 
 import CommercialDashboard from './pages/commercial/CommercialDashboard';
@@ -106,6 +110,10 @@ const App = () => {
                   <Route path="/admin/roles/:id" element={<RoleDetail />} />
                   <Route path="/admin/permissions"    element={<AdminPermissions />} />
                   <Route path="/admin/ports"          element={<AdminPorts />} />
+                  <Route path="/admin/tarifs"            element={<AdminTarifs />} />
+                  <Route path="/admin/type-conteneurs" element={<AdminTypeConteneurs />} />
+                  <Route path="/admin/banques"              element={<AdminBanques />} />
+                  <Route path="/admin/conditions-generales" element={<AdminConditionsGenerales />} />
                   <Route path="/admin/corbeille"      element={<CorbeilleManager />} />
                 </Route>
               </Route>

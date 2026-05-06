@@ -52,7 +52,8 @@ class LigneDevis extends Model
     public function montantTva(): float
     {
         if (!$this->tva_applicable) return 0;
-        return round($this->total_ht * 0.19, 2);
+        $taux = (float) \App\Models\ConfigurationSysteme::getValeur('tva_rate', 0.19);
+        return round($this->total_ht * $taux, 2);
     }
 
     // Calcule le total TTC de cette ligne

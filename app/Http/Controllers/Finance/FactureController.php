@@ -116,12 +116,17 @@ class FactureController extends Controller
         try {
             $tvaTaux   = (float) ConfigurationSysteme::getValeur('tva_rate', 0.19);
             $montantHT = 0;
+            $tva       = 0;
 
             foreach ($request->lignes as $ligne) {
-                $montantHT += $ligne['quantite'] * $ligne['prix_unitaire'];
+                $lineHT     = $ligne['quantite'] * $ligne['prix_unitaire'];
+                $montantHT += $lineHT;
+                if ($ligne['tva_applicable']) {
+                    $tva += $lineHT * $tvaTaux;
+                }
             }
 
-            $tva      = $montantHT * $tvaTaux;
+            $tva      = round($tva, 2);
             $totalTTC = $montantHT + $tva;
 
             // Generate invoice number

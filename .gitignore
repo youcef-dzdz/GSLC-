@@ -1,4 +1,32 @@
+# Dependencies
 node_modules/
+vendor/
+
+# Build output
+public/build/
 public/hot
-node_modules/
-public/hot
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Backups (agents)
+.backups/
+.fix-backups/
+
+# Claude / AI agents
+.claude/
+.claude-flow/
+.swarm/
+.mcp.json
+
+# Logs & temp
+*.log
+build_error.txt
+backup.sql
+migrations_dump.txt
+
+# OS
+.DS_Store
+Thumbs.db

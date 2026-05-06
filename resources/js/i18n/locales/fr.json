@@ -276,6 +276,10 @@
     "group_operations": "Opérations",
     "group_system":     "Système",
     "ports": "Ports & Infrastructure",
+    "tarifs": "Tarifs de service",
+    "type_conteneurs": "Types de conteneur",
+    "banques": "Banques",
+    "conditions_generales": "Conditions Générales",
     "corbeille": "Corbeille",
     "notifications": {
       "title": "Notifications",

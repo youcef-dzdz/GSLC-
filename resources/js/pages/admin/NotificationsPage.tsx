@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Bell, BellOff, CheckCheck, Trash2, X } from 'lucide-react';
-import { apiClient } from '../../services/api';
+import { adminService } from '../../services/admin.service';
 import { usePermission } from '../../hooks/usePermission';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -41,58 +42,63 @@ export default function NotificationsPage() {
     }
   }, []);
 
-  const [notifs,     setNotifs]     = useState<Notif[]>([]);
-  const [unread,     setUnread]     = useState(0);
   const [filter,     setFilter]     = useState<Filter>('all');
-  const [loading,    setLoading]    = useState(true);
   const [marking,    setMarking]    = useState(false);
   const [hoveredId,  setHoveredId]  = useState<number|null>(null);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
 
-  const fetchNotifs = async () => {
-    setLoading(true);
-    try {
-      const res = await apiClient.get('/api/admin/notifications/all');
-      setNotifs(res.data.notifications ?? []);
-      setUnread(res.data.unread_count ?? 0);
-    } catch { /* silencieux */ }
-    finally { setLoading(false); }
-  };
-
-  useEffect(() => { fetchNotifs(); }, []);
+  const queryClient = useQueryClient();
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['admin-notifications-all'],
+    queryFn: adminService.getAdminNotificationsAll,
+  });
+  const notifs: Notif[] = data?.notifications ?? [];
+  const unread: number  = data?.unread_count ?? 0;
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
   const markRead = async (id: number) => {
     try {
-      await apiClient.post(`/api/admin/notifications/${id}/read`);
-      setNotifs(prev => prev.map(n => n.id === id ? { ...n, lu: true } : n));
-      setUnread(prev => Math.max(0, prev - 1));
+      await adminService.markAdminNotificationRead(id);
+      queryClient.setQueryData(['admin-notifications-all'], (old: any) => ({
+        ...old,
+        notifications: old?.notifications?.map((n: Notif) => n.id === id ? { ...n, lu: true } : n) ?? [],
+        unread_count: Math.max(0, (old?.unread_count ?? 0) - 1),
+      }));
     } catch { /* silencieux */ }
   };
 
   const markAllRead = async () => {
     setMarking(true);
     try {
-      await apiClient.post('/api/admin/notifications/read-all');
-      setNotifs(prev => prev.map(n => ({ ...n, lu: true })));
-      setUnread(0);
+      await adminService.markAllAdminNotificationsRead();
+      queryClient.setQueryData(['admin-notifications-all'], (old: any) => ({
+        ...old,
+        notifications: old?.notifications?.map((n: Notif) => ({ ...n, lu: true })) ?? [],
+        unread_count: 0,
+      }));
     } catch { /* silencieux */ }
     finally { setMarking(false); }
   };
 
   const deleteNotif = async (id: number) => {
     try {
-      await apiClient.delete(`/api/admin/notifications/${id}`);
-      setNotifs(prev => prev.filter(n => n.id !== id));
+      await adminService.deleteAdminNotification(id);
+      queryClient.setQueryData(['admin-notifications-all'], (old: any) => ({
+        ...old,
+        notifications: old?.notifications?.filter((n: Notif) => n.id !== id) ?? [],
+      }));
     } catch { /* silencieux */ }
   };
 
   const deleteAllRead = async () => {
     try {
-      await apiClient.delete('/api/admin/notifications/read');
-      setNotifs(prev => prev.filter(n => !n.lu));
+      await adminService.deleteAllReadAdminNotifications();
+      queryClient.setQueryData(['admin-notifications-all'], (old: any) => ({
+        ...old,
+        notifications: old?.notifications?.filter((n: Notif) => !n.lu) ?? [],
+      }));
     } catch { /* silencieux */ }
   };
 

@@ -108,18 +108,22 @@ class DevisController extends Controller
         try {
             $tvaTaux = (float) ConfigurationSysteme::getValeur('tva_rate', 0.19);
 
-            // Calculate totals from lines
+            // Calculate totals from lines — TVA applied per-line based on tva_applicable flag
             $montantHT = 0;
+            $tva       = 0;
             foreach ($request->lignes as $ligne) {
-                $total = $ligne['quantite'] * $ligne['prix_unitaire'];
+                $lineHT = $ligne['quantite'] * $ligne['prix_unitaire'];
                 if ($ligne['type_ligne'] === 'REMISE') {
-                    $montantHT -= $total;
+                    $montantHT -= $lineHT;
                 } else {
-                    $montantHT += $total;
+                    $montantHT += $lineHT;
+                    if ($ligne['tva_applicable']) {
+                        $tva += $lineHT * $tvaTaux;
+                    }
                 }
             }
 
-            $tva      = $montantHT * $tvaTaux;
+            $tva      = round($tva, 2);
             $totalTTC = $montantHT + $tva;
 
             // Version number

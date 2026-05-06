@@ -20,6 +20,11 @@ use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\PortController;
 use App\Http\Controllers\Admin\TerminalController;
 use App\Http\Controllers\Admin\DepotController;
+use App\Http\Controllers\Admin\TarifServiceController;
+use App\Http\Controllers\Admin\TypeConteneurController;
+use App\Http\Controllers\Admin\BanqueController;
+use App\Http\Controllers\Admin\ConditionsGeneralesController;
+use App\Http\Controllers\Admin\FranchiseController;
 
 // Client Portal
 use App\Http\Controllers\Client\ClientController;
@@ -194,6 +199,37 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
             Route::post('/{id}/restore', [CorbeilleController::class, 'restore']);
             Route::delete('/{id}', [CorbeilleController::class, 'forceDelete']);
         });
+
+        // Tarifs de service
+        Route::get('/tarifs',         [TarifServiceController::class, 'index']);
+        Route::post('/tarifs',        [TarifServiceController::class, 'store']);
+        Route::put('/tarifs/{id}',    [TarifServiceController::class, 'update']);
+        Route::delete('/tarifs/{id}', [TarifServiceController::class, 'destroy']);
+
+        // Franchises
+        Route::get('/franchises',         [FranchiseController::class, 'index']);
+        Route::post('/franchises',        [FranchiseController::class, 'store']);
+        Route::put('/franchises/{id}',    [FranchiseController::class, 'update']);
+        Route::delete('/franchises/{id}', [FranchiseController::class, 'destroy']);
+
+        // Conditions générales
+        Route::get('/conditions',                  [ConditionsGeneralesController::class, 'index']);
+        Route::post('/conditions',                 [ConditionsGeneralesController::class, 'store']);
+        Route::put('/conditions/{id}',             [ConditionsGeneralesController::class, 'update']);
+        Route::post('/conditions/{id}/activate',   [ConditionsGeneralesController::class, 'activate']);
+        Route::delete('/conditions/{id}',          [ConditionsGeneralesController::class, 'destroy']);
+
+        // Banques
+        Route::get('/banques',         [BanqueController::class, 'index']);
+        Route::post('/banques',        [BanqueController::class, 'store']);
+        Route::put('/banques/{id}',    [BanqueController::class, 'update']);
+        Route::delete('/banques/{id}', [BanqueController::class, 'destroy']);
+
+        // Types de conteneur — full CRUD
+        Route::get('/type-conteneurs',         [TypeConteneurController::class, 'index']);
+        Route::post('/type-conteneurs',        [TypeConteneurController::class, 'store']);
+        Route::put('/type-conteneurs/{id}',    [TypeConteneurController::class, 'update']);
+        Route::delete('/type-conteneurs/{id}', [TypeConteneurController::class, 'destroy']);
     });
 
     // =========================================================================
