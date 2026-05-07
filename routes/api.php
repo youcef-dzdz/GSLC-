@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\TypeConteneurController;
 use App\Http\Controllers\Admin\BanqueController;
 use App\Http\Controllers\Admin\ConditionsGeneralesController;
 use App\Http\Controllers\Admin\FranchiseController;
+use App\Http\Controllers\Admin\PenaliteController;
 
 // Client Portal
 use App\Http\Controllers\Client\ClientController;
@@ -230,6 +231,12 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('/type-conteneurs',        [TypeConteneurController::class, 'store']);
         Route::put('/type-conteneurs/{id}',    [TypeConteneurController::class, 'update']);
         Route::delete('/type-conteneurs/{id}', [TypeConteneurController::class, 'destroy']);
+
+        // Pénalités Surestarie — full CRUD
+        Route::get('/penalites-surestarie',         [PenaliteController::class, 'index']);
+        Route::post('/penalites-surestarie',        [PenaliteController::class, 'store']);
+        Route::put('/penalites-surestarie/{id}',    [PenaliteController::class, 'update']);
+        Route::delete('/penalites-surestarie/{id}', [PenaliteController::class, 'destroy']);
     });
 
     // =========================================================================

@@ -1942,3 +1942,203 @@ No secondary errors found. Build passed on first run after applying all changes.
 .backups/2026-05-05T02-48-40Z/
   admin.service.ts
   NotificationsPage.tsx
+
+---
+
+## Task Report — 2026-05-06T20:52:20Z — Status & Phases Update
+
+### What was built / fixed
+Updated `status.md` and `phases.md` to reflect the real project state discovered during the full read-only audit of 2026-05-06. The two files were stale and contained contradictions: status.md listed 5 admin pages as missing that had already been built, stated "13 pages" when 18 files exist, and had no record of the 2 critical commercial bugs or the design violations. Both files are now accurate.
+
+### Files touched
+| File | Action | Lines changed |
+|---|---|---|
+| `status.md` | Modified | ~37 lines replaced |
+| `phases.md` | Modified | ~30 lines replaced |
+
+### Before / After
+
+**status.md — Current Focus**
+
+Before:
+```
+Admin module — design refactor + missing reference pages (TarifService, TypeConteneur)
+```
+After:
+```
+Admin module — design refactor remaining (Dashboard + old pages) + 1 missing page (PénalitesSurestarie)
+```
+Why: TarifService and TypeConteneur are built. The real remaining gap is Dashboard/Roles/Permissions design + PénalitesSurestarie.
+
+---
+
+**status.md — Admin row in Module Status table**
+
+Before:
+```
+| Admin | ✅ 13 pages | ✅ Full | ⚠️ Design refactor pending |
+```
+After:
+```
+| Admin | ✅ 18 files (17 pages + 1 ports container) | ✅ Full | ⚠️ Design refactor partial — Dashboard/Roles/Permissions old colors; new pages ✅ |
+```
+Why: Filesystem has 18 TSX files. 5 new reference pages exist. Design is partial, not uniformly pending.
+
+---
+
+**status.md — Missing Admin Reference Pages section (REMOVED)**
+
+Before:
+```
+## Missing Admin Reference Pages (Priority)
+- 🔴 TarifService — model exists, no frontend page
+- 🔴 TypeConteneur — model exists, no frontend page
+- 🟡 Banques, Franchises, ConditionsGénérales
+- 🟠 Pénalités surestarie
+```
+After (section renamed + contents corrected):
+```
+## Missing Pages (Priority)
+- 🔴 PénalitesSurestarie — not built (admin reference page)
+- 🔴 ClientContainers (client portal) — route defined, backend exists, no frontend page
+```
+Why: All 5 listed pages now exist. Only PénalitesSurestarie is absent. ClientContainers was discovered as a new gap.
+
+---
+
+**status.md — Known Bugs section (ADDED)**
+
+Before: Section did not exist.
+
+After:
+```
+## Known Bugs
+- 🔴 Bug 2: CommercialQuotes QuoteForm sends `montant_ht` instead of `lignes[]` — every quote creation fails (422)
+- 🔴 Bug 3: DevisController@index missing `commentaire_nashco` / `commentaire_client` / `numero_dossier` in transform
+- 🟡 Bug 1: DevisController statut validator missing `BROUILLON` from `in:` rule
+```
+Why: 3 confirmed bugs found in audit. Bug 2 causes every quote creation to fail. Must be tracked.
+
+---
+
+**status.md — Design Violations section (ADDED)**
+
+Before: Section did not exist.
+
+After:
+```
+## Design Violations
+- 🔴 AdminDashboard.tsx — old dark palette (#1A2332, #CFA030 forbidden) + 838 lines + useEffect API call (Rule #2)
+- 🔴 All 6 Commercial pages — unapproved Tailwind semantic colors (#3B82F6, #F59E0B etc.)
+- 🟡 AdminRoles.tsx — #C9A84C forbidden gold on create button
+- 🟡 AdminPermissions.tsx — #4366BB unapproved color
+- 🟡 Navbar.tsx — useEffect polling instead of TanStack Query refetchInterval (Rule #2)
+```
+Why: Audit found systematic design violations not previously tracked.
+
+---
+
+**status.md — Build Status + Deadline**
+
+Before:
+```
+June 2, 2026 — 28 days remaining
+✅ 0 errors as of last commit
+```
+After:
+```
+June 2, 2026 — 27 days remaining
+✅ 0 errors as of last audit (2026-05-06)
+```
+Why: Date correction + reference updated.
+
+---
+
+**phases.md — Phase 5 Remaining Tasks**
+
+Before (7 tasks including 5 already-completed reference page builds):
+```
+- [ ] Apply uidesign.md design system to all 13 admin pages
+- [ ] Build TarifService frontend page
+- [ ] Build TypeConteneur frontend page
+- [ ] Build Banques frontend page
+- [ ] Build Franchises frontend page
+- [ ] Build ConditionsGénérales frontend page
+- [ ] Build Pénalités surestarie frontend page
+- [ ] Gate 1 — code review
+- [ ] Gate 2 — browser QA all admin pages
+```
+After (3 real remaining + 2 new + completed log):
+```
+- [ ] Apply uidesign.md to remaining old admin pages (AdminDashboard, AdminRoles, AdminPermissions)
+- [ ] Fix AdminDashboard useEffect API call → useQuery with refetchInterval (Rule #2)
+- [ ] Build PénalitesSurestarie frontend page
+- [ ] Fix i18n violations in 5 new admin pages (inline TEXTS[] → fr/en/ar.json keys)
+- [ ] Gate 1 — code review
+- [ ] Gate 2 — browser QA all admin pages
+
+### Completed in Phase 5
+- [x] AdminTarifs.tsx built ✅
+- [x] AdminTypeConteneurs.tsx built ✅
+- [x] AdminBanques.tsx built ✅
+- [x] AdminFranchises.tsx built ✅
+- [x] AdminConditionsGenerales.tsx built ✅
+```
+Why: The 5 completed pages were listed as pending. Removed them from TODO, added to done log.
+
+---
+
+**phases.md — Phase 3 Gate 2 (Commercial QA) tasks**
+
+Before (generic):
+```
+- [ ] Browser QA all 6 Commercial pages
+- [ ] Fix any issues found
+- [ ] Gate 2 sign-off
+```
+After (specific, with blocker first):
+```
+- [ ] Fix Bug 2: QuoteForm lignes[] — BLOCKER, fix before any QA (CommercialQuotes.tsx line 282)
+- [ ] Fix Bug 3: DevisController@index — add commentaire_nashco / commentaire_client / numero_dossier to transform
+- [ ] Fix Bug 1: DevisController statut validator — add BROUILLON to `in:` rule
+- [ ] Apply uidesign.md to all 6 Commercial pages
+- [ ] Build CommercialPorts read-only view
+- [ ] Gate 2 QA all 6 pages
+- [ ] Gate 2 sign-off
+```
+Why: Specific bugs and missing page must be fixed before Gate 2 QA can run.
+
+---
+
+**phases.md — Phase 4b (ADDED)**
+
+Before: Did not exist.
+
+After:
+```
+## Phase 4b — Client Portal Completion
+- [ ] Build ClientContainers page
+- [ ] Apply uidesign.md to all 5 Client pages
+- [ ] Gate 2 QA all 5 pages
+```
+Why: ClientContainers gap was discovered. Client design violations must be fixed before Gate 2 sign-off.
+
+---
+
+**phases.md — Phase Summary table**
+
+Before: No Phase 4b row.
+
+After: Added `| 4b | Client Completion | ❌ Not started |` row.
+
+---
+
+**phases.md — Deadline**
+
+Before: 28 days remaining. After: 27 days remaining.
+
+### Accident log
+None — only status.md, phases.md, and this report.md entry were touched.
+
+### Build status
+No code changed — documentation only. Build status unchanged: ✅ 0 errors.

@@ -28,7 +28,7 @@ export const DashboardLayout = () => {
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Content is always offset by sidebar width on large screens */}
-        <div dir={isRTL ? 'rtl' : 'ltr'} lang={i18n.language} className={`flex flex-col flex-1 w-full min-w-0 transition-all duration-300 ${isRTL ? 'lg:pr-[240px]' : 'lg:pl-[240px]'}`}>
+        <div dir={isRTL ? 'rtl' : 'ltr'} lang={i18n.language} className={`flex flex-col flex-1 w-full min-w-0 transition-all duration-300 ${sidebarOpen ? (isRTL ? 'lg:pr-[256px]' : 'lg:pl-[256px]') : (isRTL ? 'lg:pr-[64px]' : 'lg:pl-[64px]')}`}>
           <main className="flex-1 p-4 sm:p-6">
             <Outlet />
           </main>

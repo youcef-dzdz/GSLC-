@@ -35,6 +35,8 @@ import AdminTarifs from './pages/admin/AdminTarifs';
 import AdminTypeConteneurs from './pages/admin/AdminTypeConteneurs';
 import AdminBanques from './pages/admin/AdminBanques';
 import AdminConditionsGenerales from './pages/admin/AdminConditionsGenerales';
+import AdminFranchises from './pages/admin/AdminFranchises';
+import AdminPenalitesSurestarie from './pages/admin/AdminPenalitesSurestarie';
 import CorbeilleManager from './pages/shared/CorbeilleManager';
 
 import CommercialDashboard from './pages/commercial/CommercialDashboard';
@@ -114,6 +116,8 @@ const App = () => {
                   <Route path="/admin/type-conteneurs" element={<AdminTypeConteneurs />} />
                   <Route path="/admin/banques"              element={<AdminBanques />} />
                   <Route path="/admin/conditions-generales" element={<AdminConditionsGenerales />} />
+                  <Route path="/admin/franchises"           element={<AdminFranchises />} />
+                  <Route path="/admin/penalites-surestarie" element={<AdminPenalitesSurestarie />} />
                   <Route path="/admin/corbeille"      element={<CorbeilleManager />} />
                 </Route>
               </Route>

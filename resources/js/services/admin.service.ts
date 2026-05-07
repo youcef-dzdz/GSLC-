@@ -1,6 +1,36 @@
 import { apiClient } from './api';
 import type { CreateUserPayload, UpdateUserPayload } from '../types/admin';
 
+// ─── Penalite Types ──────────────────────────────────────────────────────────
+
+interface Penalite {
+  id: number;
+  type_conteneur_id: number;
+  type_conteneur?: string; // e.g., '20GP (GP)'
+  devise_id: number;
+  devise?: string; // e.g., 'DZD'
+  type: 'DEMURRAGE' | 'DETENTION';
+  tarif_journalier: number;
+  tranche_debut: number;
+  tranche_fin: number | null;
+  date_debut_validite: string;
+  date_fin_validite: string | null;
+  actif: boolean;
+  created_at: string;
+}
+
+interface PenaliteForm {
+  type: 'DEMURRAGE' | 'DETENTION';
+  type_conteneur_id: number;
+  devise_id: number;
+  tarif_journalier: number;
+  tranche_debut: number;
+  tranche_fin?: number | null;
+  date_debut_validite: string;
+  date_fin_validite?: string | null;
+  actif?: boolean;
+}
+
 export const adminService = {
 
   // ─── Users ──────────────────────────────────────────────────────────────────
@@ -146,6 +176,9 @@ export const adminService = {
   getCurrencies: () =>
     apiClient.get('/api/admin/currencies'),
 
+  getDevises: () =>
+    apiClient.get('/api/admin/currencies').then(r => r.data), // Assuming /api/devises is the endpoint for general devises
+
   syncCurrencies: () =>
     apiClient.post('/api/admin/currencies/sync'),
 
@@ -228,6 +261,20 @@ export const adminService = {
 
   deleteTarif: (id: number) =>
     apiClient.delete(`/api/admin/tarifs/${id}`).then(r => r.data),
+
+  // ─── Penalites Surestarie ──────────────────────────────────────────────────
+
+  getPenalites: (params?: Record<string, string | number>) =>
+    apiClient.get('/api/admin/penalites-surestarie', { params }).then(r => r.data),
+
+  createPenalite: (data: PenaliteForm) =>
+    apiClient.post('/api/admin/penalites-surestarie', data).then(r => r.data),
+
+  updatePenalite: (id: number, data: PenaliteForm) =>
+    apiClient.put(`/api/admin/penalites-surestarie/${id}`, data).then(r => r.data),
+
+  deletePenalite: (id: number) =>
+    apiClient.delete(`/api/admin/penalites-surestarie/${id}`).then(r => r.data),
 
   // ─── Admin Notifications ─────────────────────────────────────────────────────
 

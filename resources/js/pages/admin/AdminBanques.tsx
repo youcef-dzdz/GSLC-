@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Edit2, Trash2, X, Landmark, ChevronDown, Check, AlertCircle } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
 import { usePermission } from '../../hooks/usePermission';
+import { useTranslation } from 'react-i18next';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,49 +38,11 @@ const EMPTY_FORM: BanqueForm = {
   actif: true,
 };
 
-const TEXTS: Record<string, Record<'fr'|'en'|'ar', string>> = {
-  title:           { fr: 'Banques',                        en: 'Banks',                         ar: 'البنوك' },
-  subtitle:        { fr: 'banques',                        en: 'banks',                         ar: 'بنوك' },
-  new_title:       { fr: 'Nouvelle banque',                en: 'New bank',                      ar: 'بنك جديد' },
-  edit_title:      { fr: 'Modifier la banque',             en: 'Edit bank',                     ar: 'تعديل البنك' },
-  create:          { fr: 'Créer',                          en: 'Create',                        ar: 'إنشاء' },
-  save:            { fr: 'Enregistrer',                    en: 'Save',                          ar: 'حفظ' },
-  cancel:          { fr: 'Annuler',                        en: 'Cancel',                        ar: 'إلغاء' },
-  delete:          { fr: 'Supprimer',                      en: 'Delete',                        ar: 'حذف' },
-  search:          { fr: 'Rechercher...',                  en: 'Search...',                     ar: 'بحث...' },
-  all_statuses:    { fr: 'Tous les statuts',               en: 'All statuses',                  ar: 'جميع الحالات' },
-  reset_filters:   { fr: 'Réinitialiser',                  en: 'Reset',                         ar: 'إعادة تعيين' },
-  no_banques:      { fr: 'Aucune banque trouvée',          en: 'No banks found',                ar: 'لم يتم العثور على بنوك' },
-  error_load:      { fr: 'Erreur de chargement',           en: 'Loading error',                 ar: 'خطأ في التحميل' },
-  retry:           { fr: 'Réessayer',                      en: 'Retry',                         ar: 'إعادة المحاولة' },
-  create_ok:       { fr: 'Banque créée avec succès',       en: 'Bank created',                  ar: 'تم إنشاء البنك' },
-  update_ok:       { fr: 'Banque mise à jour',             en: 'Bank updated',                  ar: 'تم تحديث البنك' },
-  delete_ok:       { fr: 'Banque supprimée',               en: 'Bank deleted',                  ar: 'تم حذف البنك' },
-  confirm_del:     { fr: 'Confirmer la suppression',       en: 'Confirm deletion',              ar: 'تأكيد الحذف' },
-  confirm_del_msg: { fr: 'Supprimer la banque',            en: 'Delete bank',                   ar: 'حذف البنك' },
-  f_code:          { fr: 'Code banque',                    en: 'Bank code',                     ar: 'رمز البنك' },
-  f_nom:           { fr: 'Nom officiel',                   en: 'Official name',                 ar: 'الاسم الرسمي' },
-  f_swift:         { fr: 'Code SWIFT / BIC',               en: 'SWIFT / BIC code',              ar: 'رمز SWIFT / BIC' },
-  f_telephone:     { fr: 'Téléphone',                      en: 'Phone',                         ar: 'الهاتف' },
-  f_adresse:       { fr: 'Adresse siège',                  en: 'Head office address',           ar: 'عنوان المقر' },
-  f_actif:         { fr: 'Banque active',                  en: 'Active bank',                   ar: 'البنك نشط' },
-  col_code:        { fr: 'Code',                           en: 'Code',                          ar: 'الرمز' },
-  col_nom:         { fr: 'Banque',                         en: 'Bank',                          ar: 'البنك' },
-  col_swift:       { fr: 'SWIFT / BIC',                    en: 'SWIFT / BIC',                   ar: 'SWIFT / BIC' },
-  col_telephone:   { fr: 'Téléphone',                      en: 'Phone',                         ar: 'الهاتف' },
-  col_adresse:     { fr: 'Adresse',                        en: 'Address',                       ar: 'العنوان' },
-  col_statut:      { fr: 'Statut',                         en: 'Status',                        ar: 'الحالة' },
-  col_actions:     { fr: 'Actions',                        en: 'Actions',                       ar: 'إجراءات' },
-  actif:           { fr: 'Active',                         en: 'Active',                        ar: 'نشط' },
-  inactif:         { fr: 'Inactive',                       en: 'Inactive',                      ar: 'غير نشط' },
-  statut_actif:    { fr: 'Actives',                        en: 'Active',                        ar: 'نشط' },
-  statut_inactif:  { fr: 'Inactives',                      en: 'Inactive',                      ar: 'غير نشط' },
-};
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AdminBanques() {
-  const lang = (navigator.language?.split('-')[0] ?? 'fr') as 'fr'|'en'|'ar';
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language as 'fr'|'en'|'ar';
   const isRTL = lang === 'ar';
   const qc = useQueryClient();
   const { isAdmin } = usePermission();
@@ -144,7 +107,7 @@ export default function AdminBanques() {
         : adminService.createBanque(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-banques'] });
-      showToast(editing ? tlx('update_ok') : tlx('create_ok'));
+      showToast(editing ? t('admin.banques.update_ok') : t('admin.banques.create_ok'));
       closeModal();
     },
     onError: (err: any) =>
@@ -155,7 +118,7 @@ export default function AdminBanques() {
     mutationFn: (id: number) => adminService.deleteBanque(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-banques'] });
-      showToast(tlx('delete_ok'));
+      showToast(t('admin.banques.delete_ok'));
       setToDelete(null);
     },
     onError: (err: any) => {
@@ -208,10 +171,10 @@ export default function AdminBanques() {
 
   if (isError) return (
     <div className="flex flex-col items-center justify-center h-64 gap-4">
-      <p className="text-[#8A2020] font-medium">{tlx('error_load')}</p>
+      <p className="text-[#8A2020] font-medium">{t('admin.banques.error_load')}</p>
       <button onClick={() => qc.invalidateQueries({ queryKey: ['admin-banques'] })}
         className="px-4 py-2 bg-[#0D2A5E] text-white rounded-xl text-sm font-semibold hover:bg-[#1a3360] transition">
-        {tlx('retry')}
+        {t('admin.banques.retry')}
       </button>
     </div>
   );
@@ -237,16 +200,16 @@ export default function AdminBanques() {
       {/* Page header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-extrabold text-[#0D2A5E]">{tlx('title')}</h1>
+          <h1 className="text-xl font-extrabold text-[#0D2A5E]">{t('admin.banques.title')}</h1>
           <p className="text-[11px] text-[#88A8D0] mt-0.5">
-            {filtered.length} / {allBanques.length} {tlx('subtitle')}
+            {filtered.length} / {allBanques.length} {t('admin.banques.subtitle')}
           </p>
         </div>
         {canEdit && (
           <button onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2 bg-[#C8960A] text-white rounded-xl text-sm font-semibold hover:bg-[#A87A08] transition">
             <Plus className="w-4 h-4" />
-            {tlx('new_title')}
+            {t('admin.banques.new_title')}
           </button>
         )}
       </div>
@@ -257,22 +220,22 @@ export default function AdminBanques() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-[#88A8D0] pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
             <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder={tlx('search')}
+              placeholder={t('admin.banques.search')}
               className={`w-full border border-[#C5D8F5] rounded-xl py-2 text-sm text-[#0D2A5E] bg-white focus:outline-none focus:ring-2 focus:ring-[#C8960A] focus:border-transparent ${isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'}`}
             />
           </div>
           <div className="relative min-w-[150px]">
             <select value={statFilter} onChange={e => setStatFilter(e.target.value)}
               className="w-full appearance-none border border-[#C5D8F5] rounded-xl py-2 px-3 text-sm text-[#0D2A5E] bg-white focus:outline-none focus:ring-2 focus:ring-[#C8960A] focus:border-transparent">
-              <option value="">{tlx('all_statuses')}</option>
-              <option value="actif">{tlx('statut_actif')}</option>
-              <option value="inactif">{tlx('statut_inactif')}</option>
+              <option value="">{t('admin.banques.all_statuses')}</option>
+              <option value="actif">{t('admin.banques.statut_actif')}</option>
+              <option value="inactif">{t('admin.banques.statut_inactif')}</option>
             </select>
             <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-[#88A8D0] pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
           </div>
           <button onClick={resetFilters}
             className="px-4 py-2 text-sm font-medium border border-[#C5D8F5] rounded-xl hover:bg-[#EDF4FF] transition text-[#3A5A8A]">
-            {tlx('reset_filters')}
+            {t('admin.banques.reset_filters')}
           </button>
         </div>
       </div>
@@ -282,13 +245,13 @@ export default function AdminBanques() {
         <table className="w-full text-sm" dir={isRTL ? 'rtl' : 'ltr'}>
           <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
             <tr>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_code')}</th>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_nom')}</th>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_swift')}</th>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_telephone')}</th>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_adresse')}</th>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_statut')}</th>
-              {canEdit && <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_actions')}</th>}
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.banques.col_code')}</th>
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.banques.col_nom')}</th>
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.banques.col_swift')}</th>
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.banques.col_telephone')}</th>
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.banques.col_adresse')}</th>
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.banques.col_statut')}</th>
+              {canEdit && <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.banques.col_actions')}</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#EEF5FF]">
@@ -297,7 +260,7 @@ export default function AdminBanques() {
                 <td colSpan={canEdit ? 7 : 6} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center gap-2 text-[#88A8D0]">
                     <Landmark className="w-8 h-8 opacity-40" />
-                    <span className="text-sm">{tlx('no_banques')}</span>
+                    <span className="text-sm">{t('admin.banques.no_banques')}</span>
                   </div>
                 </td>
               </tr>
@@ -342,11 +305,11 @@ export default function AdminBanques() {
                 <td className="px-4 py-3">
                   {b.actif ? (
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#FFF3C0] text-[#7A5800]">
-                      {tlx('actif')}
+                      {t('admin.banques.actif')}
                     </span>
                   ) : (
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#EEF5FF] text-[#88A8D0]">
-                      {tlx('inactif')}
+                      {t('admin.banques.inactif')}
                     </span>
                   )}
                 </td>
@@ -355,11 +318,11 @@ export default function AdminBanques() {
                 {canEdit && (
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <button onClick={() => openEdit(b)} title={tlx('edit_title')}
+                      <button onClick={() => openEdit(b)} title={t('admin.banques.edit_title')}
                         className="p-1.5 rounded-lg hover:bg-[#EDF4FF] text-[#5A80BB] hover:text-[#0D2A5E] transition">
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => setToDelete(b)} title={tlx('delete')}
+                      <button onClick={() => setToDelete(b)} title={t('admin.banques.delete')}
                         className="p-1.5 rounded-lg hover:bg-[#FFF0F0] text-[#88A8D0] hover:text-[#8A2020] transition">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -382,20 +345,20 @@ export default function AdminBanques() {
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#0D2A5E] mb-1">{tlx('confirm_del')}</h3>
+                <h3 className="text-base font-bold text-[#0D2A5E] mb-1">{t('admin.banques.confirm_del')}</h3>
                 <p className="text-sm text-[#3A5A8A]">
-                  {tlx('confirm_del_msg')} <span className="font-bold text-[#0D2A5E]">{toDelete.code_banque} — {toDelete.nom}</span> ?
+                  {t('admin.banques.confirm_del_msg')} <span className="font-bold text-[#0D2A5E]">{toDelete.code_banque} — {toDelete.nom}</span> ?
                 </p>
               </div>
               <div className="flex gap-3 w-full">
                 <button onClick={() => setToDelete(null)}
                   className="flex-1 px-4 py-2.5 text-sm font-medium border border-[#C5D8F5] rounded-xl hover:bg-[#EDF4FF] transition text-[#3A5A8A]">
-                  {tlx('cancel')}
+                  {t('admin.banques.cancel')}
                 </button>
                 <button onClick={() => deleteMut.mutate(toDelete.id)}
                   disabled={deleteMut.isPending}
                   className="flex-1 px-4 py-2.5 text-sm font-semibold bg-[#8A2020] text-white rounded-xl hover:bg-[#6A1010] transition disabled:opacity-50">
-                  {tlx('delete')}
+                  {t('admin.banques.delete')}
                 </button>
               </div>
             </div>
@@ -412,7 +375,7 @@ export default function AdminBanques() {
 
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[#EEF5FF] shrink-0">
               <h2 className="text-base font-bold text-[#0D2A5E]">
-                {editing ? tlx('edit_title') : tlx('new_title')}
+                {editing ? t('admin.banques.edit_title') : t('admin.banques.new_title')}
               </h2>
               <button onClick={closeModal} className="p-1.5 rounded-lg hover:bg-[#EDF4FF] text-[#88A8D0] hover:text-[#0D2A5E] transition">
                 <X className="w-4 h-4" />
@@ -424,7 +387,7 @@ export default function AdminBanques() {
 
                 {/* Code banque — readonly on edit */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{tlx('f_code')} *</label>
+                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{t('admin.banques.f_code')} *</label>
                   <input type="text" required disabled={!!editing}
                     value={form.code_banque}
                     onChange={e => setForm(f => ({...f, code_banque: e.target.value.toUpperCase()}))}
@@ -435,7 +398,7 @@ export default function AdminBanques() {
 
                 {/* Nom */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{tlx('f_nom')} *</label>
+                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{t('admin.banques.f_nom')} *</label>
                   <input type="text" required
                     value={form.nom}
                     onChange={e => setForm(f => ({...f, nom: e.target.value}))}
@@ -447,7 +410,7 @@ export default function AdminBanques() {
                 {/* SWIFT + Téléphone — same row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{tlx('f_swift')}</label>
+                    <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{t('admin.banques.f_swift')}</label>
                     <input type="text" maxLength={11}
                       value={form.swift}
                       onChange={e => setForm(f => ({...f, swift: e.target.value.toUpperCase()}))}
@@ -456,7 +419,7 @@ export default function AdminBanques() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{tlx('f_telephone')}</label>
+                    <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{t('admin.banques.f_telephone')}</label>
                     <input type="tel"
                       value={form.telephone}
                       onChange={e => setForm(f => ({...f, telephone: e.target.value}))}
@@ -468,7 +431,7 @@ export default function AdminBanques() {
 
                 {/* Adresse */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{tlx('f_adresse')}</label>
+                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{t('admin.banques.f_adresse')}</label>
                   <input type="text"
                     value={form.adresse}
                     onChange={e => setForm(f => ({...f, adresse: e.target.value}))}
@@ -484,7 +447,7 @@ export default function AdminBanques() {
                       onChange={e => setForm(f => ({...f, actif: e.target.checked}))}
                       className="w-4 h-4 rounded border-[#C5D8F5] accent-[#C8960A]"
                     />
-                    <span className="text-sm text-[#3A5A8A] font-medium">{tlx('f_actif')}</span>
+                    <span className="text-sm text-[#3A5A8A] font-medium">{t('admin.banques.f_actif')}</span>
                   </label>
                 </div>
 
@@ -494,11 +457,11 @@ export default function AdminBanques() {
             <div className="flex gap-3 px-6 py-4 border-t border-[#EEF5FF] justify-end shrink-0">
               <button type="button" onClick={closeModal}
                 className="px-4 py-2 text-sm font-medium border border-[#C5D8F5] rounded-xl hover:bg-[#EDF4FF] transition text-[#3A5A8A]">
-                {tlx('cancel')}
+                {t('admin.banques.cancel')}
               </button>
               <button type="submit" form="banque-form" disabled={saveMut.isPending}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#C8960A] text-white rounded-xl hover:bg-[#A87A08] transition disabled:opacity-50">
-                {editing ? tlx('save') : tlx('create')}
+                {editing ? t('admin.banques.save') : t('admin.banques.create')}
               </button>
             </div>
           </div>

@@ -1,26 +1,36 @@
 # GSLC — Project Status
-Last updated: 2026-05-05
+Last updated: 2026-05-06
 
 ## Current Focus
-Admin module — design refactor + missing reference pages (TarifService, TypeConteneur)
+Admin module — design refactor remaining (Dashboard + old pages) + 1 missing page (PénalitesSurestarie)
 
 ## Module Status
 | Module        | Frontend | Backend | Status                          |
 |---------------|----------|---------|----------------------------------|
-| Admin         | ✅ 13 pages | ✅ Full | ⚠️ Design refactor pending      |
-| Commercial    | ✅ 6 pages  | ✅ Full | 🔄 Gate 2 QA not run            |
-| Client Portal | ✅ 5 pages  | ✅ Full | ⚠️ Gate 2 QA pending            |
+| Admin         | ✅ 18 files (17 pages + 1 ports container) | ✅ Full | ⚠️ Design refactor partial — Dashboard/Roles/Permissions old colors; new pages ✅ |
+| Commercial    | ✅ 6 pages  | ✅ Full | 🔄 Gate 2 QA not run — bugs blocking          |
+| Client Portal | ✅ 5 pages  | ✅ Full | ⚠️ Gate 2 QA pending — ClientContainers missing |
 | Logistique    | ❌ 0 pages  | ✅ Full | Not started                     |
 | Finance       | ❌ 0 pages  | ✅ Full | Not started                     |
 | Directeur     | ❌ 0 pages  | ✅ Full | Not started                     |
 | Corbeille     | ✅ Built    | ✅ Full | ⚠️ HasCorbeille on 4/50+ models |
 | Innovations   | ❌ 0 pages  | Partial | Phase 11 — not started          |
 
-## Missing Admin Reference Pages (Priority)
-- 🔴 TarifService — model exists, no frontend page
-- 🔴 TypeConteneur — model exists, no frontend page
-- 🟡 Banques, Franchises, ConditionsGénérales
-- 🟠 Pénalités surestarie
+## Missing Pages (Priority)
+- 🔴 PénalitesSurestarie — not built (admin reference page)
+- 🔴 ClientContainers (client portal) — route defined, backend exists, no frontend page
+
+## Known Bugs
+- 🔴 Bug 2: CommercialQuotes QuoteForm sends `montant_ht` instead of `lignes[]` — every quote creation fails (422)
+- 🔴 Bug 3: DevisController@index missing `commentaire_nashco` / `commentaire_client` / `numero_dossier` in transform
+- 🟡 Bug 1: DevisController statut validator missing `BROUILLON` from `in:` rule
+
+## Design Violations
+- 🔴 AdminDashboard.tsx — old dark palette (#1A2332, #CFA030 forbidden) + 838 lines + useEffect API call (Rule #2)
+- 🔴 All 6 Commercial pages — unapproved Tailwind semantic colors (#3B82F6, #F59E0B etc.)
+- 🟡 AdminRoles.tsx — #C9A84C forbidden gold on create button
+- 🟡 AdminPermissions.tsx — #4366BB unapproved color
+- 🟡 Navbar.tsx — useEffect polling instead of TanStack Query refetchInterval (Rule #2)
 
 ## Security Issues (fix before Phase 12)
 - MEDIUM: CSP unsafe-inline/unsafe-eval hardcoded for dev
@@ -31,7 +41,7 @@ Admin module — design refactor + missing reference pages (TarifService, TypeCo
 - INFO: reset-password route commented out
 
 ## Deadline
-June 2, 2026 — 28 days remaining
+June 2, 2026 — 27 days remaining
 
 ## Build Status
-✅ 0 errors as of last commit
+✅ 0 errors as of last audit (2026-05-06)

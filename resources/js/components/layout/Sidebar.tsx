@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
@@ -5,7 +6,7 @@ import {
   LayoutDashboard, Users, FileText, Anchor, Truck,
   CreditCard, Box, Settings, ClipboardList, Briefcase,
   BarChart2, MapPin, Receipt, Package, Ship, Bell, Landmark,
-  ShieldCheck, Building2, Tag, Lock, Trash2,
+  ShieldCheck, Building2, Tag, Lock, Trash2, AlertTriangle,
 } from 'lucide-react';
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
@@ -71,7 +72,9 @@ const getNavLinks = (role: string, permissions: string[] = []): NavDef[] => {
         isAdmin ? { to: '/admin/tarifs',           icon: Receipt, labelKey: 'nav.tarifs'          } : null,
         isAdmin ? { to: '/admin/type-conteneurs', icon: Package,  labelKey: 'nav.type_conteneurs' } : null,
         isAdmin ? { to: '/admin/banques',               icon: Landmark, labelKey: 'nav.banques'               } : null,
+        isAdmin ? { to: '/admin/franchises',           icon: ShieldCheck, labelKey: 'nav.franchises'         } : null,
         isAdmin ? { to: '/admin/conditions-generales', icon: FileText, labelKey: 'nav.conditions_generales' } : null,
+        isAdmin ? { to: '/admin/penalites-surestarie', icon: AlertTriangle, labelKey: 'nav.penalites_surestarie' } : null,
       ].filter(Boolean) as NavItem[];
 
       const operationsItems: NavItem[] = [
@@ -161,6 +164,13 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isRTL = i18n.language.startsWith('ar');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!user) return null;
 
@@ -168,11 +178,11 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
   const sideStyle: React.CSSProperties = {
     position:  'fixed',
-    top: 64, bottom: 0,
+    top: 52, bottom: 0,
     ...(isRTL
       ? { right: 0, left: 'auto' }
       : { left:  0, right: 'auto' }),
-    width: 256,
+    width: isOpen ? 256 : 64,
     background: C.bg,
     borderRight: isRTL ? 'none' : `1px solid ${C.border}`,
     borderLeft:  isRTL ? `1px solid ${C.border}` : 'none',
@@ -184,8 +194,8 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     overflowX: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    transform: isOpen ? 'translateX(0)' : isRTL ? 'translateX(100%)' : 'translateX(-100%)',
-    transition: 'transform 0.28s cubic-bezier(.4,0,.2,1)',
+    transform: (isOpen || !isMobile) ? 'translateX(0)' : isRTL ? 'translateX(100%)' : 'translateX(-100%)',
+    transition: 'all 0.3s cubic-bezier(.4,0,.2,1)',
     direction: isRTL ? 'rtl' : 'ltr',
   };
 
@@ -194,10 +204,11 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     display:       'flex',
     alignItems:    'center',
     flexDirection: 'row',
-    gap: 10,
+    gap: isOpen ? 10 : 0,
     padding: grouped
-      ? (isRTL ? '9px 24px 9px 12px' : '9px 12px 9px 24px')
-      : '10px 12px',
+      ? (isRTL ? (isOpen ? '9px 24px 9px 12px' : '9px 0') : (isOpen ? '9px 12px 9px 24px' : '9px 0'))
+      : '10px 0',
+    justifyContent: isOpen ? 'flex-start' : 'center',
     borderRadius: 10,
     fontSize: 13,
     fontWeight: isActive ? 700 : 500,
@@ -207,9 +218,9 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     background: isActive ? C.activeBg  : 'transparent',
     boxShadow:  isActive ? C.activeShadow : 'none',
     ...(isRTL
-      ? { borderRight: isActive ? `3px solid ${C.accent}` : '3px solid transparent', borderLeft: 'none' }
-      : { borderLeft:  isActive ? `3px solid ${C.accent}` : '3px solid transparent', borderRight: 'none' }),
-    transition: 'all 0.18s cubic-bezier(.4,0,.2,1)',
+      ? { borderRight: (isActive && isOpen) ? `3px solid ${C.accent}` : '3px solid transparent', borderLeft: 'none' }
+      : { borderLeft:  (isActive && isOpen) ? `3px solid ${C.accent}` : '3px solid transparent', borderRight: 'none' }),
+    transition: 'all 0.3s cubic-bezier(.4,0,.2,1)',
     letterSpacing: '0.01em',
   });
 
@@ -250,7 +261,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         />
       )}
 
-      <aside style={sideStyle} className="lg:!translate-x-0">
+      <aside style={sideStyle}>
 
         {/* Subtle top separator */}
         <div style={{ height: 1, background: C.border, flexShrink: 0 }} />
@@ -264,21 +275,25 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               return (
                 <div key={idx} style={{ marginTop: idx === 0 ? 0 : 10, marginBottom: 2 }}>
                   {/* Section label */}
-                  <p style={{
-                    fontSize: 9,
-                    fontWeight: 700,
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    color: C.groupLabel,
-                    padding: isRTL ? '8px 14px 4px' : '8px 14px 4px',
-                    margin: 0,
-                    textAlign: isRTL ? 'right' : 'left',
-                  }}>
-                    {t(def.groupKey, def.groupLabel)}
-                  </p>
-
-                  {/* Thin divider */}
-                  <div style={{ height: 1, background: C.border, margin: '2px 4px 6px' }} />
+                  {isOpen && (
+                    <>
+                      <p style={{
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: '0.14em',
+                        textTransform: 'uppercase',
+                        color: C.groupLabel,
+                        padding: isRTL ? '8px 14px 4px' : '8px 14px 4px',
+                        margin: 0,
+                        textAlign: isRTL ? 'right' : 'left',
+                      }}>
+                        {t(def.groupKey, def.groupLabel)}
+                      </p>
+                      {/* Thin divider */}
+                      <div style={{ height: 1, background: C.border, margin: '2px 4px 6px' }} />
+                    </>
+                  )}
+                  {!isOpen && <div style={{ height: 1, background: C.border, margin: '10px 8px' }} />}
 
                   {/* Items */}
                   {def.items.map((item) => {
@@ -287,6 +302,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                       <NavLink
                         key={item.to}
                         to={item.to}
+                        title={!isOpen ? t(item.labelKey) : undefined}
                         onClick={() => window.innerWidth < 1024 && onClose()}
                         style={({ isActive }) => navLinkStyle(isActive, true)}
                         onMouseEnter={handleMouseEnter}
@@ -294,10 +310,12 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                       >
                         {({ isActive }) => (
                           <>
-                            <Icon size={15} style={iconStyle(isActive)} />
-                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {t(item.labelKey)}
-                            </span>
+                            <Icon size={20} style={iconStyle(isActive)} />
+                            {isOpen && (
+                              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {t(item.labelKey)}
+                              </span>
+                            )}
                           </>
                         )}
                       </NavLink>
@@ -313,6 +331,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               <NavLink
                 key={def.to}
                 to={def.to}
+                title={!isOpen ? t(def.labelKey) : undefined}
                 onClick={() => window.innerWidth < 1024 && onClose()}
                 style={({ isActive }) => navLinkStyle(isActive, false)}
                 onMouseEnter={handleMouseEnter}
@@ -320,10 +339,12 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               >
                 {({ isActive }) => (
                   <>
-                    <Icon size={15} style={iconStyle(isActive)} />
-                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {t(def.labelKey)}
-                    </span>
+                    <Icon size={20} style={iconStyle(isActive)} />
+                    {isOpen && (
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {t(def.labelKey)}
+                      </span>
+                    )}
                   </>
                 )}
               </NavLink>
@@ -332,27 +353,29 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         </nav>
 
         {/* ── Bottom accent strip ── */}
-        <div style={{
-          margin: '0 10px 12px',
-          borderRadius: 10,
-          padding: '10px 14px',
-          background: 'rgba(245,158,11,0.12)',
-          border: '1px solid rgba(245,158,11,0.22)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}>
+        {isOpen && (
           <div style={{
-            width: 8, height: 8, borderRadius: '50%',
-            background: '#F59E0B',
-            boxShadow: '0 0 6px rgba(245,158,11,0.6)',
-            animation: 'sidebarPulse 2s ease-in-out infinite',
-            flexShrink: 0,
-          }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(245,158,11,0.9)', letterSpacing: '0.05em' }}>
-            NASHCO · GSLC
-          </span>
-        </div>
+            margin: '0 10px 12px',
+            borderRadius: 10,
+            padding: '10px 14px',
+            background: 'rgba(245,158,11,0.12)',
+            border: '1px solid rgba(245,158,11,0.22)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}>
+            <div style={{
+              width: 8, height: 8, borderRadius: '50%',
+              background: '#F59E0B',
+              boxShadow: '0 0 6px rgba(245,158,11,0.6)',
+              animation: 'sidebarPulse 2s ease-in-out infinite',
+              flexShrink: 0,
+            }} />
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(245,158,11,0.9)', letterSpacing: '0.05em' }}>
+              NASHCO · GSLC
+            </span>
+          </div>
+        )}
 
         <style>{`
           @keyframes sidebarPulse {

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Edit2, Trash2, X, FileText, ChevronDown, Check, AlertCircle, Zap } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
 import { usePermission } from '../../hooks/usePermission';
+import { useTranslation } from 'react-i18next';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,50 +38,11 @@ const EMPTY_FORM: ConditionForm = {
   date_application: '',
 };
 
-const TEXTS: Record<string, Record<'fr'|'en'|'ar', string>> = {
-  title:            { fr: 'Conditions Générales',                  en: 'Terms & Conditions',                ar: 'الشروط العامة' },
-  subtitle:         { fr: 'versions',                              en: 'versions',                          ar: 'نسخ' },
-  new_title:        { fr: 'Nouvelle version',                      en: 'New version',                       ar: 'نسخة جديدة' },
-  edit_title:       { fr: 'Modifier la version',                   en: 'Edit version',                      ar: 'تعديل النسخة' },
-  create:           { fr: 'Créer',                                  en: 'Create',                            ar: 'إنشاء' },
-  save:             { fr: 'Enregistrer',                            en: 'Save',                              ar: 'حفظ' },
-  cancel:           { fr: 'Annuler',                               en: 'Cancel',                            ar: 'إلغاء' },
-  delete:           { fr: 'Supprimer',                             en: 'Delete',                            ar: 'حذف' },
-  activate:         { fr: 'Activer',                               en: 'Activate',                          ar: 'تفعيل' },
-  search:           { fr: 'Rechercher...',                         en: 'Search...',                         ar: 'بحث...' },
-  all_statuses:     { fr: 'Tous les statuts',                      en: 'All statuses',                      ar: 'جميع الحالات' },
-  reset_filters:    { fr: 'Réinitialiser',                         en: 'Reset',                             ar: 'إعادة تعيين' },
-  no_conditions:    { fr: 'Aucune version trouvée',                en: 'No versions found',                 ar: 'لم يتم العثور على نسخ' },
-  error_load:       { fr: 'Erreur de chargement',                  en: 'Loading error',                     ar: 'خطأ في التحميل' },
-  retry:            { fr: 'Réessayer',                             en: 'Retry',                             ar: 'إعادة المحاولة' },
-  create_ok:        { fr: 'Version créée avec succès',             en: 'Version created',                   ar: 'تم إنشاء النسخة' },
-  update_ok:        { fr: 'Version mise à jour',                   en: 'Version updated',                   ar: 'تم تحديث النسخة' },
-  activate_ok:      { fr: 'Version activée avec succès',           en: 'Version activated',                 ar: 'تم تفعيل النسخة' },
-  delete_ok:        { fr: 'Version supprimée',                     en: 'Version deleted',                   ar: 'تم حذف النسخة' },
-  confirm_del:      { fr: 'Confirmer la suppression',              en: 'Confirm deletion',                  ar: 'تأكيد الحذف' },
-  confirm_del_msg:  { fr: 'Supprimer la version',                  en: 'Delete version',                    ar: 'حذف النسخة' },
-  confirm_act:      { fr: 'Confirmer l\'activation',               en: 'Confirm activation',                ar: 'تأكيد التفعيل' },
-  confirm_act_msg:  { fr: 'Activer cette version désactivera la version actuellement en vigueur. Continuer ?', en: 'Activating this version will deactivate the current active version. Continue?', ar: 'تفعيل هذه النسخة سيوقف النسخة النشطة حالياً. هل تريد المتابعة؟' },
-  f_version:        { fr: 'Numéro de version',                     en: 'Version number',                    ar: 'رقم الإصدار' },
-  f_titre:          { fr: 'Titre du document',                     en: 'Document title',                    ar: 'عنوان الوثيقة' },
-  f_contenu:        { fr: 'Contenu (texte des conditions)',         en: 'Content (terms text)',              ar: 'المحتوى (نص الشروط)' },
-  f_date:           { fr: 'Date d\'application',                   en: 'Effective date',                    ar: 'تاريخ التطبيق' },
-  col_version:      { fr: 'Version',                               en: 'Version',                           ar: 'الإصدار' },
-  col_titre:        { fr: 'Titre',                                  en: 'Title',                             ar: 'العنوان' },
-  col_date:         { fr: 'Date d\'application',                   en: 'Effective date',                    ar: 'تاريخ التطبيق' },
-  col_cree_par:     { fr: 'Créé par',                              en: 'Created by',                        ar: 'أنشأه' },
-  col_statut:       { fr: 'Statut',                                en: 'Status',                            ar: 'الحالة' },
-  col_actions:      { fr: 'Actions',                               en: 'Actions',                           ar: 'إجراءات' },
-  badge_actif:      { fr: 'En vigueur',                            en: 'In effect',                         ar: 'سارية' },
-  badge_brouillon:  { fr: 'Brouillon',                             en: 'Draft',                             ar: 'مسودة' },
-  statut_actif:     { fr: 'En vigueur',                            en: 'In effect',                         ar: 'سارية' },
-  statut_brouillon: { fr: 'Brouillons',                            en: 'Drafts',                            ar: 'مسودات' },
-};
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AdminConditionsGenerales() {
-  const lang = (navigator.language?.split('-')[0] ?? 'fr') as 'fr'|'en'|'ar';
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language as 'fr'|'en'|'ar';
   const isRTL = lang === 'ar';
   const qc = useQueryClient();
   const { isAdmin } = usePermission();
@@ -155,7 +117,7 @@ export default function AdminConditionsGenerales() {
         : adminService.createCondition(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-conditions'] });
-      showToast(editing ? tlx('update_ok') : tlx('create_ok'));
+      showToast(editing ? t('admin.conditions_generales.update_ok') : t('admin.conditions_generales.create_ok'));
       closeModal();
     },
     onError: (err: any) =>
@@ -166,7 +128,7 @@ export default function AdminConditionsGenerales() {
     mutationFn: (id: number) => adminService.activateCondition(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-conditions'] });
-      showToast(tlx('activate_ok'));
+      showToast(t('admin.conditions_generales.activate_ok'));
       setToActivate(null);
     },
     onError: (err: any) => {
@@ -179,7 +141,7 @@ export default function AdminConditionsGenerales() {
     mutationFn: (id: number) => adminService.deleteCondition(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-conditions'] });
-      showToast(tlx('delete_ok'));
+      showToast(t('admin.conditions_generales.delete_ok'));
       setToDelete(null);
     },
     onError: (err: any) => {
@@ -228,10 +190,10 @@ export default function AdminConditionsGenerales() {
 
   if (isError) return (
     <div className="flex flex-col items-center justify-center h-64 gap-4">
-      <p className="text-[#8A2020] font-medium">{tlx('error_load')}</p>
+      <p className="text-[#8A2020] font-medium">{t('admin.conditions_generales.error_load')}</p>
       <button onClick={() => qc.invalidateQueries({ queryKey: ['admin-conditions'] })}
         className="px-4 py-2 bg-[#0D2A5E] text-white rounded-xl text-sm font-semibold hover:bg-[#1a3360] transition">
-        {tlx('retry')}
+        {t('admin.conditions_generales.retry')}
       </button>
     </div>
   );
@@ -257,16 +219,16 @@ export default function AdminConditionsGenerales() {
       {/* Page header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-extrabold text-[#0D2A5E]">{tlx('title')}</h1>
+          <h1 className="text-xl font-extrabold text-[#0D2A5E]">{t('admin.conditions_generales.title')}</h1>
           <p className="text-[11px] text-[#88A8D0] mt-0.5">
-            {filtered.length} / {allConditions.length} {tlx('subtitle')}
+            {filtered.length} / {allConditions.length} {t('admin.conditions_generales.subtitle')}
           </p>
         </div>
         {canEdit && (
           <button onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2 bg-[#C8960A] text-white rounded-xl text-sm font-semibold hover:bg-[#A87A08] transition">
             <Plus className="w-4 h-4" />
-            {tlx('new_title')}
+            {t('admin.conditions_generales.new_title')}
           </button>
         )}
       </div>
@@ -277,22 +239,22 @@ export default function AdminConditionsGenerales() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-[#88A8D0] pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
             <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder={tlx('search')}
+              placeholder={t('admin.conditions_generales.search')}
               className={`w-full border border-[#C5D8F5] rounded-xl py-2 text-sm text-[#0D2A5E] bg-white focus:outline-none focus:ring-2 focus:ring-[#C8960A] focus:border-transparent ${isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'}`}
             />
           </div>
           <div className="relative min-w-[160px]">
             <select value={statFilter} onChange={e => setStatFilter(e.target.value)}
               className="w-full appearance-none border border-[#C5D8F5] rounded-xl py-2 px-3 text-sm text-[#0D2A5E] bg-white focus:outline-none focus:ring-2 focus:ring-[#C8960A] focus:border-transparent">
-              <option value="">{tlx('all_statuses')}</option>
-              <option value="actif">{tlx('statut_actif')}</option>
-              <option value="brouillon">{tlx('statut_brouillon')}</option>
+              <option value="">{t('admin.conditions_generales.all_statuses')}</option>
+              <option value="actif">{t('admin.conditions_generales.statut_actif')}</option>
+              <option value="brouillon">{t('admin.conditions_generales.statut_brouillon')}</option>
             </select>
             <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-[#88A8D0] pointer-events-none ${isRTL ? 'left-2.5' : 'right-2.5'}`} />
           </div>
           <button onClick={resetFilters}
             className="px-4 py-2 text-sm font-medium border border-[#C5D8F5] rounded-xl hover:bg-[#EDF4FF] transition text-[#3A5A8A]">
-            {tlx('reset_filters')}
+            {t('admin.conditions_generales.reset_filters')}
           </button>
         </div>
       </div>
@@ -302,12 +264,12 @@ export default function AdminConditionsGenerales() {
         <table className="w-full text-sm" dir={isRTL ? 'rtl' : 'ltr'}>
           <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
             <tr>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_version')}</th>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_titre')}</th>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_date')}</th>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_cree_par')}</th>
-              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_statut')}</th>
-              {canEdit && <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{tlx('col_actions')}</th>}
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.conditions_generales.col_version')}</th>
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.conditions_generales.col_titre')}</th>
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.conditions_generales.col_date')}</th>
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.conditions_generales.col_cree_par')}</th>
+              <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.conditions_generales.col_statut')}</th>
+              {canEdit && <th className="text-[#0D2A5E] font-bold text-xs px-4 py-3 text-left">{t('admin.conditions_generales.col_actions')}</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#EEF5FF]">
@@ -316,7 +278,7 @@ export default function AdminConditionsGenerales() {
                 <td colSpan={canEdit ? 6 : 5} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center gap-2 text-[#88A8D0]">
                     <FileText className="w-8 h-8 opacity-40" />
-                    <span className="text-sm">{tlx('no_conditions')}</span>
+                    <span className="text-sm">{t('admin.conditions_generales.no_conditions')}</span>
                   </div>
                 </td>
               </tr>
@@ -355,11 +317,11 @@ export default function AdminConditionsGenerales() {
                   {c.actif ? (
                     <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-[#E6F7F0] text-[#2A8A5A]">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#2A8A5A]" />
-                      {tlx('badge_actif')}
+                      {t('admin.conditions_generales.badge_actif')}
                     </span>
                   ) : (
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#EEF5FF] text-[#88A8D0]">
-                      {tlx('badge_brouillon')}
+                      {t('admin.conditions_generales.badge_brouillon')}
                     </span>
                   )}
                 </td>
@@ -371,18 +333,18 @@ export default function AdminConditionsGenerales() {
                       {/* Activate — only on draft versions */}
                       {!c.actif && (
                         <button onClick={() => setToActivate(c)}
-                          title={tlx('activate')}
+                          title={t('admin.conditions_generales.activate')}
                           className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#FFF3C0] text-[#7A5800] hover:bg-[#C8960A] hover:text-white text-xs font-bold transition">
                           <Zap className="w-3 h-3" />
-                          {tlx('activate')}
+                          {t('admin.conditions_generales.activate')}
                         </button>
                       )}
-                      <button onClick={() => openEdit(c)} title={tlx('edit_title')}
+                      <button onClick={() => openEdit(c)} title={t('admin.conditions_generales.edit_title')}
                         className="p-1.5 rounded-lg hover:bg-[#EDF4FF] text-[#5A80BB] hover:text-[#0D2A5E] transition">
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       {!c.actif && (
-                        <button onClick={() => setToDelete(c)} title={tlx('delete')}
+                        <button onClick={() => setToDelete(c)} title={t('admin.conditions_generales.delete')}
                           className="p-1.5 rounded-lg hover:bg-[#FFF0F0] text-[#88A8D0] hover:text-[#8A2020] transition">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -406,19 +368,19 @@ export default function AdminConditionsGenerales() {
                 <Zap className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#0D2A5E] mb-1">{tlx('confirm_act')}</h3>
-                <p className="text-sm text-[#3A5A8A] leading-relaxed">{tlx('confirm_act_msg')}</p>
+                <h3 className="text-base font-bold text-[#0D2A5E] mb-1">{t('admin.conditions_generales.confirm_act')}</h3>
+                <p className="text-sm text-[#3A5A8A] leading-relaxed">{t('admin.conditions_generales.confirm_act_msg')}</p>
                 <p className="mt-2 font-bold text-[#0D2A5E] text-sm">{toActivate.version} — {toActivate.titre}</p>
               </div>
               <div className="flex gap-3 w-full">
                 <button onClick={() => setToActivate(null)}
                   className="flex-1 px-4 py-2.5 text-sm font-medium border border-[#C5D8F5] rounded-xl hover:bg-[#EDF4FF] transition text-[#3A5A8A]">
-                  {tlx('cancel')}
+                  {t('admin.conditions_generales.cancel')}
                 </button>
                 <button onClick={() => activateMut.mutate(toActivate.id)}
                   disabled={activateMut.isPending}
                   className="flex-1 px-4 py-2.5 text-sm font-semibold bg-[#C8960A] text-white rounded-xl hover:bg-[#A87A08] transition disabled:opacity-50">
-                  {tlx('activate')}
+                  {t('admin.conditions_generales.activate')}
                 </button>
               </div>
             </div>
@@ -437,20 +399,20 @@ export default function AdminConditionsGenerales() {
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#0D2A5E] mb-1">{tlx('confirm_del')}</h3>
+                <h3 className="text-base font-bold text-[#0D2A5E] mb-1">{t('admin.conditions_generales.confirm_del')}</h3>
                 <p className="text-sm text-[#3A5A8A]">
-                  {tlx('confirm_del_msg')} <span className="font-bold text-[#0D2A5E]">{toDelete.version}</span> ?
+                  {t('admin.conditions_generales.confirm_del_msg')} <span className="font-bold text-[#0D2A5E]">{toDelete.version}</span> ?
                 </p>
               </div>
               <div className="flex gap-3 w-full">
                 <button onClick={() => setToDelete(null)}
                   className="flex-1 px-4 py-2.5 text-sm font-medium border border-[#C5D8F5] rounded-xl hover:bg-[#EDF4FF] transition text-[#3A5A8A]">
-                  {tlx('cancel')}
+                  {t('admin.conditions_generales.cancel')}
                 </button>
                 <button onClick={() => deleteMut.mutate(toDelete.id)}
                   disabled={deleteMut.isPending}
                   className="flex-1 px-4 py-2.5 text-sm font-semibold bg-[#8A2020] text-white rounded-xl hover:bg-[#6A1010] transition disabled:opacity-50">
-                  {tlx('delete')}
+                  {t('admin.conditions_generales.delete')}
                 </button>
               </div>
             </div>
@@ -467,7 +429,7 @@ export default function AdminConditionsGenerales() {
 
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[#EEF5FF] shrink-0">
               <h2 className="text-base font-bold text-[#0D2A5E]">
-                {editing ? tlx('edit_title') : tlx('new_title')}
+                {editing ? t('admin.conditions_generales.edit_title') : t('admin.conditions_generales.new_title')}
               </h2>
               <button onClick={closeModal} className="p-1.5 rounded-lg hover:bg-[#EDF4FF] text-[#88A8D0] hover:text-[#0D2A5E] transition">
                 <X className="w-4 h-4" />
@@ -480,7 +442,7 @@ export default function AdminConditionsGenerales() {
                 {/* Version + Date — same row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{tlx('f_version')} *</label>
+                    <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{t('admin.conditions_generales.f_version')} *</label>
                     <input type="text" required disabled={!!editing}
                       value={form.version}
                       onChange={e => setForm(f => ({...f, version: e.target.value}))}
@@ -489,7 +451,7 @@ export default function AdminConditionsGenerales() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{tlx('f_date')}</label>
+                    <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{t('admin.conditions_generales.f_date')}</label>
                     <input type="datetime-local"
                       value={form.date_application}
                       onChange={e => setForm(f => ({...f, date_application: e.target.value}))}
@@ -500,7 +462,7 @@ export default function AdminConditionsGenerales() {
 
                 {/* Titre */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{tlx('f_titre')} *</label>
+                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{t('admin.conditions_generales.f_titre')} *</label>
                   <input type="text" required
                     value={form.titre}
                     onChange={e => setForm(f => ({...f, titre: e.target.value}))}
@@ -511,7 +473,7 @@ export default function AdminConditionsGenerales() {
 
                 {/* Contenu */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{tlx('f_contenu')} *</label>
+                  <label className="block text-xs font-semibold text-[#3A5A8A] mb-1">{t('admin.conditions_generales.f_contenu')} *</label>
                   <textarea required rows={12}
                     value={form.contenu}
                     onChange={e => setForm(f => ({...f, contenu: e.target.value}))}
@@ -526,11 +488,11 @@ export default function AdminConditionsGenerales() {
             <div className="flex gap-3 px-6 py-4 border-t border-[#EEF5FF] justify-end shrink-0">
               <button type="button" onClick={closeModal}
                 className="px-4 py-2 text-sm font-medium border border-[#C5D8F5] rounded-xl hover:bg-[#EDF4FF] transition text-[#3A5A8A]">
-                {tlx('cancel')}
+                {t('admin.conditions_generales.cancel')}
               </button>
               <button type="submit" form="condition-form" disabled={saveMut.isPending}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#C8960A] text-white rounded-xl hover:bg-[#A87A08] transition disabled:opacity-50">
-                {editing ? tlx('save') : tlx('create')}
+                {editing ? t('admin.conditions_generales.save') : t('admin.conditions_generales.create')}
               </button>
             </div>
           </div>

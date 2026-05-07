@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { X, Bell, BellRing, CheckCheck } from 'lucide-react';
+import { X, Menu, Bell, BellRing, CheckCheck } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { apiClient } from '../../services/api';
 
@@ -174,7 +174,7 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
 
   return (
     <nav
-      dir="ltr"
+      dir={isRTL ? 'rtl' : 'ltr'}
       style={{
         background: '#FFFFFF',
         borderBottom: '1px solid #C5D8F5',
@@ -198,6 +198,14 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
 
         {/* ── LEFT: brand + breadcrumb + badges ─────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+
+          <button
+            onClick={onMenuClick}
+            className={`p-2 rounded-md text-[#3A5A8A] hover:bg-[#F0F4F8] ${isRTL ? 'ml-2' : 'mr-2'}`}
+            aria-label="Toggle menu"
+          >
+            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
 
           {/* Brand mark */}
           <button
