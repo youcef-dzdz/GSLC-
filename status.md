@@ -2,13 +2,13 @@
 Last updated: 2026-05-06
 
 ## Current Focus
-Admin module — design refactor remaining (Dashboard + old pages) + 1 missing page (PénalitesSurestarie)
+Commercial module (Quotes, Contracts, Vessels) + Full QA
 
 ## Module Status
 | Module        | Frontend | Backend | Status                          |
 |---------------|----------|---------|----------------------------------|
-| Admin         | ✅ 18 files (17 pages + 1 ports container) | ✅ Full | ⚠️ Design refactor partial — Dashboard/Roles/Permissions old colors; new pages ✅ |
-| Commercial    | ✅ 6 pages  | ✅ Full | 🔄 Gate 2 QA not run — bugs blocking          |
+| Admin         | ✅ 18 files (17 pages + 1 ports container) | ✅ Full | ✅ COMPLETE (all pages built, routed, sidebar linked, FR/EN/AR translations, collapsible sidebar) |
+| Commercial    | ✅ 6 pages  | ✅ Full | 🔄 In Progress — Phase 3 (Vessels + QA) |
 | Client Portal | ✅ 5 pages  | ✅ Full | ⚠️ Gate 2 QA pending — ClientContainers missing |
 | Logistique    | ❌ 0 pages  | ✅ Full | Not started                     |
 | Finance       | ❌ 0 pages  | ✅ Full | Not started                     |
@@ -17,7 +17,6 @@ Admin module — design refactor remaining (Dashboard + old pages) + 1 missing p
 | Innovations   | ❌ 0 pages  | Partial | Phase 11 — not started          |
 
 ## Missing Pages (Priority)
-- 🔴 PénalitesSurestarie — not built (admin reference page)
 - 🔴 ClientContainers (client portal) — route defined, backend exists, no frontend page
 
 ## Known Bugs

@@ -122,11 +122,22 @@ GSLC/
 │   ├── hooks/                  # Custom React hooks
 │   ├── contexts/               # AuthContext (user, role, niveau)
 │   └── app.tsx                 # React Router config
+```
 ├── routes/
 │   ├── api.php                 # All REST endpoints
 │   └── web.php                 # SPA entry point
 └── database/migrations/        # All table schemas
 ```
+
+## Layout & Sidebar Standards (established May 2026)
+- Sidebar: collapsible 256px (expanded) → 64px (icons only, collapsed)
+- Sidebar position: fixed, top: 52px (navbar height)
+- RTL: sidebar on RIGHT when Arabic, LEFT when FR/EN
+- Hamburger toggle: visible on ALL screen sizes in Navbar
+- Content offset: LTR pl-[256px]/pl-[64px], RTL pr-[256px]/pr-[64px]
+- Navbar height: 52px, fixed top
+- All layout transitions: duration-300
+- Mobile: sidebar slides completely off-screen when closed
 
 ---
 
