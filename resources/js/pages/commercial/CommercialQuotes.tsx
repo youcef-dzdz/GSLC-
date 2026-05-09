@@ -279,9 +279,15 @@ const QuoteForm = () => {
     mutationFn: () =>
       commercialService.createQuote({
         demande_id: Number(demande_id),
-        montant_ht: ht,
-        tva,
-        total_ttc: totalTtc,
+        lignes: [
+          {
+            service: 'Service global (Devis)',
+            quantite: 1,
+            prix_unitaire: ht,
+            tva_applicable: true,
+            type_ligne: 'SERVICE'
+          }
+        ],
         commentaire_nashco: commentaireNashco,
         date_expiration: dateExpiration,
       }),

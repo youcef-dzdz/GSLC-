@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 import { adminService } from '@/services/admin.service';
-import { apiClient } from '@/services/api';
+
 import { useToast } from '@/components/ui/Toast';
 import { usePermission } from '../../hooks/usePermission';
 
@@ -184,7 +184,7 @@ const KpiCard: React.FC<KpiProps> = ({ label, target, suffix, icon: Icon, accent
           <Icon size={18} style={{ color: accent }} />
         </div>
       </div>
-      <p className="text-[28px] font-black text-[#1A2332] tabular-nums leading-none">
+      <p className="text-[28px] font-black text-[#0D2A5E] tabular-nums leading-none">
         {count.toLocaleString('fr-FR')}
         {suffix && <span className="text-sm font-semibold text-[#64748B] ml-1">{suffix}</span>}
       </p>
@@ -198,7 +198,7 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white rounded-xl shadow-xl border border-[#E2E8F0] p-3 text-xs">
-      <p className="font-bold text-[#1A2332] mb-2">{label}</p>
+      <p className="font-bold text-[#0D2A5E] mb-2">{label}</p>
       {payload.map(p => (
         <p key={p.name} className="flex items-center gap-2 mb-1">
           <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: p.color }} />
@@ -300,14 +300,11 @@ const AdminDashboard: React.FC = () => {
 
   // ── Monthly registrations ──────────────────────────────────────────────────
 
-  const [monthlyData, setMonthlyData] = useState<{ mois: string; approuvees: number; rejetees: number }[]>([]);
-  const [monthlyLoading, setMonthlyLoading] = useState(true);
-  useEffect(() => {
-    apiClient.get('/api/admin/stats/monthly-registrations')
-      .then(r => setMonthlyData(Array.isArray(r.data) ? r.data : []))
-      .catch(() => setMonthlyData([]))
-      .finally(() => setMonthlyLoading(false));
-  }, []);
+  const { data: monthlyData = [], isLoading: monthlyLoading } = useQuery<{ mois: string; approuvees: number; rejetees: number }[]>({
+    queryKey: ['monthly-registrations'],
+    queryFn: () => adminService.getMonthlyRegistrations().then(r => Array.isArray(r.data) ? r.data : []),
+    retry: false,
+  });
 
   // ── Sync mutation ──────────────────────────────────────────────────────────
 
@@ -441,16 +438,16 @@ const AdminDashboard: React.FC = () => {
 
       {/* ── SECTION 1 — Header ── */}
       <div
-        className="rounded-2xl shadow-lg p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-l-4 border-[#CFA030] bg-white bg-opacity-80 backdrop-blur-md"
+        className="rounded-2xl shadow-lg p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-l-4 border-[#C8960A] bg-white bg-opacity-80 backdrop-blur-md"
         style={{
           animation: 'fadeSlideUp 400ms ease both',
         }}
       >
         <div>
-          <div className="flex items-center gap-3 mb-1.5 text-[#0D1F3C]">
+          <div className="flex items-center gap-3 mb-1.5 text-[#0D2A5E]">
             <h1 className="text-2xl font-black">{t('admin.dashboard.title')}</h1>
             <span
-              className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#FFFBEB] text-[#CFA030] border border-[#CFA030]"
+              className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#FFFBEB] text-[#C8960A] border border-[#C8960A]"
             >
               Admin
             </span>
@@ -588,10 +585,10 @@ const AdminDashboard: React.FC = () => {
                       className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: ROLE_COLORS[entry.name] ?? '#94A3B8' }}
                     />
-                    <span className="font-medium text-[#1A2332] capitalize">{entry.name}</span>
+                    <span className="font-medium text-[#0D2A5E] capitalize">{entry.name}</span>
                   </div>
                   <div className="flex items-center gap-2 text-[#64748B]">
-                    <span className="font-bold text-[#1A2332]">{entry.value}</span>
+                    <span className="font-bold text-[#0D2A5E]">{entry.value}</span>
                     <span>({entry.pct}%)</span>
                   </div>
                 </div>
@@ -653,7 +650,7 @@ const AdminDashboard: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <span className="text-xl leading-none">{FLAG[code] ?? '🏳️'}</span>
                     <div>
-                      <p className="text-sm font-black text-[#1A2332]">{code}</p>
+                      <p className="text-sm font-black text-[#0D2A5E]">{code}</p>
                       <p className="text-xs text-[#94A3B8]">{d.nom}</p>
                     </div>
                   </div>
@@ -675,7 +672,7 @@ const AdminDashboard: React.FC = () => {
                           if (e.key === 'Enter')  confirmEdit(code);
                           if (e.key === 'Escape') setEditingCode(null);
                         }}
-                        className="w-28 text-right font-mono text-sm font-bold border-2 border-[#F59E0B] rounded-lg px-2 py-1 bg-white text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#1E40AF]/30"
+                        className="w-28 text-right font-mono text-sm font-bold border-2 border-[#F59E0B] rounded-lg px-2 py-1 bg-white text-[#0D2A5E] focus:outline-none focus:ring-2 focus:ring-[#1E40AF]/30"
                       />
                       <button
                         onClick={() => confirmEdit(code)}
@@ -696,7 +693,7 @@ const AdminDashboard: React.FC = () => {
                   ) : (
                     <div className="flex items-center gap-2">
                       <div className="text-right">
-                        <p className="text-sm font-black text-[#1A2332] font-mono tabular-nums">
+                        <p className="text-sm font-black text-[#0D2A5E] font-mono tabular-nums">
                           {d.taux_actuel.toLocaleString('fr-DZ', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} DZD
                         </p>
                         <p
@@ -747,7 +744,7 @@ const AdminDashboard: React.FC = () => {
               >
                 <div className="flex items-center gap-2.5">
                   <Icon size={15} className="text-[#64748B]" />
-                  <span className="text-sm font-medium text-[#1A2332]">{label}</span>
+                  <span className="text-sm font-medium text-[#0D2A5E]">{label}</span>
                 </div>
                 {warn ? (
                   <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">{t('admin.dashboard.active')}</span>
@@ -826,7 +823,7 @@ const AdminDashboard: React.FC = () => {
                         {initials(name)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-[#1A2332] truncate">{reg.raison_sociale || '—'}</p>
+                        <p className="text-sm font-bold text-[#0D2A5E] truncate">{reg.raison_sociale || '—'}</p>
                         <p className="text-xs text-[#64748B] truncate">
                           {reg.ville ? `${reg.ville} · ` : ''}
                           {reg.created_at ? format(new Date(reg.created_at), 'dd/MM/yyyy') : '—'}
@@ -885,7 +882,7 @@ const AdminDashboard: React.FC = () => {
                         <Icon size={13} style={{ color: ai.color }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-[#1A2332] truncate">{entry.utilisateur}</p>
+                        <p className="text-xs font-bold text-[#0D2A5E] truncate">{entry.utilisateur}</p>
                         <p className="text-xs text-[#94A3B8] font-mono truncate">{entry.table_cible}</p>
                       </div>
                       <div className="text-right flex-shrink-0">

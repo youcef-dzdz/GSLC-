@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
-import { apiClient } from '../../services/api';
+import { adminService } from '../../services/admin.service';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePermission } from '../../hooks/usePermission';
@@ -100,10 +100,7 @@ export default function AuditPage() {
       if (appliedDebut)  params.date_debut = appliedDebut;
       if (appliedFin)    params.date_fin   = appliedFin;
 
-      const res = await apiClient.get('/api/admin/audit-logs/export', {
-        params,
-        responseType: 'blob',
-      });
+      const res = await adminService.exportAuditLogs(params);
 
       const today = new Date().toISOString().slice(0, 10);
       const url   = URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8;' }));
@@ -141,7 +138,7 @@ export default function AuditPage() {
       if (appliedAction) params.action     = appliedAction;
       if (appliedDebut)  params.date_debut = appliedDebut;
       if (appliedFin)    params.date_fin   = appliedFin;
-      const res = await apiClient.get('/api/admin/audit-logs', { params });
+      const res = await adminService.getAuditLogs(params);
       return res.data;
     },
     placeholderData: (prev) => prev,
@@ -180,12 +177,12 @@ export default function AuditPage() {
         className="rounded-2xl p-6 border-l-4 shadow-sm"
         style={{
           background: 'linear-gradient(135deg, #EFF6FF, #FFFBEB)',
-          borderLeftColor: '#CFA030',
+          borderLeftColor: '#C8960A',
         }}
       >
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-[#0D1F3C]">{t('admin.audit.title')}</h1>
+            <h1 className="text-2xl font-bold text-[#0D2A5E]">{t('admin.audit.title')}</h1>
             <p className="text-sm text-[#6B7280] mt-1">
               {total > 0 ? `${total.toLocaleString('fr-FR')} ${t('admin.audit.entries')}` : t('admin.audit.title')}
             </p>
@@ -378,8 +375,8 @@ export default function AuditPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between flex-wrap gap-3">
           <p className="text-sm text-[#6B7280]">
-            Page <span className="font-semibold text-[#0D1F3C]">{page}</span> sur{' '}
-            <span className="font-semibold text-[#0D1F3C]">{totalPages}</span>
+            Page <span className="font-semibold text-[#0D2A5E]">{page}</span> sur{' '}
+            <span className="font-semibold text-[#0D2A5E]">{totalPages}</span>
           </p>
 
           <div className="flex items-center gap-1">
@@ -388,7 +385,7 @@ export default function AuditPage() {
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
               className="p-2 rounded-xl border border-[#E2E8F0] text-[#6B7280]
-                         hover:bg-[#F0F7FF] hover:text-[#0D1F3C] disabled:opacity-40
+                         hover:bg-[#F0F7FF] hover:text-[#0D2A5E] disabled:opacity-40
                          disabled:cursor-not-allowed transition-all duration-150 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -418,7 +415,7 @@ export default function AuditPage() {
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className="p-2 rounded-xl border border-[#E2E8F0] text-[#6B7280]
-                         hover:bg-[#F0F7FF] hover:text-[#0D1F3C] disabled:opacity-40
+                         hover:bg-[#F0F7FF] hover:text-[#0D2A5E] disabled:opacity-40
                          disabled:cursor-not-allowed transition-all duration-150 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />

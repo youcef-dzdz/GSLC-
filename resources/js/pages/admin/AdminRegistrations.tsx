@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/admin.service';
-import { apiClient } from '../../services/api';
 import { usePermission } from '../../hooks/usePermission';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -197,7 +196,7 @@ export default function AdminRegistrations() {
   // ─── Mutations ───────────────────────────────────────────────────────────────
 
   const approveMut = useMutation({
-    mutationFn: (id: number) => apiClient.post(`/api/admin/registrations/${id}/approve`, { lang }),
+    mutationFn: (id: number) => adminService.approveRegistration(id, lang),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-registrations'] });
       showToast(tlx('approve_success'), 'success');
@@ -225,7 +224,7 @@ export default function AdminRegistrations() {
   };
 
   const deleteMut = useMutation({
-    mutationFn: (id: number) => apiClient.delete(`/api/admin/registrations/${id}`),
+    mutationFn: (id: number) => adminService.deleteRegistration(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-registrations'] });
       showToast(tlx('delete_success'), 'success');
@@ -268,7 +267,7 @@ export default function AdminRegistrations() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#0D1F3C]">{tlx('title')}</h1>
+          <h1 className="text-2xl font-bold text-[#0D2A5E]">{tlx('title')}</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {filtered.length} / {allRegistrations.length} {tlx('subtitle')}
           </p>
@@ -368,7 +367,7 @@ export default function AdminRegistrations() {
                       className="transition-all duration-700"
                       style={highlightedId === reg.id ? {
                         backgroundColor: '#FFFBEB',
-                        boxShadow: 'inset 0 0 0 2px #CFA030',
+                        boxShadow: 'inset 0 0 0 2px #C8960A',
                       } : {}}
                     >
                       {/* Company */}
@@ -482,7 +481,7 @@ export default function AdminRegistrations() {
                   {initials(detailTarget)}
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#0D1F3C]">{detailTarget.raison_sociale}</h2>
+                  <h2 className="text-base font-bold text-[#0D2A5E]">{detailTarget.raison_sociale}</h2>
                   <p className="text-xs text-gray-400">{tlx('detail_title')}</p>
                 </div>
               </div>
@@ -642,7 +641,7 @@ export default function AdminRegistrations() {
                   className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 resize-none leading-relaxed ${
                     motifError
                       ? 'border-rose-400 focus:ring-rose-300/30'
-                      : 'border-gray-200 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]'
+                      : 'border-gray-200 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E]'
                   }`}
                   placeholder="Ex: Documents manquants, NIF/NIS non fournis..."
                 />

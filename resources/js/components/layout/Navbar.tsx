@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { adminService } from '../../services/admin.service';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { X, Menu, Bell, BellRing, CheckCheck } from 'lucide-react';
@@ -88,58 +90,52 @@ export const Navbar = ({ onMenuClick, sidebarOpen }: { onMenuClick?: () => void;
 
   // ── Notification state ──────────────────────────────────────────────────────
   const [notifOpen,    setNotifOpen]    = useState(false);
-  const [notifs,       setNotifs]       = useState<Notif[]>([]);
-  const [unread,       setUnread]       = useState(0);
-  const [notifLoading, setNotifLoading] = useState(false);
   const [hoveredNotif, setHoveredNotif] = useState<number|null>(null);
 
-  const fetchNotifs = async () => {
-    setNotifLoading(true);
-    try {
-      const res = await apiClient.get('/api/admin/notifications');
-      setNotifs(res.data.notifications ?? []);
-      setUnread(res.data.unread_count ?? 0);
-    } catch {
-      // silencieux — ne pas bloquer la navbar
-    } finally {
-      setNotifLoading(false);
-    }
-  };
+  const queryClient = useQueryClient();
+  const { data, isLoading: notifLoading } = useQuery({
+    queryKey: ['admin-notifications-all'],
+    queryFn: adminService.getAdminNotificationsAll,
+    refetchInterval: 30000,
+    enabled: user?.role?.label === 'admin',
+  });
+
+  const notifs: Notif[] = data?.notifications ?? [];
+  const unread: number = data?.unread_count ?? 0;
 
   const markRead = async (id: number) => {
     try {
-      await apiClient.post(`/api/admin/notifications/${id}/read`);
-      setNotifs(prev =>
-        prev.map(n => n.id === id ? { ...n, lu: true } : n)
-      );
-      setUnread(prev => Math.max(0, prev - 1));
+      await adminService.markAdminNotificationRead(id);
+      queryClient.setQueryData(['admin-notifications-all'], (old: any) => ({
+        ...old,
+        notifications: old?.notifications?.map((n: Notif) => n.id === id ? { ...n, lu: true } : n) ?? [],
+        unread_count: Math.max(0, (old?.unread_count ?? 0) - 1),
+      }));
     } catch { /* silencieux */ }
   };
 
   const markAllRead = async () => {
     try {
-      await apiClient.post('/api/admin/notifications/read-all');
-      setNotifs(prev => prev.map(n => ({ ...n, lu: true })));
-      setUnread(0);
+      await adminService.markAllAdminNotificationsRead();
+      queryClient.setQueryData(['admin-notifications-all'], (old: any) => ({
+        ...old,
+        notifications: old?.notifications?.map((n: Notif) => ({ ...n, lu: true })) ?? [],
+        unread_count: 0,
+      }));
     } catch { /* silencieux */ }
   };
 
   const deleteNotif = async (id: number) => {
     try {
       const wasUnread = notifs.find(n => n.id === id)?.lu === false;
-      await apiClient.delete(`/api/admin/notifications/${id}`);
-      setNotifs(prev => prev.filter(n => n.id !== id));
-      if (wasUnread) setUnread(prev => Math.max(0, prev - 1));
+      await adminService.deleteAdminNotification(id);
+      queryClient.setQueryData(['admin-notifications-all'], (old: any) => ({
+        ...old,
+        notifications: old?.notifications?.filter((n: Notif) => n.id !== id) ?? [],
+        unread_count: wasUnread ? Math.max(0, (old?.unread_count ?? 0) - 1) : (old?.unread_count ?? 0),
+      }));
     } catch { /* silencieux */ }
   };
-
-  useEffect(() => {
-    if (user?.role?.label === 'admin') {
-      fetchNotifs();
-      const id = setInterval(fetchNotifs, 30_000);
-      return () => clearInterval(id);
-    }
-  }, [user]);
 
   // ────────────────────────────────────────────────────────────────────────────
 

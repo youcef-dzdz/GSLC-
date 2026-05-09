@@ -53,6 +53,9 @@ export const adminService = {
   resetPassword: (id: number, password?: string) =>
     apiClient.post(`/api/admin/users/${id}/reset-password`, password ? { password } : {}),
 
+  resetUserPassword: (id: number, data: Record<string, any>) =>
+    apiClient.post(`/api/admin/users/${id}/reset-password`, data),
+
   // ─── Roles ──────────────────────────────────────────────────────────────────
 
   getRoles: () =>
@@ -131,21 +134,48 @@ export const adminService = {
   getDepartments: () =>
     apiClient.get('/api/admin/departments'),
 
+  createDepartment: (data: Record<string, any>) =>
+    apiClient.post('/api/admin/departments', data),
+
+  updateDepartment: (id: number, data: Record<string, any>) =>
+    apiClient.put(`/api/admin/departments/${id}`, data),
+
+  deleteDepartment: (id: number) =>
+    apiClient.delete(`/api/admin/departments/${id}`),
+
   getPositions: (departmentId?: number) =>
     apiClient.get('/api/admin/positions', departmentId ? { params: { department_id: departmentId } } : undefined),
+
+  createPosition: (data: Record<string, any>) =>
+    apiClient.post('/api/admin/positions', data),
+
+  updatePosition: (id: number, data: Record<string, any>) =>
+    apiClient.put(`/api/admin/positions/${id}`, data),
+
+  deletePosition: (id: number) =>
+    apiClient.delete(`/api/admin/positions/${id}`),
 
   // ─── Registrations ──────────────────────────────────────────────────────────
 
   getRegistrations: (statut = 'EN_ATTENTE_VALIDATION') =>
     apiClient.get('/api/admin/registrations', { params: { statut } }),
 
-  approveRegistration: (id: number) =>
-    apiClient.post(`/api/admin/registrations/${id}/approve`),
+  approveRegistration: (id: number, lang?: string) =>
+    apiClient.post(`/api/admin/registrations/${id}/approve`, lang ? { lang } : undefined),
 
   rejectRegistration: (id: number, motif: string) =>
     apiClient.post(`/api/admin/registrations/${id}/reject`, { motif }),
 
+  deleteRegistration: (id: number) =>
+    apiClient.delete(`/api/admin/registrations/${id}`),
+
   // ─── Audit Log ──────────────────────────────────────────────────────────────
+
+  exportAuditLogs: (params?: Record<string, string>) =>
+    apiClient.get('/api/admin/audit-logs/export', { params, responseType: 'blob' }),
+
+  getAuditLogs: (params?: Record<string, string | number>) =>
+    apiClient.get('/api/admin/audit-logs', { params }),
 
   getAuditLog: (params?: Record<string, string>) =>
     apiClient.get('/api/admin/audit', { params }),
@@ -163,6 +193,9 @@ export const adminService = {
   getSystemConfig: () =>
     apiClient.get('/api/admin/system-config'),
 
+  testEmail: (data: { email: string }) =>
+    apiClient.post('/api/admin/system-config/test-email', data),
+
   updateSystemConfigSection: (section: string, data: Record<string, string>) =>
     apiClient.post(`/api/admin/system-config/${section}`, data),
 
@@ -170,6 +203,9 @@ export const adminService = {
 
   getDashboard: () =>
     apiClient.get('/api/admin/dashboard'),
+
+  getMonthlyRegistrations: () =>
+    apiClient.get('/api/admin/stats/monthly-registrations'),
 
   // ─── Currencies ─────────────────────────────────────────────────────────────
 

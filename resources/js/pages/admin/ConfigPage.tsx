@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Settings, Mail, Bell, AlertTriangle, Eye, EyeOff, Save, Loader2 } from 'lucide-react';
-import { apiClient } from '../../services/api';
+import { adminService } from '../../services/admin.service';
 import { useToast } from '../../components/ui/Toast';
 import { usePermission } from '../../hooks/usePermission';
 
@@ -38,7 +39,7 @@ function ConfirmDialog({
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
         <div className="flex items-center gap-3 px-6 py-4 bg-red-50 border-b border-red-100">
           <AlertTriangle size={20} className="text-red-500 flex-shrink-0" />
-          <h3 className="text-base font-black text-[#0D1F3C]">{title}</h3>
+          <h3 className="text-base font-black text-[#0D2A5E]">{title}</h3>
         </div>
         <div className="px-6 py-5">
           <p className="text-sm text-[#64748B]">{message}</p>
@@ -84,7 +85,7 @@ function SectionCard({
     <div className="bg-white rounded-2xl shadow-md border border-[#E2E8F0] overflow-hidden mb-6">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-[#F1F5F9]">
         {icon}
-        <h2 className="text-base font-black text-[#0D1F3C]">{title}</h2>
+        <h2 className="text-base font-black text-[#0D2A5E]">{title}</h2>
       </div>
       <div className="p-6 space-y-5">{children}</div>
       <div className="px-6 py-4 bg-[#F8FAFC] border-t border-[#F1F5F9] flex items-center justify-end gap-3">
@@ -195,7 +196,7 @@ function NotifToggle({
   return (
     <div className="flex items-center justify-between p-4 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
       <div>
-        <p className="text-sm font-semibold text-[#0D1F3C]">{label}</p>
+        <p className="text-sm font-semibold text-[#0D2A5E]">{label}</p>
         <p className="text-xs text-[#94A3B8] mt-0.5">{description}</p>
       </div>
       <button
@@ -276,7 +277,7 @@ export default function ConfigPage() {
     }
     setTestingEmail(true);
     try {
-      await apiClient.post('/api/admin/system-config/test-email', { email: emailTo });
+      await adminService.testEmail({ email: emailTo });
       toast('success', 'Email envoyé', `Email de test envoyé à ${emailTo}`);
     } catch (e: any) {
       toast('error', 'Échec', e?.response?.data?.message ?? 'Erreur SMTP');
@@ -285,18 +286,14 @@ export default function ConfigPage() {
     }
   };
 
-  const [loading, setLoading] = useState(true);
-  const [loadErr, setLoadErr] = useState(false);
   const [confirmMaint, setConfirmMaint] = useState(false);
 
   // ─── Load ─────────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    apiClient
-      .get('/api/admin/system-config')
-      .then((r) => { setConfig(r.data); setLoading(false); })
-      .catch(() => { setLoadErr(true); setLoading(false); });
-  }, []);
+  const { isLoading: loading, isError: loadErr, refetch } = useQuery({
+    queryKey: ['system-config'],
+    queryFn: () => adminService.getSystemConfig().then((r) => { setConfig(r.data); return r.data; }),
+  });
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -315,7 +312,7 @@ export default function ConfigPage() {
     setSaving((prev) => ({ ...prev, [section]: true }));
     const payload = Object.fromEntries(keys.map((k) => [k, config[k] ?? '']));
     try {
-      await apiClient.post(`/api/admin/system-config/${section}`, payload);
+      await adminService.updateSystemConfigSection(section, payload);
       toast('success', t('common.success'), t('admin.config.save_success'));
     } catch {
       toast('error', t('common.error'), t('admin.config.save_error'));
@@ -349,7 +346,7 @@ export default function ConfigPage() {
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <p className="text-sm text-red-500">{t('admin.config.error_load')}</p>
         <button
-          onClick={() => { setLoadErr(false); setLoading(true); apiClient.get('/api/admin/system-config').then((r) => { setConfig(r.data); setLoading(false); }).catch(() => { setLoadErr(true); setLoading(false); }); }}
+          onClick={() => refetch()}
           className="text-sm text-[#2563EB] underline cursor-pointer"
         >
           {t('common.retry')}
@@ -365,14 +362,14 @@ export default function ConfigPage() {
 
       {/* ── Page Header ── */}
       <div
-        className="rounded-2xl shadow-md p-5 mb-6 flex items-center justify-between border-l-4 border-[#CFA030] bg-white bg-opacity-80 backdrop-blur-md"
+        className="rounded-2xl shadow-md p-5 mb-6 flex items-center justify-between border-l-4 border-[#C8960A] bg-white bg-opacity-80 backdrop-blur-md"
       >
         <div>
-          <h1 className="text-2xl font-black text-[#0D1F3C]">{t('admin.config.title')}</h1>
+          <h1 className="text-2xl font-black text-[#0D2A5E]">{t('admin.config.title')}</h1>
           <p className="text-sm text-[#64748B] mt-0.5">{t('admin.config.subtitle')}</p>
         </div>
         <div className="hidden sm:flex items-center justify-center w-12 h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl shadow-sm">
-          <Settings size={22} className="text-[#CFA030]" />
+          <Settings size={22} className="text-[#C8960A]" />
         </div>
       </div>
 

@@ -209,10 +209,10 @@ const AdminRoles: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] flex items-center justify-center">
-              <ShieldCheck size={20} color="#0D1F3C" />
+              <ShieldCheck size={20} color="#0D2A5E" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#0D1F3C]">{tlx('title')}</h1>
+              <h1 className="text-2xl font-bold text-[#0D2A5E]">{tlx('title')}</h1>
               <p className="text-sm text-[#6B7280] mt-0.5">
                 {isLoading ? '...' : `${roles.length} ${roles.length !== 1 ? tlx('subtitle_roles_p') : tlx('subtitle_roles')}`} · {tlx('subtitle_desc')}
               </p>
@@ -220,7 +220,7 @@ const AdminRoles: React.FC = () => {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#0D1F3C] hover:bg-[#1a3a6b] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-[#0D2A5E] hover:bg-[#1a3a6b] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
           >
             <Plus size={16} />
             {tlx('new_role')}
@@ -253,7 +253,7 @@ const AdminRoles: React.FC = () => {
                         <p className="text-[#6B7280] font-medium">{tlx('no_roles')}</p>
                         <button
                           onClick={() => setShowCreate(true)}
-                          className="mt-3 px-4 py-2 bg-[#0D1F3C] text-white text-sm font-semibold rounded-lg cursor-pointer hover:bg-[#1a3a6b] transition-colors"
+                          className="mt-3 px-4 py-2 bg-[#0D2A5E] text-white text-sm font-semibold rounded-lg cursor-pointer hover:bg-[#1a3a6b] transition-colors"
                         >
                           {tlx('create_first')}
                         </button>
@@ -271,7 +271,7 @@ const AdminRoles: React.FC = () => {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div>
-                              <p className="font-medium text-[#0D1F3C]">{role.nom_role}</p>
+                              <p className="font-medium text-[#0D2A5E]">{role.nom_role}</p>
                               {role.description && (
                                 <p className="text-xs text-[#9CA3AF] truncate max-w-[160px]">{role.description}</p>
                               )}
@@ -301,7 +301,7 @@ const AdminRoles: React.FC = () => {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-bold text-[#0D1F3C]">{role.permissions?.length ?? 0}</p>
+                          <p className="font-bold text-[#0D2A5E]">{role.permissions?.length ?? 0}</p>
                           <p className="text-xs text-[#9CA3AF]">{tlx('subtitle_perms_p')}</p>
                         </td>
                         <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
@@ -350,7 +350,7 @@ const AdminRoles: React.FC = () => {
                                     style={{
                                       background: 'none', border: 'none',
                                       cursor: 'pointer', padding: 4,
-                                      color: '#4366BB',
+                                      color: '#0D2A5E',
                                     }}
                                     title="Modifier"
                                   >
@@ -386,10 +386,10 @@ const AdminRoles: React.FC = () => {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] bg-[#F8FAFC]">
               <div className="flex items-center gap-2">
-                <Plus size={16} color="#0D1F3C" />
-                <h2 className="text-sm font-bold text-[#0D1F3C]">{tlx('new_role')}</h2>
+                <Plus size={16} color="#0D2A5E" />
+                <h2 className="text-sm font-bold text-[#0D2A5E]">{tlx('new_role')}</h2>
               </div>
-              <button onClick={() => setShowCreate(false)} className="text-[#64748B] hover:text-[#0D1F3C] cursor-pointer transition-colors">
+              <button onClick={() => setShowCreate(false)} className="text-[#64748B] hover:text-[#0D2A5E] cursor-pointer transition-colors">
                 <X size={18} />
               </button>
             </div>
@@ -453,7 +453,7 @@ const AdminRoles: React.FC = () => {
                     borderRadius: 8, fontSize: 13,
                     boxSizing: 'border-box',
                     background: '#F8FAFF',
-                    color: '#4366BB',
+                    color: '#0D2A5E',
                     fontFamily: 'monospace',
                   }}
                 />
@@ -466,7 +466,7 @@ const AdminRoles: React.FC = () => {
                 <select
                   value={form.niveau}
                   onChange={e => setForm(f => ({ ...f, niveau: Number(e.target.value) }))}
-                  className="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#0D1F3C] focus:outline-none focus:border-[#0D1F3C] focus:ring-1 focus:ring-[#0D1F3C]/20 cursor-pointer"
+                  className="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#0D2A5E] focus:outline-none focus:border-[#0D2A5E] focus:ring-1 focus:ring-[#0D2A5E]/20 cursor-pointer"
                 >
                   {[1,2,3,4,5].map(n => <option key={n} value={n}>{tlx('lvl_num')} {n}</option>)}
                 </select>
@@ -478,7 +478,7 @@ const AdminRoles: React.FC = () => {
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2}
-                  className="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#0D1F3C] focus:outline-none focus:border-[#0D1F3C] focus:ring-1 focus:ring-[#0D1F3C]/20 resize-none"
+                  className="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#0D2A5E] focus:outline-none focus:border-[#0D2A5E] focus:ring-1 focus:ring-[#0D2A5E]/20 resize-none"
                 />
               </div>
             </div>
@@ -509,9 +509,9 @@ const AdminRoles: React.FC = () => {
                 }}
                 disabled={!form.nom_role || !form.label || createMut.isPending}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 cursor-pointer transition-colors"
-                style={{ backgroundColor: '#C9A84C' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#b8923e')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C9A84C')}
+                style={{ backgroundColor: '#C8960A' }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#C8960A')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8960A')}
               >
                 <Plus size={14} />
                 {createMut.isPending ? tlx('creating') : tlx('create')}
@@ -632,7 +632,7 @@ const AdminRoles: React.FC = () => {
               padding: '9px 20px', borderRadius: 8,
               border: 'none', cursor: 'pointer',
               fontSize: 13, fontWeight: 600,
-              background: '#4366BB', color: '#fff',
+              background: '#0D2A5E', color: '#fff',
               opacity: updateMut.isPending ? 0.7 : 1,
             }}
           >

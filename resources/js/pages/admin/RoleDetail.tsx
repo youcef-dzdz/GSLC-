@@ -119,13 +119,13 @@ export default function RoleDetail() {
       <div className="bg-white border-b border-[#E2E8F0] px-6 py-5">
         <button
           onClick={() => navigate('/admin/roles')}
-          className="flex items-center gap-2 text-[#64748B] hover:text-[#0D1F3C] text-sm font-medium mb-3 cursor-pointer transition-colors"
+          className="flex items-center gap-2 text-[#64748B] hover:text-[#0D2A5E] text-sm font-medium mb-3 cursor-pointer transition-colors"
         >
           <ArrowLeft size={16} />
           {tlx('back')}
         </button>
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl font-bold text-[#0D1F3C]">{role.nom_role}</h1>
+          <h1 className="text-2xl font-bold text-[#0D2A5E]">{role.nom_role}</h1>
           <span className="font-mono text-xs bg-[#F1F5F9] text-[#475569] px-2 py-0.5 rounded">{role.label}</span>
           <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ backgroundColor: nv.bg, color: nv.text }}>N{role.niveau}</span>
           {role.is_system ? (
@@ -152,7 +152,7 @@ export default function RoleDetail() {
 
         {/* Counter */}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-semibold text-[#0D1F3C]">{tlx('assigned_perms')}</p>
+          <p className="text-sm font-semibold text-[#0D2A5E]">{tlx('assigned_perms')}</p>
           <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#475569]">
             {checkedIds.size} {tlx('selected')}
           </span>
@@ -177,7 +177,7 @@ export default function RoleDetail() {
                       style={{ backgroundColor: mc.bg, color: mc.text, borderColor: mc.border }}>
                       {module}
                     </span>
-                    <span className="text-sm font-bold text-[#0D1F3C] uppercase tracking-wide">
+                    <span className="text-sm font-bold text-[#0D2A5E] uppercase tracking-wide">
                       {MODULE_LABELS_TR[module]?.[lang] ?? module}
                     </span>
                   </div>
@@ -200,10 +200,10 @@ export default function RoleDetail() {
                         checked={checkedIds.has(perm.id)}
                         onChange={() => togglePerm(perm.id)}
                         disabled={role.is_system}
-                        className="w-3.5 h-3.5 rounded accent-[#0D1F3C] flex-shrink-0"
+                        className="w-3.5 h-3.5 rounded accent-[#0D2A5E] flex-shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-[#0D1F3C] truncate">{perm.label}</p>
+                        <p className="text-xs font-medium text-[#0D2A5E] truncate">{perm.label}</p>
                         <p className="text-[10px] font-mono text-[#9CA3AF] truncate">{perm.name}</p>
                       </div>
                     </label>
@@ -223,9 +223,9 @@ export default function RoleDetail() {
               onClick={() => syncMut.mutate(Array.from(checkedIds))}
               disabled={syncMut.isPending}
               className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-              style={{ backgroundColor: '#C9A84C' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#b8923e')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C9A84C')}
+              style={{ backgroundColor: '#C8960A' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#C8960A')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#C8960A')}
             >
               <Save size={15} />
               {syncMut.isPending ? tlx('saving') : tlx('save_perms')}

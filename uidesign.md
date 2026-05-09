@@ -51,6 +51,39 @@
 | `status-online-border` | `#A8DFC4` | System online badge border |
 | `status-online-text` | `#2A8A5A` | System online badge text + dot, department avatars (FIN), module headers (commercial) |
 
+### Semantic State Colors (Standardized)
+| State | Type | Hex | Usage |
+|---|---|---|---|
+| **Success** | Background | `#F0FDF4` | Success/Create badge background |
+| | Border | `#BBF7D0` | Success badge border |
+| | Text | `#166534` | Success badge text |
+| | Accent | `#10B981` | Success icons/accents (Tailwind emerald-500) |
+| | Text Dark | `#2A8A5A` | Darker success text/module headers |
+| **Error** | Background | `#FFF0F0` | Error/Delete badge background |
+| | Bg Alt | `#FEE2E2` | Alternate error background (Tailwind red-100) |
+| | Border | `#FECACA` | Error badge border |
+| | Text | `#991B1B` | Error badge text |
+| | Text Dark | `#8A2020` | Darker error text/module headers |
+| | Accent | `#EF4444` | Error icons/accents (Tailwind red-500) |
+| **Warning** | Background | `#FFFBEB` | Warning badge background |
+| | Bg Alt | `#FEF3C7` | Alternate warning background (Tailwind amber-100) |
+| | Accent | `#F59E0B` | Warning icons/accents (Tailwind amber-500) |
+| | Text | `#92400E` | Warning badge text |
+| **Info** | Background | `#EFF6FF` | Info/Login badge background |
+| | Border | `#BFDBFE` | Info badge border |
+| | Text | `#1E40AF` | Info badge text |
+| | Accent | `#3B82F6` | Info icons/accents (Tailwind blue-500) |
+
+### UI Neutrals
+| Hex | Tailwind | Usage |
+|---|---|---|
+| `#F1F5F9` | `bg-[#F1F5F9]` | Slate-100 (Secondary BG) |
+| `#E2E8F0` | `border-[#E2E8F0]` | Slate-200 (Table row dividers/Neutral border) |
+| `#64748B` | `text-[#64748B]` | Slate-500 (Muted text/labels) |
+| `#94A3B8` | `text-[#94A3B8]` | Slate-400 (Placeholder/Icons) |
+| `#F0F7FF` | `bg-[#F0F7FF]` | Subtle blue background |
+| `#F9FBFF` | `bg-[#F9FBFF]` | Very light blue background |
+
 ### Module Group Header Colors (flat — no gradients)
 | Module | Header Bg | Text on header |
 |---|---|---|

@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, Edit2, Trash2, Lock, Unlock, Key, X, Building2, Briefcase, Loader2, ChevronDown, Check, AlertCircle, Copy, Eye, EyeOff } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
-import { apiClient } from '../../services/api';
 import { usePermission } from '../../hooks/usePermission';
 
 interface Department { id: number; code: string; name: string; }
@@ -238,7 +237,7 @@ export default function AdminUsers() {
   /* ── Mutations ── */
   const resetMut = useMutation({
     mutationFn: ({ id, password, lang: reqLang }: { id: number; password?: string; lang: string }) =>
-      apiClient.post(`/api/admin/users/${id}/reset-password`, { password, lang: reqLang }),
+      adminService.resetUserPassword(id, { password, lang: reqLang }),
     onMutate: ({ id }) => setResettingId(id),
     onSuccess: () => {
       showToast(TEXTS.reset_success[lang], 'success');
@@ -411,7 +410,7 @@ export default function AdminUsers() {
   /* ── Guards ── */
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">
-      <Loader2 className="w-8 h-8 animate-spin text-[#0D1F3C]" />
+      <Loader2 className="w-8 h-8 animate-spin text-[#0D2A5E]" />
     </div>
   );
 
@@ -447,7 +446,7 @@ export default function AdminUsers() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#0D1F3C]">{tlx('users')}</h1>
+          <h1 className="text-2xl font-bold text-[#0D2A5E]">{tlx('users')}</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {filtered.length} / {allUsers.length} {t('admin.users.members_count')}
           </p>
@@ -525,7 +524,7 @@ export default function AdminUsers() {
                       key={title}
                       onMouseDown={() => { setPosteFilter(title); setPosteOpen(false); }}
                       style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13,
-                               color: '#0D1F3C',
+                               color: '#0D2A5E',
                                background: posteFilter === title ? '#F1F5F9' : 'transparent' }}
                     >
                       {title}
@@ -784,7 +783,7 @@ export default function AdminUsers() {
                 </p>
                 <button
                   onClick={generatePassword}
-                  className="w-full px-4 py-2.5 text-sm font-semibold bg-[#0D2A5E] text-white rounded-xl hover:bg-[#1a3360] transition flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2.5 text-sm font-semibold bg-[#0D2A5E] text-white rounded-xl hover:bg-[#0D2A5E] transition flex items-center justify-center gap-2"
                 >
                   <Key className="w-4 h-4" />
                   {t('admin.users.generate_password')}
@@ -802,7 +801,7 @@ export default function AdminUsers() {
 
                 {/* Password box */}
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center justify-between gap-3">
-                  <p className="font-mono text-[#0B1D3A] font-bold text-base tracking-widest select-all flex-1 min-w-0 break-all">
+                  <p className="font-mono text-[#0D2A5E] font-bold text-base tracking-widest select-all flex-1 min-w-0 break-all">
                     {generatedPwd}
                   </p>
                   <button
@@ -836,7 +835,7 @@ export default function AdminUsers() {
                 <button
                   onClick={handleResetSubmit}
                   disabled={resettingId === resetTarget.id}
-                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-[#0D2A5E] text-white rounded-xl hover:bg-[#1a3360] transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-[#0D2A5E] text-white rounded-xl hover:bg-[#0D2A5E] transition flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {resettingId === resetTarget.id && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {t('admin.users.confirm_send')}
@@ -859,7 +858,7 @@ export default function AdminUsers() {
           <div className="bg-white w-full max-w-md max-h-[90vh] rounded-2xl flex flex-col overflow-hidden">
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
-              <h2 className="text-base font-bold text-[#0D1F3C]">
+              <h2 className="text-base font-bold text-[#0D2A5E]">
                 {editingUser ? tlx('edit_title') : tlx('new_title')}
               </h2>
               <button
@@ -882,7 +881,7 @@ export default function AdminUsers() {
                       required
                       value={form.nom}
                       onChange={e => setForm(f => ({...f, nom: e.target.value}))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E]"
                     />
                   </div>
                   <div>
@@ -892,7 +891,7 @@ export default function AdminUsers() {
                       required
                       value={form.prenom}
                       onChange={e => setForm(f => ({...f, prenom: e.target.value}))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E]"
                     />
                   </div>
                 </div>
@@ -905,7 +904,7 @@ export default function AdminUsers() {
                     required
                     value={form.email}
                     onChange={e => setForm(f => ({...f, email: e.target.value}))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C]"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E]"
                   />
                 </div>
 
@@ -921,7 +920,7 @@ export default function AdminUsers() {
                       value={form.password}
                       onChange={e => setForm(f => ({...f, password: e.target.value}))}
                       placeholder={editingUser ? '••••••••' : ''}
-                      className={`w-full border border-gray-200 rounded-lg py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-10' : 'px-3 pr-10'}`}
+                      className={`w-full border border-gray-200 rounded-lg py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] ${isRTL ? 'px-3 pl-10' : 'px-3 pr-10'}`}
                     />
                     <button
                       type="button"
@@ -944,7 +943,7 @@ export default function AdminUsers() {
                           required={!editingUser}
                           value={form.department_code}
                           onChange={e => setForm(f => ({...f, department_code: e.target.value, poste: ''}))}
-                          className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
+                          className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
                         >
                           <option value="">{tlx('sel_service')}</option>
                           {(Array.isArray(departments) ? departments : []).map(d => (
@@ -962,7 +961,7 @@ export default function AdminUsers() {
                         <select
                           value={form.poste}
                           onChange={e => setForm(f => ({...f, poste: e.target.value}))}
-                          className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
+                          className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
                         >
                           <option value="">{tlx('sel_poste')}</option>
                           {(Array.isArray(availablePositions) ? availablePositions : []).map(p => (
@@ -983,7 +982,7 @@ export default function AdminUsers() {
                           required={!editingUser}
                           value={form.role_nom}
                           onChange={e => setForm(f => ({...f, role_nom: e.target.value}))}
-                          className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
+                          className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
                         >
                           <option value="">{t('admin.users.select_role')}</option>
                           {availableRolesForModal.map(r => (
@@ -1004,7 +1003,7 @@ export default function AdminUsers() {
                       required
                       value={form.statut}
                       onChange={e => setForm(f => ({...f, statut: e.target.value}))}
-                      className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
+                      className={`w-full appearance-none border border-gray-200 rounded-lg py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] ${isRTL ? 'px-3 pl-8' : 'px-3 pr-8'}`}
                     >
                       <option value="ACTIF">{tlx('active')}</option>
                       <option value="SUSPENDU">{tlx('suspended')}</option>

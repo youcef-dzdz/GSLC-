@@ -1,11 +1,11 @@
-# CLAUDE.md — GSLC / NASHCO
+# CLAUDE.md — GSLC
 > **READ THIS ENTIRE FILE BEFORE TOUCHING ANY CODE.**
-> You are an AI coding agent working on the GSLC/NASHCO project.
+> You are an AI coding agent working on the GSLC project.
 > Analyze the project, produce a status report, and wait for approval before doing anything.
 
 ---
 
-## 🔴 THE 15 GOLDEN RULES — NON-NEGOTIABLE
+## 🔴 THE 17 GOLDEN RULES — NON-NEGOTIABLE
 
 Violating any rule invalidates the task. No exceptions.
 
@@ -27,6 +27,7 @@ Violating any rule invalidates the task. No exceptions.
 | 14 | **Forbidden from touching out-of-scope files without explicit permission.** If a task requires modifying a file not listed in the initial plan, stop completely, name the file, explain why it is needed, and wait for the human to authorize it before touching it. |
 | 15 | **Back up every existing file before modifying it.** New files created from scratch do not need a backup. Any existing file being modified gets backed up to `.backups/<ISO-8601-timestamp>/<original-filename>` before the first edit. |
 | 16 | **Every completed task appends its full report to `report.md`.** Fixes and builds alike. Format: timestamp header + full report. Never summarize or truncate. If `report.md` does not exist, create it. This file is the permanent audit trail of the entire project. |
+| 17 | **Every controller method and every key React handler must have a 2-line professional comment.** Line 1 = what it does. Line 2 = who can do it and why. Example: `// Supprime softement un client — déplace vers corbeille, récupérable 30 jours` / `// Autorisé: Responsable (niveau <= 3) uniquement via middleware CheckPermission` |
 
 ---
 
@@ -76,10 +77,15 @@ npm run build — 0 errors ✅ / ❌ [list errors if any]
 
 | Item | Value |
 |---|---|
-| **Project name** | GSLC / NASHCO |
-| **Type** | Logistics & Shipping Management Platform |
-| **Context** | PFE (Final Year Engineering Project) — demoed online to jury |
-| **Deadline** | June 2 — must be deployed and online |
+| **Project name** | GSLC |
+| **Full title** | Système d'automatisation et d'optimisation du suivi des conteneurs maritimes — analyse prédictive et intégration multi-sources |
+| **Type** | Container Rental Management Platform — déploiement clé en main par client (chaque client = instance dédiée) |
+| **Context** | Startup — NASHCO (port de Mostaganem) = client de référence et étude terrain |
+| **Market** | Entreprises algériennes de location de conteneurs maritimes |
+| **Founder** | Solo |
+| **Deadline** | July 31, 2026 — soutenance startup |
+| **Commercial model** | Licence par déploiement — chaque entreprise achète son instance propre, données sur sa propre infrastructure |
+| **Multi-tenant SaaS** | Roadmap post-graduation — architecture tenant_id planifiée après la soutenance |
 | **Languages** | French (primary), English, Arabic (RTL) |
 | **Backend** | Laravel 11 + Sanctum |
 | **Frontend** | React 18 + TypeScript + Vite |
@@ -103,6 +109,7 @@ GSLC/
 │   │   └── Requests/           # FormRequest validation classes
 │   ├── Models/                 # 50+ Eloquent models
 │   ├── Services/               # Business logic layer
+│   │   └── PredictionService.php  # Phase 9 — rule-based scoring (DO NOT BUILD before Phase 9)
 │   └── Mail/                   # Email templates
 ├── resources/js/
 │   ├── components/             # Reusable UI components
@@ -122,7 +129,6 @@ GSLC/
 │   ├── hooks/                  # Custom React hooks
 │   ├── contexts/               # AuthContext (user, role, niveau)
 │   └── app.tsx                 # React Router config
-```
 ├── routes/
 │   ├── api.php                 # All REST endpoints
 │   └── web.php                 # SPA entry point
@@ -141,6 +147,83 @@ GSLC/
 
 ---
 
+## ⚙️ Business Rules (Core Domain Logic)
+
+> These rules are the law of the application. Every controller, every button, every state transition must respect them. Read before building anything.
+
+### Surestaries Calculation
+```
+jours_retard = max(0, date_retour_reelle - date_fin_prevue - franchise_jours)
+montant_ht   = jours_retard × prix_jour_suresties
+montant_ttc  = montant_ht × (1 + tva_rate)
+```
+- Calculated automatically on every container return event (triggered in LogMouvements)
+- Early warning notification sent at J-3 and J-1 before franchise expiry
+- Two invoices always separate — `facture_loyer` ≠ `facture_surestaries` — never merge them
+
+### Contract Lifecycle — State Machine
+Each state transition is enforced at the backend. No frontend-only enforcement. No state bypass allowed.
+
+| From | To | Module Owner | Condition Required |
+|---|---|---|---|
+| DEMANDE | OFFRE | Commercial | documents_valides = true |
+| OFFRE | NÉGOCIATION | Commercial | client demande modification |
+| NÉGOCIATION | ACCEPTÉE | Commercial | rounds <= 5 AND client accepte |
+| ACCEPTÉE | CONTRAT | Commercial | signature physique enregistrée |
+| CONTRAT | ACTIF | Finance | cheque_enregistré = true |
+| ACTIF | EN_COURS | Logistique | conteneur affecté + sorti du dépôt |
+| EN_COURS | RETOURNÉ | Logistique | date_retour_reelle enregistrée |
+| RETOURNÉ | INSPECTÉ | Logistique | rapport_inspection complété |
+| INSPECTÉ | CLÔTURÉ | Finance | facture_finale émise |
+
+> **Workflow implementation rule:** Each transition condition is enforced during the module build that owns that button. Not deferred to a later phase. When you build the button — enforce the condition — same task, same day.
+
+### Container Asset Lifecycle (7 states — strictly ordered)
+```
+DISPONIBLE → RÉSERVÉE → EN_LOCATION → RETOURNÉE
+→ EN_INSPECTION → EN_MAINTENANCE → HORS_SERVICE
+```
+- A container cannot be assigned to a contract unless status = DISPONIBLE
+- Status updated automatically on each movement recorded in LogMouvements
+
+### Contract Activation — Hard Prerequisites
+A contract CANNOT reach status ACTIF without both:
+1. Physical signature recorded (date + document reference)
+2. Guarantee cheque registered (number + amount + bank name)
+Enforced in Finance module — FinTresorerie page.
+
+### Negotiation Cap
+Maximum 5 rounds per quote. Round 6 = automatic rejection, logged to JournalAudit.
+Enforced in Commercial module.
+
+### Predictive Service — Phase 9 ONLY
+> ⚠️ DO NOT build any part of this before Phase 9. All modules (Phases 3–8) must be Gate 2 complete first.
+
+**What it does:** Scores each active client's risk of late container return based on historical data.
+
+**Technical approach:** Laravel Service class — rule-based scoring. No Python, no external ML library. Pure PHP using existing database data.
+
+**Scoring logic (Phase 1 — simple rules):**
+```
+score_risque = ÉLEVÉ  if retards dans > 50% des contrats passés
+             = MOYEN  if retards dans 25–50% des contrats passés
+             = FAIBLE if retards dans < 25% des contrats passés
+```
+
+**Data inputs:**
+- `Contrats`: franchise_jours, prix_jour_suresties, date_fin_prevue
+- `Mouvements`: date_retour_reelle (historical records)
+- `Clients`: historique retards (ratio late / total contracts)
+
+**Output — three consumers:**
+- Client Portal smart card: "Il vous reste X jours — coût estimé Y DZD"
+- Finance dashboard: liste clients score ÉLEVÉ cette semaine
+- Directeur dashboard: montant surestaries potentiel si aucune action
+
+**Technical approach discussion:** Held at Phase 9 start — between founder and Claude — before any code is written.
+
+---
+
 ## 👥 Role & Permission System
 
 ### Role Hierarchy
@@ -152,7 +235,10 @@ GSLC/
 | Responsable | 3 | Department head — full CRUD in their module |
 | Agent | 4 | Operational — read + basic actions only |
 | Secrétaire | 5 | Read-only + data entry |
-| Client | — | External portal access only |
+| Client | — | External portal — isolated to their own contracts/containers only |
+
+> **Data isolation rule:** Each deployment is a dedicated instance for one company. Client X must never see Client Y data within the same company. Isolation enforced at the backend via resource ownership checks.
+> **Multi-tenant architecture** (tenant_id, shared infrastructure) is a post-graduation roadmap item — do NOT implement before the defense.
 
 ### Permission Gate Pattern (React)
 
@@ -255,10 +341,12 @@ Every page must pass ALL items before it is considered done:
 ### Backend
 - [ ] Routes in `api.php` with correct middleware (`auth:sanctum`, role, permission)
 - [ ] Controller with `FormRequest` validation
+- [ ] **2-line professional comment on every controller method** (Rule 17)
 - [ ] Resource ownership check
 - [ ] Soft delete → writes to `corbeille` via `HasCorbeille`
 - [ ] All mutating actions logged to `JournalAudit`
 - [ ] Rate limiting on mutating endpoints
+- [ ] State transition conditions enforced if this page owns a transition button
 
 ### Frontend
 - [ ] TanStack Query for all data fetching — no raw `useEffect` for API calls
@@ -268,6 +356,7 @@ Every page must pass ALL items before it is considered done:
 - [ ] Toast notifications for all operations (success + error)
 - [ ] Confirmation modal before any destructive action
 - [ ] `canEdit` permission gate on ALL action buttons
+- [ ] **2-line professional comment on every key React handler** (Rule 17)
 - [ ] Full FR/EN/AR translations — keys in all 3 files
 - [ ] RTL layout works correctly
 - [ ] Responsive — mobile-friendly (jury may test on phone)
@@ -335,6 +424,85 @@ export const commercialService = {
 };
 ```
 
+### Rule 17 — Professional comment pattern
+
+```php
+// PHP Controller method example
+// Crée un nouveau contrat à partir d'une offre acceptée — génère le numéro de dossier automatiquement
+// Autorisé: Responsable Commercial (niveau <= 3) via middleware CheckPermission('contrats.create')
+public function store(StoreContratRequest $request): JsonResponse { ... }
+```
+
+```tsx
+// React handler example
+// Soumet le formulaire d'activation — vérifie que le chèque est enregistré avant d'activer
+// Accessible: Responsable Finance uniquement — bouton masqué si niveau > 3
+const handleActivate = async (contratId: number) => { ... };
+```
+
+---
+
+## 🎓 Protocole de Soutenance
+
+> This section defines the defense preparation workflow. It triggers automatically after every Gate 2 sign-off.
+
+### Trigger
+After Gate 2 QA passes on any module → agent generates the defense cheat sheet for that module.
+
+### What the agent generates
+A file at `defense/[module_name].md` containing every key feature of that module with:
+
+1. **Localisation du code** — fichier exact + numéro de ligne approximatif
+2. **Ce que ça fait** — explication en français simple, 3-4 phrases
+3. **Pourquoi ce choix technique** — justification de la décision d'implémentation
+4. **Questions probables du jury** — minimum 3 questions avec réponses suggérées
+
+### Format
+
+```markdown
+## Module: [Nom] — Fiche de Soutenance
+
+### Fonctionnalité: [Nom de la fonctionnalité]
+
+**Localisation:**
+- Backend: `app/Http/Controllers/[Controller].php` → méthode `[method]()` → ligne ~N
+- Frontend: `resources/js/pages/[module]/[Page].tsx` → handler `[handler]` → ligne ~N
+
+**Ce que ça fait:**
+[Explication en français simple — comme si tu l'expliquais à quelqu'un qui ne code pas]
+
+**Pourquoi ce choix technique:**
+[La décision + la raison — ex: "On utilise le soft delete plutôt que la suppression définitive
+parce que les données financières doivent rester traçables pendant 30 jours"]
+
+**Questions probables du jury:**
+
+Q: [Question]
+R: [Réponse suggérée]
+
+Q: [Question]
+R: [Réponse suggérée]
+
+Q: [Question]
+R: [Réponse suggérée]
+```
+
+### Language
+All content in French. Technical terms (Controller, Model, etc.) stay in English as they appear in the code.
+
+### Output location
+`defense/` folder in the project root. One file per module:
+```
+defense/
+├── admin.md
+├── commercial.md
+├── client_portal.md
+├── logistique.md
+├── finance.md
+├── directeur.md
+└── predictif.md
+```
+
 ---
 
 ## 🤖 Agent Startup Protocol
@@ -373,4 +541,6 @@ Do not write, edit, or create any file until the human reads the report and expl
 ---
 
 *Last updated: May 2026*
+*Project direction updated: PFE → Startup — déploiement clé en main par client*
+*Multi-tenant SaaS architecture: post-graduation roadmap only*
 *Any agent modifying this file must update the "Last updated" date.*

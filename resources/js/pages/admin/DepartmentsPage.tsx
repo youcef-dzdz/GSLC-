@@ -7,7 +7,7 @@ import {
   Plus, Edit2, Trash2, Briefcase, Users,
   AlertCircle, Loader2, X, Building2, Search,
 } from 'lucide-react';
-import { apiClient } from '@/services/api';
+import { adminService } from '@/services/admin.service';
 import { useToast } from '@/components/ui/Toast';
 import { usePermission } from '../../hooks/usePermission';
 
@@ -63,7 +63,7 @@ const codeColor = (code: string) =>
 // ─── Spinner ──────────────────────────────────────────────────────────────────
 
 const Spinner: React.FC<{ size?: number }> = ({ size = 5 }) => (
-  <svg className={`w-${size} h-${size} animate-spin text-[#0D1F3C]`} fill="none" viewBox="0 0 24 24">
+  <svg className={`w-${size} h-${size} animate-spin text-[#0D2A5E]`} fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
   </svg>
@@ -102,8 +102,8 @@ const DeptModal: React.FC<ModalProps> = ({ open, editing, users, onClose, onSave
   const mutation = useMutation({
     mutationFn: (payload: Record<string, unknown>) =>
       editing
-        ? apiClient.put(`/api/admin/departments/${editing.id}`, payload)
-        : apiClient.post('/api/admin/departments', payload),
+        ? adminService.updateDepartment(editing.id, payload)
+        : adminService.createDepartment(payload),
     onSuccess: () => {
       toast('success', editing ? t('admin.departments.updated') : t('admin.departments.created'), t('admin.departments.op_success'));
       onSaved();
@@ -133,7 +133,7 @@ const DeptModal: React.FC<ModalProps> = ({ open, editing, users, onClose, onSave
   };
 
   const inputCls = (hasError?: boolean) =>
-    `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] transition ${hasError ? 'border-red-300' : 'border-gray-200'}`;
+    `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] transition ${hasError ? 'border-red-300' : 'border-gray-200'}`;
 
   if (!open || typeof document === 'undefined') return null;
 
@@ -147,7 +147,7 @@ const DeptModal: React.FC<ModalProps> = ({ open, editing, users, onClose, onSave
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
-          <h2 className="text-base font-bold text-[#0D1F3C]">
+          <h2 className="text-base font-bold text-[#0D2A5E]">
             {editing ? t('admin.departments.edit_title') : t('admin.departments.create_title')}
           </h2>
           <button
@@ -206,7 +206,7 @@ const DeptModal: React.FC<ModalProps> = ({ open, editing, users, onClose, onSave
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 rows={3}
                 placeholder="Description du département (optionnel)"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] transition resize-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] transition resize-none"
               />
             </div>
 
@@ -216,7 +216,7 @@ const DeptModal: React.FC<ModalProps> = ({ open, editing, users, onClose, onSave
               <select
                 value={form.responsable_id}
                 onChange={e => setForm(f => ({ ...f, responsable_id: e.target.value }))}
-                className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] transition cursor-pointer"
+                className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] transition cursor-pointer"
               >
                 <option value="">{t('admin.departments.no_responsable_option')}</option>
                 {users.map(u => (
@@ -277,9 +277,9 @@ const ConfirmDialog: React.FC<ConfirmProps> = ({ dept, loading, onConfirm, onCan
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
             <Trash2 size={22} className="text-red-500" />
           </div>
-          <h3 className="text-lg font-black text-[#0D1F3C] mb-2">{t('admin.departments.delete_title')}</h3>
+          <h3 className="text-lg font-black text-[#0D2A5E] mb-2">{t('admin.departments.delete_title')}</h3>
           <p className="text-sm text-[#64748B]">
-            Vous allez supprimer <span className="font-bold text-[#0D1F3C]">{dept.name}</span>.
+            Vous allez supprimer <span className="font-bold text-[#0D2A5E]">{dept.name}</span>.
           </p>
 
           {blocked && (
@@ -337,20 +337,20 @@ const DepartmentsPage: React.FC = () => {
 
   const { data, isLoading, isError } = useQuery<{ departments: Department[] }>({
     queryKey: ['dept-page-list'],
-    queryFn: async () => (await apiClient.get('/api/admin/departments')).data,
+    queryFn: async () => (await adminService.getDepartments()).data,
   });
 
   // ── Fetch users for responsable select ───────────────────────────────────
 
   const { data: usersData } = useQuery<{ data: UserOption[] }>({
     queryKey: ['admin-users-select'],
-    queryFn: async () => (await apiClient.get('/api/admin/users')).data,
+    queryFn: async () => (await adminService.getUsers()).data,
   });
 
   // ── Delete mutation ───────────────────────────────────────────────────────
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiClient.delete(`/api/admin/departments/${id}`),
+    mutationFn: (id: number) => adminService.deleteDepartment(id),
     onSuccess: () => {
       toast('success', t('admin.departments.deleted'), t('admin.departments.op_success'));
       setDeletingDept(null);
@@ -390,10 +390,10 @@ const DepartmentsPage: React.FC = () => {
       {/* Page header */}
       <div
         className="rounded-2xl shadow-md p-5 flex items-center justify-between"
-        style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #FFFBEB 100%)', borderLeft: '4px solid #CFA030' }}
+        style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #FFFBEB 100%)', borderLeft: '4px solid #C8960A' }}
       >
         <div>
-          <h1 className="text-2xl font-black text-[#0D1F3C]">{t('admin.departments.title')}</h1>
+          <h1 className="text-2xl font-black text-[#0D2A5E]">{t('admin.departments.title')}</h1>
           <p className="text-sm text-[#64748B] mt-0.5">{t('admin.departments.subtitle')}</p>
         </div>
         {(isAdmin || hasPermission('departments.manage')) && (
@@ -415,7 +415,7 @@ const DepartmentsPage: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">Départements</p>
-            <p className="text-4xl font-black text-[#0D1F3C] tabular-nums">{departments.length}</p>
+            <p className="text-4xl font-black text-[#0D2A5E] tabular-nums">{departments.length}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-md p-5 flex items-center gap-4">
@@ -424,7 +424,7 @@ const DepartmentsPage: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">{t('admin.departments.total_members')}</p>
-            <p className="text-4xl font-black text-[#0D1F3C] tabular-nums">{totalMembers}</p>
+            <p className="text-4xl font-black text-[#0D2A5E] tabular-nums">{totalMembers}</p>
           </div>
         </div>
       </div>
@@ -435,8 +435,8 @@ const DepartmentsPage: React.FC = () => {
         {/* Card toolbar */}
         <div className="p-5 border-b border-[#F1F5F9]">
           <div className="filter-bar">
-            <h3 className="text-sm font-semibold text-[#0D1F3C] flex items-center gap-2 flex-shrink-0">
-              <Building2 size={15} className="text-[#CFA030]" />
+            <h3 className="text-sm font-semibold text-[#0D2A5E] flex items-center gap-2 flex-shrink-0">
+              <Building2 size={15} className="text-[#C8960A]" />
               {t('admin.departments.list_title')}
             </h3>
             <div className="relative flex-1 max-w-xs">
@@ -505,7 +505,7 @@ const DepartmentsPage: React.FC = () => {
                           >
                             {dept.code}
                           </span>
-                          <span className="font-semibold text-[#0D1F3C]">{dept.name}</span>
+                          <span className="font-semibold text-[#0D2A5E]">{dept.name}</span>
                         </div>
                       </td>
 
@@ -521,7 +521,7 @@ const DepartmentsPage: React.FC = () => {
                       <td>
                         {dept.responsable ? (
                           <div>
-                            <p className="text-xs font-semibold text-[#0D1F3C]">
+                            <p className="text-xs font-semibold text-[#0D2A5E]">
                               {dept.responsable.prenom} {dept.responsable.nom}
                             </p>
                             <p className="text-xs text-[#94A3B8]">{dept.responsable.email}</p>

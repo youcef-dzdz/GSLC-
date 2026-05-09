@@ -117,10 +117,10 @@ const AdminPermissions: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] flex items-center justify-center">
-              <Lock size={20} color="#0D1F3C" />
+              <Lock size={20} color="#0D2A5E" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#0D1F3C]">{t('permissions.title')}</h1>
+              <h1 className="text-2xl font-bold text-[#0D2A5E]">{t('permissions.title')}</h1>
               <p className="text-sm text-[#6B7280] mt-0.5">
                 {isLoading ? '...' : `${totalCount} permissions · ${modules.length} module${modules.length !== 1 ? 's' : ''}`}
               </p>
@@ -131,7 +131,7 @@ const AdminPermissions: React.FC = () => {
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '8px 16px', borderRadius: 8,
-              background: '#4366BB', color: '#fff',
+              background: '#0D2A5E', color: '#fff',
               border: 'none', cursor: 'pointer',
               fontSize: 13, fontWeight: 600,
             }}
@@ -148,7 +148,7 @@ const AdminPermissions: React.FC = () => {
             {t('permissions.readonly_info')}{' '}
             <button
               onClick={() => navigate('/admin/roles')}
-              className="font-semibold underline cursor-pointer hover:text-[#0D1F3C] transition-colors"
+              className="font-semibold underline cursor-pointer hover:text-[#0D2A5E] transition-colors"
             >
               {t('permissions.roles_link')}
             </button>.
@@ -164,7 +164,7 @@ const AdminPermissions: React.FC = () => {
               onClick={() => setActiveModule('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                 activeModule === 'all'
-                  ? 'bg-[#0D1F3C] text-white'
+                  ? 'bg-[#0D2A5E] text-white'
                   : 'bg-white border border-[#E2E8F0] text-[#6B7280] hover:bg-[#F8FAFC]'
               }`}
             >
@@ -183,7 +183,7 @@ const AdminPermissions: React.FC = () => {
                       : 'bg-white border border-[#E2E8F0] text-[#6B7280] hover:bg-[#F8FAFC]'
                   }`}
                   style={activeModule === m
-                    ? { backgroundColor: meta?.text ?? '#0D1F3C' }
+                    ? { backgroundColor: meta?.text ?? '#0D2A5E' }
                     : {}
                   }
                 >
@@ -270,7 +270,7 @@ const AdminPermissions: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-5 py-3">
-                          <span className="font-medium text-[#0D1F3C] text-sm">{perm.label}</span>
+                          <span className="font-medium text-[#0D2A5E] text-sm">{perm.label}</span>
                         </td>
                         <td className="px-5 py-3 hidden md:table-cell">
                           <span className="text-sm text-[#9CA3AF] italic">
@@ -298,7 +298,7 @@ const AdminPermissions: React.FC = () => {
                                       setEditPerm(perm);
                                     }}
                                     style={{ background: 'none', border: 'none',
-                                             cursor: 'pointer', color: '#4366BB',
+                                             cursor: 'pointer', color: '#0D2A5E',
                                              padding: 4 }}
                                   >
                                     <Pencil size={13} />
@@ -350,7 +350,7 @@ const AdminPermissions: React.FC = () => {
         <textarea value={form.description} onChange={e => setForm(prev => ({...prev, description: e.target.value}))} rows={3} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 24, boxSizing: 'border-box', resize: 'vertical' }}/>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button onClick={() => setShowCreate(false)} style={{ padding: '9px 20px', borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151' }}>{t('common.cancel')}</button>
-          <button onClick={() => createMut.mutate()} disabled={createMut.isPending || !form.name.trim() || !form.label.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: '#4366BB', color: '#fff', opacity: createMut.isPending ? 0.7 : 1 }}>{createMut.isPending ? t('common.saving') : t('common.save')}</button>
+          <button onClick={() => createMut.mutate()} disabled={createMut.isPending || !form.name.trim() || !form.label.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: '#0D2A5E', color: '#fff', opacity: createMut.isPending ? 0.7 : 1 }}>{createMut.isPending ? t('common.saving') : t('common.save')}</button>
         </div>
       </div>
     </div>
@@ -379,7 +379,7 @@ const AdminPermissions: React.FC = () => {
         <textarea value={editForm.description} onChange={e => setEditForm(prev => ({...prev, description: e.target.value}))} rows={3} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E2E8F0', borderRadius: 8, fontSize: 13, marginBottom: 24, boxSizing: 'border-box', resize: 'vertical' }}/>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button onClick={() => setEditPerm(null)} style={{ padding: '9px 20px', borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151' }}>{t('common.cancel')}</button>
-          <button onClick={() => updateMut.mutate()} disabled={updateMut.isPending || !editForm.label.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: '#4366BB', color: '#fff', opacity: updateMut.isPending ? 0.7 : 1 }}>{updateMut.isPending ? t('common.saving') : t('common.save')}</button>
+          <button onClick={() => updateMut.mutate()} disabled={updateMut.isPending || !editForm.label.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: '#0D2A5E', color: '#fff', opacity: updateMut.isPending ? 0.7 : 1 }}>{updateMut.isPending ? t('common.saving') : t('common.save')}</button>
         </div>
       </div>
     </div>

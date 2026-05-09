@@ -47,6 +47,9 @@ class DevisController extends Controller
             'tva'            => (float) $d->tva,
             'total_ttc'      => (float) $d->total_ttc,
             'statut'         => $d->statut,
+            'commentaire_nashco' => $d->commentaire_nashco,
+            'commentaire_client' => $d->commentaire_client,
+            'numero_dossier' => $d->demande?->numero_dossier,
             'date_envoi'     => $d->date_envoi,
             'date_expiration'=> $d->date_expiration,
             'created_at'     => $d->created_at,
@@ -207,7 +210,7 @@ class DevisController extends Controller
         $old   = $devis->toArray();
 
         $request->validate([
-            'statut'             => 'sometimes|in:ENVOYE,EN_NEGOCIATION,ACCEPTE,REFUSE,EXPIRE,ANNULE',
+            'statut'             => 'sometimes|in:BROUILLON,ENVOYE,EN_NEGOCIATION,ACCEPTE,REFUSE,EXPIRE,ANNULE',
             'commentaire_nashco' => 'sometimes|nullable|string',
         ]);
 

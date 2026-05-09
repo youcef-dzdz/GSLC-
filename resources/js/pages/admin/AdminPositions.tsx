@@ -6,7 +6,7 @@ import {
   Plus, Edit2, Trash2, Briefcase, Search,
   AlertCircle, Loader2, X, Building2, ChevronDown,
 } from 'lucide-react';
-import { apiClient } from '@/services/api';
+import { adminService } from '@/services/admin.service';
 import { useToast } from '@/components/ui/Toast';
 import { usePermission } from '../../hooks/usePermission';
 
@@ -41,7 +41,7 @@ const codeColor = (code: string) =>
 // ─── Spinner ──────────────────────────────────────────────────────────────────
 
 const Spinner: React.FC<{ size?: number }> = ({ size = 5 }) => (
-  <svg className={`w-${size} h-${size} animate-spin text-[#0D1F3C]`} fill="none" viewBox="0 0 24 24">
+  <svg className={`w-${size} h-${size} animate-spin text-[#0D2A5E]`} fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
   </svg>
@@ -116,8 +116,8 @@ const PositionModal: React.FC<ModalProps> = ({ open, editing, departments, lang,
   const mutation = useMutation({
     mutationFn: (payload: Record<string, unknown>) =>
       editing
-        ? apiClient.put(`/api/admin/positions/${editing.id}`, payload)
-        : apiClient.post('/api/admin/positions', payload),
+        ? adminService.updatePosition(editing.id, payload)
+        : adminService.createPosition(payload),
     onSuccess: () => {
       toast('success', editing ? tl(TX.updated_ok, lang) : tl(TX.created_ok, lang));
       onSaved();
@@ -146,7 +146,7 @@ const PositionModal: React.FC<ModalProps> = ({ open, editing, departments, lang,
   };
 
   const inputCls = (hasError?: boolean) =>
-    `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] transition ${hasError ? 'border-red-300' : 'border-gray-200'}`;
+    `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] transition ${hasError ? 'border-red-300' : 'border-gray-200'}`;
 
   if (!open || typeof document === 'undefined') return null;
 
@@ -160,7 +160,7 @@ const PositionModal: React.FC<ModalProps> = ({ open, editing, departments, lang,
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
-          <h2 className="text-base font-bold text-[#0D1F3C]">
+          <h2 className="text-base font-bold text-[#0D2A5E]">
             {editing ? tl(TX.edit_title, lang) : tl(TX.create_title, lang)}
           </h2>
           <button
@@ -201,7 +201,7 @@ const PositionModal: React.FC<ModalProps> = ({ open, editing, departments, lang,
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 rows={3}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] transition resize-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] transition resize-none"
               />
             </div>
 
@@ -214,7 +214,7 @@ const PositionModal: React.FC<ModalProps> = ({ open, editing, departments, lang,
                 <select
                   value={form.department_id}
                   onChange={e => setForm(f => ({ ...f, department_id: e.target.value }))}
-                  className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D1F3C]/20 focus:border-[#0D1F3C] transition cursor-pointer pr-8"
+                  className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0D2A5E]/20 focus:border-[#0D2A5E] transition cursor-pointer pr-8"
                 >
                   <option value="">{tl(TX.no_dept_opt, lang)}</option>
                   {departments.map(d => (
@@ -277,9 +277,9 @@ const ConfirmDelete: React.FC<ConfirmDeleteProps> = ({ position, loading, errorM
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
             {(isAdmin || hasPermission('positions.manage')) && <Trash2 size={22} className="text-red-500" />}
           </div>
-          <h3 className="text-base font-black text-[#0D1F3C] mb-2">{tl(TX.del_title, lang)}</h3>
+          <h3 className="text-base font-black text-[#0D2A5E] mb-2">{tl(TX.del_title, lang)}</h3>
           <p className="text-sm text-[#64748B]">
-            <span className="font-bold text-[#0D1F3C]">{position.title}</span>
+            <span className="font-bold text-[#0D2A5E]">{position.title}</span>
           </p>
 
           {errorMsg && (
@@ -334,12 +334,12 @@ export default function AdminPositions() {
 
   const { data: posData, isLoading, isError } = useQuery({
     queryKey: ['admin-positions'],
-    queryFn: () => apiClient.get('/api/admin/positions').then(r => r.data),
+    queryFn: () => adminService.getPositions().then(r => r.data),
   });
 
   const { data: deptData } = useQuery({
     queryKey: ['admin-departments-list'],
-    queryFn: () => apiClient.get('/api/admin/departments').then(r => r.data),
+    queryFn: () => adminService.getDepartments().then(r => r.data),
   });
 
   const positions: Position[]   = posData?.positions   ?? [];
@@ -364,7 +364,7 @@ export default function AdminPositions() {
     setDeleting(true);
     setDeleteError(null);
     try {
-      await apiClient.delete(`/api/admin/positions/${deleteTarget.id}`);
+      await adminService.deletePosition(deleteTarget.id);
       qc.invalidateQueries({ queryKey: ['admin-positions'] });
       toast('success', tl(TX.deleted_ok, lang));
       setDeleteTarget(null);
@@ -395,11 +395,11 @@ export default function AdminPositions() {
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#0D1F3C] flex items-center justify-center shrink-0">
-            <Briefcase size={18} color="#CFA030" />
+          <div className="w-10 h-10 rounded-xl bg-[#0D2A5E] flex items-center justify-center shrink-0">
+            <Briefcase size={18} color="#C8960A" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-[#0D1F3C]">{tl(TX.title, lang)}</h1>
+            <h1 className="text-xl font-black text-[#0D2A5E]">{tl(TX.title, lang)}</h1>
             <p className="text-xs text-[#64748B]">{tl(TX.subtitle, lang)}</p>
           </div>
         </div>
@@ -482,10 +482,10 @@ export default function AdminPositions() {
                     {/* Title */}
                     <td>
                       <div className="cell-content">
-                        <div className="w-7 h-7 rounded-lg bg-[#0D1F3C]/5 flex items-center justify-center shrink-0">
-                          <Briefcase size={13} className="text-[#0D1F3C]" />
+                        <div className="w-7 h-7 rounded-lg bg-[#0D2A5E]/5 flex items-center justify-center shrink-0">
+                          <Briefcase size={13} className="text-[#0D2A5E]" />
                         </div>
-                        <span className="font-semibold text-[#0D1F3C]">{p.title}</span>
+                        <span className="font-semibold text-[#0D2A5E]">{p.title}</span>
                       </div>
                     </td>
 

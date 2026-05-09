@@ -203,7 +203,7 @@ export default function AdminTypeConteneurs() {
     <div className="flex flex-col items-center justify-center h-64 gap-4">
       <p className="text-[#8A2020] font-medium">{t('admin.type_conteneurs.error_load')}</p>
       <button onClick={() => qc.invalidateQueries({ queryKey: ['admin-type-conteneurs'] })}
-        className="px-4 py-2 bg-[#0D2A5E] text-white rounded-xl text-sm font-semibold hover:bg-[#1a3360] transition">
+        className="px-4 py-2 bg-[#0D2A5E] text-white rounded-xl text-sm font-semibold hover:bg-[#0D2A5E] transition">
         {t('admin.type_conteneurs.retry')}
       </button>
     </div>

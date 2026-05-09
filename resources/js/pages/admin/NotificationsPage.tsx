@@ -172,8 +172,8 @@ export default function NotificationsPage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Bell size={22} color="#CFA030" />
-          <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0B1D3A', margin: 0 }}>
+          <Bell size={22} color="#C8960A" />
+          <h1 style={{ fontSize: 20, fontWeight: 900, color: '#0D2A5E', margin: 0 }}>
             {t('admin.notifications_page.title')}
           </h1>
           {unread > 0 && (
@@ -209,7 +209,7 @@ export default function NotificationsPage() {
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '8px 16px',
                 borderRadius: 10,
-                background: '#0B1D3A',
+                background: '#0D2A5E',
                 color: '#fff',
                 border: 'none',
                 fontSize: 13,
@@ -238,9 +238,9 @@ export default function NotificationsPage() {
               padding: '6px 16px',
               borderRadius: 9999,
               border: '1.5px solid',
-              borderColor: filter === f ? '#CFA030' : '#E2E8F0',
-              background:  filter === f ? '#CFA030' : '#fff',
-              color:        filter === f ? '#0B1D3A' : '#64748B',
+              borderColor: filter === f ? '#C8960A' : '#E2E8F0',
+              background:  filter === f ? '#C8960A' : '#fff',
+              color:        filter === f ? '#0D2A5E' : '#64748B',
               fontSize: 13,
               fontWeight: 700,
               cursor: 'pointer',
@@ -284,7 +284,7 @@ export default function NotificationsPage() {
                 padding: '16px 20px',
                 borderRadius: 16,
                 border: '1px solid #E2E8F0',
-                borderLeft: n.lu ? '1px solid #E2E8F0' : '3px solid #CFA030',
+                borderLeft: n.lu ? '1px solid #E2E8F0' : '3px solid #C8960A',
                 background: n.lu ? '#fff' : '#FFFBEB',
                 cursor: 'pointer',
                 transition: 'box-shadow .15s, background .15s',
@@ -299,7 +299,7 @@ export default function NotificationsPage() {
                   display: 'block',
                   width: 9, height: 9,
                   borderRadius: '50%',
-                  background: n.lu ? 'transparent' : '#CFA030',
+                  background: n.lu ? 'transparent' : '#C8960A',
                   border: n.lu ? '1.5px solid #CBD5E1' : 'none',
                 }} />
               </div>
@@ -310,7 +310,7 @@ export default function NotificationsPage() {
                   <p style={{
                     fontSize: 13,
                     fontWeight: n.lu ? 500 : 700,
-                    color: n.lu ? '#475569' : '#0B1D3A',
+                    color: n.lu ? '#475569' : '#0D2A5E',
                     margin: 0,
                   }}>
                     {n.titre}
@@ -342,9 +342,9 @@ export default function NotificationsPage() {
                     flexShrink: 0,
                     padding: '5px 12px',
                     borderRadius: 8,
-                    border: '1.5px solid #CFA030',
+                    border: '1.5px solid #C8960A',
                     background: 'transparent',
-                    color: '#CFA030',
+                    color: '#C8960A',
                     fontSize: 12,
                     fontWeight: 700,
                     cursor: 'pointer',
@@ -352,12 +352,12 @@ export default function NotificationsPage() {
                     transition: 'all .15s',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = '#CFA030';
-                    e.currentTarget.style.color = '#0B1D3A';
+                    e.currentTarget.style.background = '#C8960A';
+                    e.currentTarget.style.color = '#0D2A5E';
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#CFA030';
+                    e.currentTarget.style.color = '#C8960A';
                   }}
                 >
                   {t('admin.notifications_page.see')}
