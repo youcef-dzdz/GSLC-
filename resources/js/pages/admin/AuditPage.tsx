@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Download, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -31,7 +31,7 @@ interface PaginatedAudit {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const ACTION_OPTIONS = ['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE', 'BLOCK', 'EXPORT'];
+const ACTION_OPTIONS = ['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE', 'FORCE_DELETE', 'BLOCK', 'EXPORT', 'RESTORE'];
 
 const ACTION_BADGE: Record<string, string> = {
   LOGIN:  'bg-blue-100 text-blue-700 ring-1 ring-blue-200',
@@ -130,7 +130,7 @@ export default function AuditPage() {
     setPage(1);
   };
 
-  const { data, isLoading, isError } = useQuery<PaginatedAudit>({
+  const { data, isLoading, isError, refetch } = useQuery<PaginatedAudit>({
     queryKey: ['admin-audit', appliedUser, appliedAction, appliedDebut, appliedFin, page],
     queryFn: async () => {
       const params: Record<string, string | number> = { page };
@@ -142,6 +142,7 @@ export default function AuditPage() {
       return res.data;
     },
     placeholderData: (prev) => prev,
+    retry: false,
   });
 
   const rows       = data?.data ?? [];
@@ -291,14 +292,21 @@ export default function AuditPage() {
       <div className="rounded-2xl shadow-md border border-[#E2E8F0] bg-white overflow-hidden">
 
         {isLoading && (
-          <div className="flex items-center justify-center h-48 text-[#94A3B8] text-sm">
-            {t('common.loading')}
+          <div className="p-4 space-y-3">
+            {[...Array(6)].map((_, i) => <div key={i} className="h-12 bg-[#EEF5FF] rounded-xl" />)}
           </div>
         )}
 
         {isError && (
-          <div className="flex items-center justify-center h-48 text-red-500 text-sm">
-            {t('admin.audit.error_load')}
+          <div className="flex flex-col items-center gap-3 py-12">
+            <div className="w-12 h-12 rounded-full bg-[#EEF5FF] flex items-center justify-center">
+              <AlertCircle size={22} className="text-[#5A80BB]" />
+            </div>
+            <p className="text-sm font-semibold text-[#0D2A5E]">Erreur de chargement</p>
+            <p className="text-xs text-[#64748B] text-center max-w-sm">
+              Erreur de chargement — vous n'avez peut-être pas les permissions nécessaires.
+            </p>
+            <button onClick={() => refetch()} className="btn-gold mt-1">Réessayer</button>
           </div>
         )}
 

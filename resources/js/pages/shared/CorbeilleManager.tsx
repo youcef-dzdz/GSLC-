@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Trash2, RotateCcw, Eye, Inbox, RefreshCw, AlertCircle } from 'lucide-react';
-import { apiClient } from '../../services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminService } from '../../services/admin.service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,8 +86,7 @@ function SkeletonRow() {
 
 export default function CorbeilleManager() {
   const { t, i18n } = useTranslation();
-  const [items, setItems]               = useState<CorbeilleItem[]>([]);
-  const [loading, setLoading]           = useState(true);
+  const queryClient = useQueryClient();
   const [error, setError]               = useState<string | null>(null);
   const [success, setSuccess]           = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<CorbeilleItem | null>(null);
@@ -97,28 +97,21 @@ export default function CorbeilleManager() {
 
   // ── Data fetching ─────────────────────────────────────────────────────────
 
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params: Record<string, string> = {};
-      if (appliedFilter) params.module = appliedFilter;
-      const res = await apiClient.get('/api/admin/corbeille', { params });
-      setItems(res.data.data ?? []);
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { message?: string } } };
-      setError(
-        axiosErr?.response?.data?.message ?? t('corbeille.error_load')
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [appliedFilter, t]);
+  const {
+    data,
+    isLoading: loading,
+    isError: isQueryError,
+    refetch,
+  } = useQuery({
+    queryKey: ['admin-corbeille', appliedFilter],
+    queryFn:  () =>
+      adminService.getCorbeilleItems(appliedFilter || undefined)
+        .then(r => (r.data.data ?? []) as CorbeilleItem[]),
+  });
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+  const items: CorbeilleItem[] = data ?? [];
 
+  // Success auto-dismiss (UI timer — not an API call, useEffect allowed)
   useEffect(() => {
     if (!success) return;
     const tid = setTimeout(() => setSuccess(null), 3000);
@@ -131,36 +124,36 @@ export default function CorbeilleManager() {
   const expired    = items.filter(i => i.is_expired).length;
   const restorable = items.filter(i => !i.is_expired && i.restored_at === null).length;
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  // ── Mutations ─────────────────────────────────────────────────────────────
 
-  const handleRestore = async (id: number) => {
-    setActionLoading(id);
-    try {
-      await apiClient.post(`/api/admin/corbeille/${id}/restore`);
-      await fetchItems();
+  const restoreMut = useMutation({
+    mutationFn: (id: number) => adminService.restoreCorbeille(id),
+    onMutate:   (id) => setActionLoading(id),
+    onSuccess:  () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-corbeille', appliedFilter] });
       setSuccess(t('corbeille.success_restored'));
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { message?: string } } };
-      setError(axiosErr?.response?.data?.message ?? t('corbeille.error_restore'));
-    } finally {
-      setActionLoading(null);
-    }
-  };
+      setError(null);
+    },
+    onError: (err: any) =>
+      setError(err?.response?.data?.message ?? t('corbeille.error_restore')),
+    onSettled: () => setActionLoading(null),
+  });
 
-  const handleForceDelete = async (id: number) => {
-    setConfirmDeleteId(null);
-    setActionLoading(id);
-    try {
-      await apiClient.delete(`/api/admin/corbeille/${id}`);
-      await fetchItems();
+  const forceDeleteMut = useMutation({
+    mutationFn: (id: number) => adminService.forceDeleteCorbeille(id),
+    onMutate:   (id) => { setConfirmDeleteId(null); setActionLoading(id); },
+    onSuccess:  () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-corbeille', appliedFilter] });
       setSuccess(t('corbeille.success_deleted'));
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { message?: string } } };
-      setError(axiosErr?.response?.data?.message ?? t('corbeille.error_delete'));
-    } finally {
-      setActionLoading(null);
-    }
-  };
+      setError(null);
+    },
+    onError: (err: any) =>
+      setError(err?.response?.data?.message ?? t('corbeille.error_delete')),
+    onSettled: () => setActionLoading(null),
+  });
+
+  const handleRestore     = (id: number) => restoreMut.mutate(id);
+  const handleForceDelete = (id: number) => forceDeleteMut.mutate(id);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -187,12 +180,12 @@ export default function CorbeilleManager() {
       </div>
 
       {/* ── Error state ────────────────────────────────────────────────────── */}
-      {error && (
+      {(error || isQueryError) && (
         <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span className="text-sm flex-1">{error}</span>
+          <span className="text-sm flex-1">{error ?? t('corbeille.error_load')}</span>
           <button
-            onClick={fetchItems}
+            onClick={() => { setError(null); refetch(); }}
             className="text-sm font-medium underline hover:no-underline"
           >
             {t('corbeille.retry')}
@@ -266,7 +259,7 @@ export default function CorbeilleManager() {
       )}
 
       {/* ── Table ──────────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl shadow-md border border-[#E2E8F0] bg-white overflow-hidden">
+      <div className="rounded-2xl shadow-md border border-[#E2E8F0] bg-white">
 
         {/* Empty state */}
         {!loading && !error && items.length === 0 && (
@@ -279,17 +272,16 @@ export default function CorbeilleManager() {
 
         {(loading || items.length > 0) && (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
                   {[
                     t('corbeille.col_type'), 'ID', t('corbeille.col_label'), t('corbeille.col_deleted_by'), t('corbeille.col_date'),
                     t('corbeille.col_expires'), t('corbeille.col_status'), t('corbeille.col_actions'),
-                  ].map(col => (
+                  ].map((col, idx, arr) => (
                     <th
                       key={col}
-                      className="px-4 py-3 text-left text-[10px] font-bold text-[#94A3B8]
-                                 uppercase tracking-wider whitespace-nowrap"
+                      className={`px-4 py-3 text-left text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider whitespace-nowrap${idx === arr.length - 1 ? ' min-w-[200px]' : ''}`}
                     >
                       {col}
                     </th>
@@ -374,7 +366,7 @@ export default function CorbeilleManager() {
                       </td>
 
                       {/* Actions */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-2">
 
                           {/* Aperçu */}
@@ -404,22 +396,6 @@ export default function CorbeilleManager() {
                           )}
 
                           {/* Supprimer définitivement */}
-                          {confirmDeleteId === item.id ? (
-                            <span className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleForceDelete(item.id)}
-                                className="px-2 py-1 rounded-lg text-xs font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
-                              >
-                                {t('corbeille.confirm_delete')}
-                              </button>
-                              <button
-                                onClick={() => setConfirmDeleteId(null)}
-                                className="px-2 py-1 rounded-lg text-xs font-semibold border border-[#E2E8F0] text-[#6B7280] hover:bg-gray-50 transition-colors"
-                              >
-                                {t('corbeille.cancel')}
-                              </button>
-                            </span>
-                          ) : (
                             <button
                               onClick={() => setConfirmDeleteId(item.id)}
                               disabled={isActing}
@@ -430,7 +406,6 @@ export default function CorbeilleManager() {
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
-                          )}
 
                         </div>
                       </td>
@@ -444,10 +419,45 @@ export default function CorbeilleManager() {
         )}
       </div>
 
+      {/* ── Delete Confirm Modal ───────────────────────────────────────────── */}
+      {confirmDeleteId !== null && createPortal(
+        <div
+          className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50"
+          onClick={(e) => { if (e.target === e.currentTarget) setConfirmDeleteId(null); }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="text-base font-bold text-[#0D2A5E] text-center mb-2">
+              {t('corbeille.delete_permanent')}
+            </h3>
+            <p className="text-sm text-[#64748B] text-center mb-6">
+              {t('corbeille.confirm_delete_msg')}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="flex-1 px-4 py-2 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-[#64748B] hover:bg-gray-50 transition-colors"
+              >
+                {t('corbeille.cancel')}
+              </button>
+              <button
+                onClick={() => handleForceDelete(confirmDeleteId)}
+                className="flex-1 px-4 py-2 rounded-xl bg-red-500 text-sm font-semibold text-white hover:bg-red-600 transition-colors"
+              >
+                {t('corbeille.confirm_delete')}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* ── Snapshot Modal ─────────────────────────────────────────────────── */}
       {selectedItem !== null && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60"
           onClick={e => { if (e.target === e.currentTarget) setSelectedItem(null); }}
         >
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6
@@ -469,11 +479,24 @@ export default function CorbeilleManager() {
               </button>
             </div>
 
-            {/* JSON snapshot */}
-            <pre className="bg-[#0D1F3C] text-[#CFA030] p-4 rounded-lg overflow-auto
-                            text-xs max-h-96 font-mono">
-              {JSON.stringify(selectedItem.snapshot, null, 2)}
-            </pre>
+            {/* Snapshot key-value grid */}
+            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-4 max-h-64 overflow-y-auto">
+              {selectedItem.snapshot && typeof selectedItem.snapshot === 'object'
+                ? Object.entries(selectedItem.snapshot)
+                    .filter(([, v]) => v !== null && v !== undefined)
+                    .map(([k, v]) => (
+                      <div key={k} className="flex gap-3 py-1 border-b border-[#EEF5FF] last:border-0">
+                        <span className="text-[11px] font-semibold text-[#5A80BB] w-36 flex-shrink-0 capitalize">
+                          {k.replace(/_/g, ' ')}
+                        </span>
+                        <span className="text-[11px] text-[#0D2A5E] break-all">
+                          {typeof v === 'boolean' ? (v ? 'Oui' : 'Non') : String(v)}
+                        </span>
+                      </div>
+                    ))
+                : <span className="text-[11px] text-[#88A8D0]">Aucune donnée</span>
+              }
+            </div>
 
             {/* Metadata grid */}
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">

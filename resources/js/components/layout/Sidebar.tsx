@@ -48,7 +48,7 @@ const isNavGroup = (def: NavDef): def is NavGroup => 'items' in def;
 
 const getNavLinks = (role: string, permissions: string[] = []): NavDef[] => {
   const dashboard: NavItem = {
-    to: `/${rolePrefix(role)}/dashboard`,
+    to: `/${rolePrefix(role.replace(/^roles\./, ''))}/dashboard`,
     icon: LayoutDashboard,
     labelKey: 'nav.dashboard',
   };
@@ -58,6 +58,7 @@ const getNavLinks = (role: string, permissions: string[] = []): NavDef[] => {
 
   switch (role) {
     case 'admin':
+    case 'agent_it':
     case 'it_agent': {
       const accessItems: NavItem[] = [
         hasPerm('users.view')   ? { to: '/admin/users',       icon: Users,       labelKey: 'nav.users'       } : null,
@@ -153,6 +154,7 @@ function rolePrefix(role: string): string {
     case 'logistique': return 'logistics';
     case 'directeur':  return 'director';
     case 'financier':  return 'finance';
+    case 'agent_it':
     case 'it_agent':   return 'admin';
     default:           return 'admin'; // Rôles custom → fallback admin dashboard
   }
@@ -174,7 +176,8 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
   if (!user) return null;
 
-  const links = getNavLinks(user.role.label, user.role.permissions ?? []);
+  const rawLabel = (user.role.label ?? '').replace(/^roles\./, '');
+  const links = getNavLinks(rawLabel, user.role.permissions ?? []);
 
   const sideStyle: React.CSSProperties = {
     position:  'fixed',

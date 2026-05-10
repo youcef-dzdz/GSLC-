@@ -139,7 +139,7 @@ class PenaliteController extends Controller
 
         DB::beginTransaction();
         try {
-            $penalite->delete();
+            $penalite->moveToCorbeille(auth()->id(), request()->ip());
 
             DB::commit();
             $this->audit('DELETE', 'penalites', $id, $old, null);

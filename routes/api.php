@@ -95,7 +95,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     // =========================================================================
     // ADMIN
     // =========================================================================
-    Route::middleware('role:admin,it_agent')->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('role:admin,it_agent,agent_it')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard',                   [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/users',                        [UserController::class, 'index'])->name('users.index')->middleware('permission:users.view');
         Route::post('/users',                       [UserController::class, 'store'])->name('users.store')->middleware('permission:users.create');

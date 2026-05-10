@@ -88,8 +88,9 @@ class TarifServiceController extends Controller
             ], 422);
         }
 
-        $this->audit('DELETE', 'tarifs_service', $tarif->id, $tarif->toArray(), null);
-        $tarif->delete();
+        $old = $tarif->toArray();
+        $tarif->moveToCorbeille(auth()->id(), request()->ip());
+        $this->audit('DELETE', 'tarifs_service', $tarif->id, $old, null);
 
         return response()->json(['message' => 'Tarif supprimé avec succès.']);
     }

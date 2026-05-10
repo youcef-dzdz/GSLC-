@@ -138,6 +138,7 @@
     "status_active": "في السلة",
     "restore": "استعادة",
     "confirm_delete": "تأكيد",
+    "confirm_delete_msg": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف العنصر نهائياً.",
     "cancel": "إلغاء",
     "delete_permanent": "حذف نهائي",
     "modal_deleted_by": "حُذف بواسطة",

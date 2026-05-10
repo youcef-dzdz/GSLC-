@@ -51,9 +51,8 @@ apiClient.interceptors.response.use(
     }
 
     if (status === 403) {
-      // Authenticated but forbidden — redirect to their own home
-      // AuthContext will determine the correct home on next load
-      window.location.href = '/';
+      // 403 — let the page component handle it via isError state
+      // Do not redirect — the user is authenticated but lacks permission for this specific resource
     }
 
     if (status === 429) {

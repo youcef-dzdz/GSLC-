@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,7 @@ import {
   LogIn, Plus, Edit2, Trash2, Shield, RefreshCw,
   CheckCircle, XCircle, AlertCircle, Inbox,
   Database, Mail, Wrench, Server, Pencil,
-  AlertTriangle, Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   LineChart, Line, PieChart, Pie, Cell,
@@ -242,7 +242,7 @@ const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { hasPermission } = usePermission();
+  const { hasPermission, isAdmin } = usePermission();
 
   // Live clock
   const [now, setNow] = useState(new Date());
@@ -376,8 +376,15 @@ const AdminDashboard: React.FC = () => {
 
   if (dashLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 size={32} className="animate-spin text-slate-400" />
+      <div className="p-6 space-y-5">
+        <div className="h-20 bg-[#EEF5FF] rounded-2xl" />
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-[#EEF5FF] rounded-2xl" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          <div className="lg:col-span-3 h-64 bg-[#EEF5FF] rounded-2xl" />
+          <div className="lg:col-span-2 h-64 bg-[#EEF5FF] rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -511,7 +518,7 @@ const AdminDashboard: React.FC = () => {
           />
           <div className="p-5">
             {monthlyLoading ? (
-              <div className="flex items-center justify-center h-[220px]"><Spinner /></div>
+              <div className="h-[220px] bg-[#EEF5FF] rounded-xl" />
             ) : monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={monthlyData} margin={{ top: 4, right: 16, left: -12, bottom: 0 }}>
@@ -615,7 +622,7 @@ const AdminDashboard: React.FC = () => {
             action={
               <button
                 onClick={() => syncMut.mutate()}
-                disabled={syncMut.isPending}
+                disabled={syncMut.isPending || !isAdmin}
                 className="btn-gold h-8 text-[11px]"
               >
                 <RefreshCw size={12} className={syncMut.isPending ? 'animate-spin' : ''} />
@@ -635,7 +642,7 @@ const AdminDashboard: React.FC = () => {
                 <div
                   key={code}
                   onClick={() => {
-                    if (!isEditing) {
+                    if (!isEditing && isAdmin) {
                       setEditingCode(code);
                       setEditingValue(d.taux_actuel.toString());
                     }
@@ -799,7 +806,9 @@ const AdminDashboard: React.FC = () => {
           />
           <div className="p-4">
             {regsLoading ? (
-              <div className="flex justify-center py-8"><Spinner /></div>
+              <div className="space-y-2">
+                {[...Array(3)].map((_, i) => <div key={i} className="h-14 bg-[#EEF5FF] rounded-xl" />)}
+              </div>
             ) : registrations.length === 0 ? (
               <div className="flex flex-col items-center py-10 gap-2 text-[#94A3B8]">
                 <Inbox size={36} />

@@ -213,6 +213,7 @@
     "status_active": "En corbeille",
     "restore": "Restaurer",
     "confirm_delete": "Confirmer",
+    "confirm_delete_msg": "Cette action est irréversible. L'élément sera supprimé définitivement.",
     "cancel": "Annuler",
     "delete_permanent": "Supprimer définitivement",
     "modal_deleted_by": "Supprimé par",

@@ -174,6 +174,10 @@ class AuditController extends Controller
                 return "Blocage de {$target}";
             case 'EXPORT':
                 return "Export de {$target}";
+            case 'RESTORE':
+                return "Restauration depuis la corbeille : {$target}";
+            case 'FORCE_DELETE':
+                return "Suppression définitive de {$target}";
             default:
                 return "{$row->action} sur {$target}";
         }

@@ -72,6 +72,7 @@ function SectionCard({
   onSave,
   saving,
   extraAction,
+  showSave = true,
 }: {
   title: string;
   icon: React.ReactNode;
@@ -79,6 +80,7 @@ function SectionCard({
   onSave: () => void;
   saving: boolean;
   extraAction?: React.ReactNode;
+  showSave?: boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -90,23 +92,25 @@ function SectionCard({
       <div className="p-6 space-y-5">{children}</div>
       <div className="px-6 py-4 bg-[#F8FAFC] border-t border-[#F1F5F9] flex items-center justify-end gap-3">
         {extraAction}
-        <button
-          onClick={onSave}
-          disabled={saving}
-          className="btn-gold disabled:opacity-60"
-        >
-          {saving ? (
-            <>
-              <Loader2 size={15} className="animate-spin" />
-              {t('admin.config.saving')}
-            </>
-          ) : (
-            <>
-              <Save size={15} />
-              {t('admin.config.save_section')}
-            </>
-          )}
-        </button>
+        {showSave && (
+          <button
+            onClick={onSave}
+            disabled={saving}
+            className="btn-gold disabled:opacity-60"
+          >
+            {saving ? (
+              <>
+                <Loader2 size={15} className="animate-spin" />
+                {t('admin.config.saving')}
+              </>
+            ) : (
+              <>
+                <Save size={15} />
+                {t('admin.config.save_section')}
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -255,6 +259,7 @@ function PasswordField({
 
 export default function ConfigPage() {
   const { isAdmin, hasPermission } = usePermission();
+  const canManage = isAdmin || hasPermission('config.manage');
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -293,6 +298,7 @@ export default function ConfigPage() {
   const { isLoading: loading, isError: loadErr, refetch } = useQuery({
     queryKey: ['system-config'],
     queryFn: () => adminService.getSystemConfig().then((r) => { setConfig(r.data); return r.data; }),
+    retry: false,
   });
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -309,6 +315,7 @@ export default function ConfigPage() {
   // ─── Save ─────────────────────────────────────────────────────────────────
 
   const save = async (section: string, keys: string[]) => {
+    if (!canManage) return;
     setSaving((prev) => ({ ...prev, [section]: true }));
     const payload = Object.fromEntries(keys.map((k) => [k, config[k] ?? '']));
     try {
@@ -335,22 +342,24 @@ export default function ConfigPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 size={32} className="animate-spin text-[#2563EB]" />
+      <div className="p-6 max-w-4xl space-y-6">
+        <div className="h-20 bg-[#EEF5FF] rounded-2xl" />
+        {[...Array(4)].map((_, i) => <div key={i} className="h-44 bg-[#EEF5FF] rounded-2xl" />)}
       </div>
     );
   }
 
   if (loadErr) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <p className="text-sm text-red-500">{t('admin.config.error_load')}</p>
-        <button
-          onClick={() => refetch()}
-          className="text-sm text-[#2563EB] underline cursor-pointer"
-        >
-          {t('common.retry')}
-        </button>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 p-6">
+        <div className="w-14 h-14 rounded-full bg-[#EEF5FF] flex items-center justify-center">
+          <AlertTriangle size={28} className="text-[#5A80BB]" />
+        </div>
+        <p className="text-sm font-semibold text-[#0D2A5E]">Erreur de chargement</p>
+        <p className="text-xs text-[#64748B] text-center max-w-sm">
+          Erreur de chargement — vous n'avez peut-être pas les permissions nécessaires.
+        </p>
+        <button onClick={() => refetch()} className="btn-gold mt-1">Réessayer</button>
       </div>
     );
   }
@@ -383,6 +392,7 @@ export default function ConfigPage() {
         }
         onSave={() => save('general', SECTION_KEYS.general)}
         saving={!!saving.general}
+        showSave={canManage}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Field
@@ -431,6 +441,7 @@ export default function ConfigPage() {
         }
         onSave={() => save('email', SECTION_KEYS.email)}
         saving={!!saving.email}
+        showSave={canManage}
         extraAction={
           <button
             onClick={testEmail}
@@ -517,6 +528,7 @@ export default function ConfigPage() {
         }
         onSave={() => save('notifications', SECTION_KEYS.notifications)}
         saving={!!saving.notifications}
+        showSave={canManage}
       >
         <NotifToggle
           label={t('admin.config.field_notif_registration')}
@@ -548,6 +560,7 @@ export default function ConfigPage() {
         }
         onSave={() => save('maintenance', SECTION_KEYS.maintenance)}
         saving={!!saving.maintenance}
+        showSave={canManage}
       >
         <NotifToggle
           label={t('admin.config.field_maintenance_mode')}

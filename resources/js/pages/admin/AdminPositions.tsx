@@ -268,6 +268,7 @@ interface ConfirmDeleteProps {
 }
 
 const ConfirmDelete: React.FC<ConfirmDeleteProps> = ({ position, loading, errorMsg, lang, onConfirm, onCancel }) => {
+  const { hasPermission, isAdmin } = usePermission();
   if (!position || typeof document === 'undefined') return null;
 
   return createPortal(
@@ -312,6 +313,18 @@ const ConfirmDelete: React.FC<ConfirmDeleteProps> = ({ position, loading, errorM
   );
 };
 
+// ─── Data helper (mirrors AdminUsers — same cache key must return same shape) ──
+
+const safeArray = (res: any): any[] => {
+  const d = res?.data ?? res;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.data)) return d.data;
+  if (Array.isArray(d?.positions)) return d.positions;
+  if (Array.isArray(d?.departments)) return d.departments;
+  if (Array.isArray(d?.roles)) return d.roles;
+  return [];
+};
+
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AdminPositions() {
@@ -332,18 +345,20 @@ export default function AdminPositions() {
 
   // ── Queries ──────────────────────────────────────────────────────────────────
 
-  const { data: posData, isLoading, isError } = useQuery({
+  const { data: posData, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-positions'],
-    queryFn: () => adminService.getPositions().then(r => r.data),
+    queryFn: async () => safeArray(await adminService.getPositions()),
+    retry: false,
   });
 
   const { data: deptData } = useQuery({
-    queryKey: ['admin-departments-list'],
-    queryFn: () => adminService.getDepartments().then(r => r.data),
+    queryKey: ['admin-departments'],
+    queryFn: async () => safeArray(await adminService.getDepartments()),
+    retry: false,
   });
 
-  const positions: Position[]   = posData?.positions   ?? [];
-  const departments: Department[] = deptData?.departments ?? [];
+  const positions: Position[]   = posData ?? [];
+  const departments: Department[] = deptData ?? [];
 
   // ── Filtered list ─────────────────────────────────────────────────────────────
 
@@ -448,13 +463,19 @@ export default function AdminPositions() {
 
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Spinner size={7} />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => <div key={i} className="h-14 bg-[#EEF5FF] rounded-xl" />)}
         </div>
       ) : isError ? (
-        <div className="flex items-center gap-2 justify-center py-16 text-sm text-red-500">
-          <AlertCircle size={16} />
-          {tl(TX.err_load, lang)}
+        <div className="flex flex-col items-center gap-3 py-16">
+          <div className="w-12 h-12 rounded-full bg-[#EEF5FF] flex items-center justify-center">
+            <AlertCircle size={22} className="text-[#5A80BB]" />
+          </div>
+          <p className="text-sm font-semibold text-[#0D2A5E]">Erreur de chargement</p>
+          <p className="text-xs text-[#64748B] text-center max-w-xs">
+            Erreur de chargement — vous n'avez peut-être pas les permissions nécessaires.
+          </p>
+          <button onClick={() => refetch()} className="btn-gold mt-1">Réessayer</button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center py-20 gap-3 text-[#94A3B8]">

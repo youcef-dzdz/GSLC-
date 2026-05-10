@@ -107,7 +107,7 @@ class DepartmentController extends Controller
         }
 
         $old = $dept->toArray();
-        $dept->delete();
+        $dept->moveToCorbeille(auth()->id(), request()->ip());
 
         $this->audit('DELETE', 'departments', $id, $old, null);
 

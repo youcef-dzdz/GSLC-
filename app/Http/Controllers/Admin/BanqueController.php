@@ -80,8 +80,9 @@ class BanqueController extends Controller
             ], 422);
         }
 
-        $this->audit('DELETE', 'banques', $banque->id, $banque->toArray(), null);
-        $banque->delete();
+        $old = $banque->toArray();
+        $banque->moveToCorbeille(auth()->id(), request()->ip());
+        $this->audit('DELETE', 'banques', $banque->id, $old, null);
 
         return response()->json(['message' => 'Banque supprimée avec succès.']);
     }

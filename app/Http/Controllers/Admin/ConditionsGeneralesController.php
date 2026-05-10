@@ -95,14 +95,16 @@ class ConditionsGeneralesController extends Controller
             ], 422);
         }
 
-        if ($condition->actif) {
+        $isAdmin = auth()->user()->role->niveau <= 1;
+        if ($condition->actif && !$isAdmin) {
             return response()->json([
                 'message' => 'La version active ne peut pas être supprimée. Activez une autre version d\'abord.',
             ], 422);
         }
 
-        $this->audit('DELETE', 'conditions_generales', $condition->id, $condition->toArray(), null);
-        $condition->delete();
+        $old = $condition->toArray();
+        $condition->moveToCorbeille(auth()->id(), request()->ip());
+        $this->audit('DELETE', 'conditions_generales', $condition->id, $old, null);
 
         return response()->json(['message' => 'Version supprimée avec succès.']);
     }

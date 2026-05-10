@@ -104,7 +104,7 @@ class PositionController extends Controller
         }
 
         $old = $position->toArray();
-        $position->delete();
+        $position->moveToCorbeille(auth()->id(), request()->ip());
 
         $this->audit('DELETE', 'positions', $id, $old, null);
 

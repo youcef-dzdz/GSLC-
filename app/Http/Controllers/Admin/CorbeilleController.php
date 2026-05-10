@@ -98,7 +98,7 @@ class CorbeilleController extends Controller
                 \App\Models\JournalAudit::create([
                     'utilisateur_id'    => $user->id,
                     'action'            => 'RESTORE',
-                    'table_cible'       => $corbeille->model_type,
+                    'table_cible'       => class_exists($corbeille->model_type) ? (new $corbeille->model_type)->getTable() : $corbeille->model_type,
                     'enregistrement_id' => $corbeille->model_id,
                     'nouvelles_valeurs' => ['corbeille_id' => $corbeille->id],
                     'adresse_ip'        => $request->ip(),
@@ -135,7 +135,7 @@ class CorbeilleController extends Controller
                 \App\Models\JournalAudit::create([
                     'utilisateur_id'    => $user->id,
                     'action'            => 'FORCE_DELETE',
-                    'table_cible'       => $corbeille->model_type,
+                    'table_cible'       => class_exists($corbeille->model_type) ? (new $corbeille->model_type)->getTable() : $corbeille->model_type,
                     'enregistrement_id' => $corbeille->model_id,
                     'adresse_ip'        => request()->ip(),
                     'resultat'          => 'success',

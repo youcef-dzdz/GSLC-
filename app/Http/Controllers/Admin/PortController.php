@@ -61,8 +61,9 @@ class PortController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $port = Port::findOrFail($id);
-        $this->audit('DELETE', 'ports', $port->id, $port->toArray(), null);
-        $port->delete();
+        $old = $port->toArray();
+        $port->moveToCorbeille(auth()->id(), request()->ip());
+        $this->audit('DELETE', 'ports', $port->id, $old, null);
 
         return response()->json(['message' => 'Port supprimé.']);
     }

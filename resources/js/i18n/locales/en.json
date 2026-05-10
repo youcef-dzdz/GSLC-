@@ -210,6 +210,7 @@
     "status_active": "In trash",
     "restore": "Restore",
     "confirm_delete": "Confirm",
+    "confirm_delete_msg": "This action is irreversible. The item will be permanently deleted.",
     "cancel": "Cancel",
     "delete_permanent": "Permanently delete",
     "modal_deleted_by": "Deleted by",

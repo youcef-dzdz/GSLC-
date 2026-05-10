@@ -328,4 +328,15 @@ export const adminService = {
 
   deleteAllReadAdminNotifications: () =>
     apiClient.delete('/api/admin/notifications/read'),
+
+  // ─── Corbeille ────────────────────────────────────────────────────────────────
+
+  getCorbeilleItems: (module?: string) =>
+    apiClient.get('/api/admin/corbeille', module ? { params: { module } } : undefined),
+
+  restoreCorbeille: (id: number) =>
+    apiClient.post(`/api/admin/corbeille/${id}/restore`),
+
+  forceDeleteCorbeille: (id: number) =>
+    apiClient.delete(`/api/admin/corbeille/${id}`),
 };

@@ -88,8 +88,9 @@ class TypeConteneurController extends Controller
             ], 422);
         }
 
-        $this->audit('DELETE', 'types_conteneur', $type->id, $type->toArray(), null);
-        $type->delete();
+        $old = $type->toArray();
+        $type->moveToCorbeille(auth()->id(), request()->ip());
+        $this->audit('DELETE', 'types_conteneur', $type->id, $old, null);
 
         return response()->json(['message' => 'Type de conteneur supprimé avec succès.']);
     }

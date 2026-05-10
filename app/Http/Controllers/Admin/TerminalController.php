@@ -59,8 +59,9 @@ class TerminalController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $terminal = Terminal::findOrFail($id);
-        $this->audit('DELETE', 'terminaux', $terminal->id, $terminal->toArray(), null);
-        $terminal->delete();
+        $old = $terminal->toArray();
+        $terminal->moveToCorbeille(auth()->id(), request()->ip());
+        $this->audit('DELETE', 'terminaux', $terminal->id, $old, null);
 
         return response()->json(['message' => 'Terminal supprimé.']);
     }

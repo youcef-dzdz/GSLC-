@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Search, Plus, Edit2, Trash2, X, Clock, ChevronDown, Check, AlertCircle } from 'lucide-react';
 import { adminService } from '../../services/admin.service';
 import { usePermission } from '../../hooks/usePermission';
@@ -107,7 +108,8 @@ const TEXTS: Record<string, Record<'fr'|'en'|'ar', string>> = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AdminFranchises() {
-  const lang = (navigator.language?.split('-')[0] ?? 'fr') as 'fr'|'en'|'ar';
+  const { i18n } = useTranslation();
+  const lang = (i18n.language?.split('-')[0] ?? 'fr') as 'fr'|'en'|'ar';
   const isRTL = lang === 'ar';
   const qc = useQueryClient();
   const { isAdmin } = usePermission();

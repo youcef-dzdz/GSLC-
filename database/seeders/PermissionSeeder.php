@@ -102,12 +102,7 @@ class PermissionSeeder extends Seeder
             // admin (id=1) → toutes
             1  => $allPermissions,
 
-            // it_agent (id=12)
-            12 => $ids([
-                'users.view', 'users.create', 'users.edit', 'users.block',
-                'users.reset_password', 'departments.view', 'positions.view',
-                'roles.view', 'audit.view', 'registrations.view', 'notifications.view',
-            ]),
+
 
             // directeur (id=2)
             2  => $ids([

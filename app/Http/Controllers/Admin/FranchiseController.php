@@ -95,8 +95,9 @@ class FranchiseController extends Controller
             ], 422);
         }
 
-        $this->audit('DELETE', 'franchises', $franchise->id, $franchise->toArray(), null);
-        $franchise->delete();
+        $old = $franchise->toArray();
+        $franchise->moveToCorbeille(auth()->id(), request()->ip());
+        $this->audit('DELETE', 'franchises', $franchise->id, $old, null);
 
         return response()->json(['message' => 'Franchise supprimée avec succès.']);
     }

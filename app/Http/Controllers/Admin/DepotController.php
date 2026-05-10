@@ -63,8 +63,9 @@ class DepotController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $depot = Depot::findOrFail($id);
-        $this->audit('DELETE', 'depots', $depot->id, $depot->toArray(), null);
-        $depot->delete();
+        $old = $depot->toArray();
+        $depot->moveToCorbeille(auth()->id(), request()->ip());
+        $this->audit('DELETE', 'depots', $depot->id, $old, null);
 
         return response()->json(['message' => 'Dépôt supprimé.']);
     }
