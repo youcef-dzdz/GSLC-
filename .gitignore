@@ -30,3 +30,10 @@ migrations_dump.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# AI agent scratch dirs
+.gemini/
+
+# Temp files
+tmp_tinker.php
+*.php.bak
